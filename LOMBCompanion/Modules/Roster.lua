@@ -38,7 +38,7 @@ function Roster.Scan()
   local away = Roster.scansThisSession == 0
   local changes = {}
   for i = 1, total do
-    local name, rankName, rankIndex, level, className, zone, _, _, online, status, classFile =
+    local name, rankName, rankIndex, level, className, zone, note, _, online, status, classFile =
       C.Call(GetGuildRosterInfo, i)
     if name then
       local full = C.FullName(name)
@@ -46,6 +46,7 @@ function Roster.Scan()
         name = full, short = C.ShortName(full), rank = rankName, rankIndex = rankIndex,
         level = level, className = className, class = classFile, zone = zone,
         online = online and true or false, status = status,
+        note = type(note) == "string" and note ~= "" and note or nil,
         lastOnlineHours = online and 0 or lastOnlineHours(i),
       }
       if g then
@@ -132,8 +133,18 @@ function Roster.View(opts)
   opts = opts or {}
   local q = opts.search and opts.search:lower() or ""
   local out = {}
+  local P = ns.Profiles
+  local altCount = {}
   for _, r in ipairs(Roster.members) do
-    if (not opts.onlineOnly or r.online) and (not opts.addonOnly or r.peer) then
+    local main = P and P.MainOf(r.name)
+    local mrow = main and Roster.byName[main]
+    r.mainShort = mrow and mrow.short or (main and C.ShortName(main)) or nil
+    if mrow then altCount[main] = (altCount[main] or 0) + 1 end
+  end
+  for _, r in ipairs(Roster.members) do r.altCount = altCount[r.name] end
+  for _, r in ipairs(Roster.members) do
+    local hidden = opts.hideAlts and r.mainShort and Roster.byName[P.MainOf(r.name)] ~= nil
+    if not hidden and (not opts.onlineOnly or r.online) and (not opts.addonOnly or r.peer) then
       if q == "" or (r.short or ""):lower():find(q, 1, true)
         or (r.zone or ""):lower():find(q, 1, true)
         or (r.className or ""):lower():find(q, 1, true) then

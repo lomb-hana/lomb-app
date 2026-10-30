@@ -3,7 +3,9 @@ local _, ns = ...
 local T, W, UI = ns.Theme, ns.Widgets, ns.UI
 local Roster = ns.Roster
 
-local view = { search = "", onlineOnly = false, addonOnly = false, sort = "online" }
+local view = { search = "", onlineOnly = false, addonOnly = false, hideAlts = false, sort = "online" }
+local Tab = {}
+ns.RosterTab = Tab
 
 local function professionsText(pr)
   if type(pr) ~= "table" then return nil end
@@ -41,10 +43,19 @@ local function createRow(list, i)
     end
     x = x + col.w
   end
+  row:SetScript("OnClick", function(self) if self.item then Tab.OpenProfile(self.item.name) end end)
   W.Tooltip(row, function(tt, self)
     local r = self.item
     if not r then return end
     tt:SetText(T.classColorText(r.class, r.short), 1, 1, 1)
+    local main = ns.Profiles.MainOf(r.name)
+    local alts = ns.Profiles.AltsOf(r.name)
+    if main then tt:AddLine("Alt of " .. ns.Compat.ShortName(main), 0.95, 0.78, 0.36) end
+    if #alts > 0 then
+      local names = {}
+      for _, a in ipairs(alts) do names[#names + 1] = ns.Compat.ShortName(a) end
+      tt:AddLine("Alts: " .. table.concat(names, ", "), 0.95, 0.78, 0.36, true)
+    end
     tt:AddLine(("Level %s %s  ·  %s"):format(tostring(r.level or "?"), r.className or "", r.rank or ""), 0.8, 0.78, 0.85)
     if r.zone then tt:AddLine(r.zone, 0.6, 0.57, 0.66) end
     local peer = r.peer
@@ -64,6 +75,7 @@ local function createRow(list, i)
       tt:AddLine(" ")
       tt:AddLine("Doesn't have LOMB Companion yet.", 0.6, 0.57, 0.66)
     end
+    tt:AddLine("Click to open their profile.", 0.6, 0.57, 0.66)
   end)
   return row
 end
@@ -71,7 +83,10 @@ end
 local function updateRow(row, r)
   local dim = not r.online
   row.badge:SetShown(r.peer ~= nil)
-  row.cells.short:SetText(T.classColorText(r.class, r.short or "?"))
+  local tag = ""
+  if r.mainShort then tag = "  |cff777080(" .. r.mainShort .. ")|r"
+  elseif (r.altCount or 0) > 0 then tag = "  |cff777080+" .. r.altCount .. "|r" end
+  row.cells.short:SetText(T.classColorText(r.class, r.short or "?") .. tag)
   row.cells.short:SetAlpha(dim and 0.6 or 1)
   row.cells.level:SetText(r.level or "")
   row.cells.class:SetText(r.className or "")
@@ -100,6 +115,11 @@ UI.RegisterTab({
       function(v) view.addonOnly = v; UI.Refresh("roster") end)
     addon:SetWidth(100)
     addon:SetPoint("LEFT", online, "RIGHT", 4, 0)
+    local alts = W.Check(p, "Hide alts", function() return view.hideAlts end,
+      function(v) view.hideAlts = v; UI.Refresh("roster") end,
+      "Hide characters linked to a main (by the addon or by a guild note like \"alt of Bob\").")
+    alts:SetWidth(90)
+    alts:SetPoint("LEFT", addon, "RIGHT", 4, 0)
     p.counts = W.Text(p, "narrow", 11, "muted", "RIGHT")
     p.counts:SetPoint("TOPRIGHT", 0, -5)
 
@@ -126,6 +146,7 @@ UI.RegisterTab({
       x = x + col.w
     end
 
+    p.profile = ns.ProfilePage.New(p, function() Tab.CloseProfile() end)
     p.list = W.List(p, T.sizes.row, createRow, updateRow)
     p.list:SetPoint("TOPLEFT", 0, -52)
     p.list:SetPoint("BOTTOMRIGHT", 0, 0)
@@ -137,9 +158,13 @@ UI.RegisterTab({
 
     ns:Listen("ROSTER_UPDATED", function() UI.Refresh("roster") end)
     ns:Listen("PEER_UPDATED", function() UI.Refresh("roster") end)
+    ns:Listen("PROFILES_UPDATED", function() UI.Refresh("roster") end)
+    p.browse = { search, online, addon, alts, p.counts, header, p.list, p.empty }
+    Tab.panel = p
     return p
   end,
   refresh = function(p)
+    if Tab.profileName then return end
     local items = Roster.View(view)
     p.list:SetItems(items)
     local inGuild = ns.Compat.Call(IsInGuild)
@@ -149,3 +174,24 @@ UI.RegisterTab({
       Roster.online or 0, #Roster.members, inGuild and Roster.PeerCount() + 1 or 0))
   end,
 })
+
+function Tab.OpenProfile(name)
+  local p = Tab.panel
+  if not p then
+    UI.Open("roster")
+    p = Tab.panel
+    if not p then return end
+  end
+  Tab.profileName = name
+  for _, f in ipairs(p.browse) do f:Hide() end
+  p.profile:Show2(name)
+end
+
+function Tab.CloseProfile()
+  local p = Tab.panel
+  Tab.profileName = nil
+  if not p then return end
+  p.profile:Hide()
+  for _, f in ipairs(p.browse) do f:Show() end
+  UI.Refresh("roster")
+end

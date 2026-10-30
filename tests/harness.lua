@@ -272,6 +272,12 @@ function H.installAPI(opts)
   env.UnitRace = function() return "Night Elf" end
   env.UnitXP = function() return 1200 end
   env.UnitXPMax = function() return 3000 end
+  H.gear = {}
+  H.unitGear = {}
+  env.GetInventoryItemLink = function(unit, slot)
+    if unit == "player" then return H.gear[slot] end
+    return H.unitGear[unit] and H.unitGear[unit][slot]
+  end
   env.GetAverageItemLevel = function() return 24.4, 23.6 end
   env.GetNumSkillLines = function() return #H.state.skills end
   env.GetSkillLineInfo = function(i)
@@ -309,7 +315,7 @@ function H.installAPI(opts)
   env.GetGuildRosterInfo = function(i)
     local r = H.roster[i]
     if r then
-      return r.name, r.rank, r.rankIndex or 1, r.level, r.className, r.zone, "", "", r.online, 0, r.class
+      return r.name, r.rank, r.rankIndex or 1, r.level, r.className, r.zone, r.note or "", "", r.online, 0, r.class
     end
   end
   env.GetGuildRosterLastOnline = function(i)

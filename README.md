@@ -44,8 +44,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![News tab](docs/screenshots/12-news.png) | ![News filtered to milestones](docs/screenshots/13-news-milestones.png) |
 | **Leaderboard: levels (v0.3)** | **Leaderboard: kills this week (v0.3)** |
 | ![Leaderboard levels](docs/screenshots/14-leaderboard-levels.png) | ![Leaderboard weekly kills](docs/screenshots/15-leaderboard-kills-week.png) |
-| **Leaderboard: firsts (v0.3)** | |
-| ![Leaderboard firsts](docs/screenshots/16-leaderboard-firsts.png) | |
+| **Leaderboard: firsts (v0.3)** | **Member profile (v0.4)** |
+| ![Leaderboard firsts](docs/screenshots/16-leaderboard-firsts.png) | ![Member profile](docs/screenshots/17-profile.png) |
+| **Profile from an inspect, no addon (v0.4)** | **Roster with "Hide alts" (v0.4)** |
+| ![Profile filled in by inspecting](docs/screenshots/18-profile-inspected.png) | ![Roster hiding alts](docs/screenshots/19-roster-hide-alts.png) |
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -101,10 +103,13 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 - **Fun leaderboards:** levels, kills, rares, hours played and "firsts". Kills and rares can be shown for this week (since the Tuesday reset) or all time. These are just for fun, since shared stats can't be fully verified.
 - **Off switch** in Settings: "Share my news and leaderboard stats". Hours played are only shared if profile sharing is on too.
 
-### v0.4: Profiles & Gear
-- **Member profiles:** equipped gear, average item level, empty slots, level progress and professions.
-- **Alts and mains:** link alts to their main so the roster groups them.
-- When you're standing next to someone, their gear can also be filled in by inspecting them.
+### v0.4: Profiles & Gear (built, awaiting in-game test)
+- **Member profiles:** click anyone on the roster to open their page: equipped gear (with item tooltips), item level, empty slots, XP progress, hours played, kills, rares, professions and their recent news. There's a Whisper button too.
+  - Gear is shared as item and enchant IDs only. XP is shared in 5% steps. Both stop if you turn off profile sharing.
+- **Alts and mains:** on the Me tab, click the "Main" button to say which of your characters is your main (or that this one is). Alts show their main in brackets on the roster, mains show "+N", and a "Hide alts" box hides alts from the list.
+  - For guildmates without the addon, public notes like "alt of Name" or "Name's alt" are understood too.
+  - Your main is only shared once you pick one.
+- **Inspect:** when you inspect a guildmate yourself, their gear is remembered on your computer so their profile can show it even if they don't have the addon. It's never sent to anyone.
 
 ### v0.5: Bestiary+
 - **Full bestiary page for every mob:** level, type and family, elite or rare, where it's been seen, abilities seen, loot, seen and killed counts, and completion % per zone.
@@ -168,6 +173,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
 - **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
 - **v0.2.0 is built:** the Crafters tab ("who can craft X?", filter by profession, online only, click to whisper, shift-click to link), crafter names on item tooltips, and a sidebar menu so more tabs fit. Recipes are read when you open a profession window and shared as recipe IDs only.
 - It has an offline test suite (a fake WoW API runs the whole addon, including the windows) plus a linter. Both pass.

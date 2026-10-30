@@ -6,9 +6,13 @@ local function S() return ns.db.settings end
 
 local OPTIONS = {
   { section = "Sharing with the guild" },
-  { key = "shareProfile", label = "Share my level, class, professions, item level and hours played",
-    tip = "Only those five things. Never gold, location history, chat, or anything else. Off = guildmates just see that you have the addon.",
-    after = function() ns:Fire("PROFILE_CHANGED"); if ns.Sync then ns.Sync.SendProfile(true) end end },
+  { key = "shareProfile", label = "Share my level, class, professions, gear, XP and hours played",
+    tip = "Gear is item + enchant IDs only; XP in 5% steps. Never gold, location history, chat, or anything else. "
+      .. "Off = guildmates just see that you have the addon (and your main, if you picked one).",
+    after = function()
+      ns:Fire("PROFILE_CHANGED"); ns.Shared.MarkDirty("gr")
+      if ns.Sync then ns.Sync.SendProfile(true) end
+    end },
   { key = "shareBestiary", label = "Share bestiary records (kills, loot, abilities)",
     tip = "Off = you neither send nor receive bestiary data. Your own records still work." },
   { key = "shareRecipes", label = "Share the recipes I know (for \"who can craft\")",

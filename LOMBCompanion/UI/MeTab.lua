@@ -27,6 +27,15 @@ UI.RegisterTab({
     p.subheader = W.Text(p, "narrow", 11, "muted")
     p.subheader:SetPoint("TOPLEFT", p.header, "BOTTOMLEFT", 0, -2)
 
+    p.main = W.Button(p, "Main: not set", 190, 22, function(_, button)
+      UI.CycleMain(button == "RightButton" and -1 or 1)
+      ns.SafeCall(p.Render, p, Me.stats)
+    end)
+    p.main:SetPoint("TOPRIGHT", 0, 0)
+    if p.main.RegisterForClicks then p.main:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
+    p.main.tip = "Pick your main so guildmates see your alts grouped together.\n" ..
+      "Click to change (right-click goes back). Picking it once covers all your characters in the guild."
+
     p.tiles = {}
     local defs = { { "level", "Level" }, { "played", "Played" }, { "ilvl", "Item level" },
       { "gold", "Gold" }, { "kills", "Kills recorded" }, { "deaths", "Deaths" } }
@@ -134,6 +143,23 @@ function UI.RenderMe(p, s)
         line.r:SetText("")
       end
     end
-    p.sharing:SetText(ns.db.settings.shareProfile and "Sharing level, class, professions, item level, hours played"
+    local main = ns.Profiles.MyMain()
+    if not main then p.main.label:SetText("Main: not set")
+    elseif main == ns.playerKey then p.main.label:SetText("This is my main")
+    else p.main.label:SetText("Alt of " .. ns.Compat.ShortName(main)) end
+    p.sharing:SetText(ns.db.settings.shareProfile and "Sharing level, class, professions, gear, XP, hours played"
       or "Profile sharing is off")
+end
+
+-- not set -> this character -> each of your other characters in the guild -> not set
+function UI.CycleMain(step)
+  local opts = { false, ns.playerKey }
+  for _, c in ipairs(ns.Profiles.MyChars()) do
+    if c.name ~= ns.playerKey then opts[#opts + 1] = c.name end
+  end
+  local cur = ns.Profiles.MyMain() or false
+  local idx = 1
+  for i, o in ipairs(opts) do if o == cur then idx = i end end
+  idx = (idx - 1 + step) % #opts + 1
+  ns.Profiles.SetMain(opts[idx] or nil)
 end
