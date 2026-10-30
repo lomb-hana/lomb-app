@@ -12,6 +12,7 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [What it does](#what-it-does)
 - [Roadmap](#roadmap)
 - [How it works](#how-it-works)
@@ -21,6 +22,26 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 - [Data & credits](#data--credits)
 - [Privacy](#privacy)
 - [License](#license)
+
+---
+
+## Screenshots
+
+> **Previews only.** These are mock-ups with sample data that mirror the addon's real layout and look. WoW: Forever isn't out yet, so they're not in-game captures.
+
+| Bestiary card + full page | Roster |
+|---|---|
+| ![Bestiary card and full page](docs/screenshots/04-bestiary-expanded.png) | ![Roster tab](docs/screenshots/01-roster.png) |
+| **Me** | **Bestiary tab** |
+| ![Me tab](docs/screenshots/02-me.png) | ![Bestiary tab](docs/screenshots/05-bestiary-tab.png) |
+| **Settings** | **Credits** |
+| ![Settings tab](docs/screenshots/06-settings.png) | ![Credits tab](docs/screenshots/07-credits.png) |
+| **Bestiary card (small)** | **Minimap button** |
+| ![Bestiary card](docs/screenshots/03-card-small.png) | ![Minimap button](docs/screenshots/08-minimap-button.png) |
+
+How the bestiary would look *if* ForeverDB.net approves using their data (not shipped):
+
+![Bestiary with ForeverDB sections](docs/screenshots/05-bestiary-tab-with-foreverdb.png)
 
 ---
 
@@ -181,4 +202,6 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+The addon's code is MIT licensed. See [LICENSE](LICENSE).
+
+The MIT license covers **only our code**. It doesn't cover Blizzard's game data or any third-party data. If ForeverDB.net data is ever added, it will live in its own clearly marked file that stays ForeverDB.net's: it may not be reused, resold or presented as anyone else's, and it keeps their credit and rules.
