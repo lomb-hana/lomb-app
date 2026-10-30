@@ -155,7 +155,10 @@ function Frame:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function Frame:ClearAllPoints() self.points = {} end
 function Frame:GetPoint() local p = self.points[1]; if p then return unpack(p) end return "CENTER", nil, "CENTER", 0, 0 end
 function Frame:GetNumPoints() return #self.points end
-function Frame:SetText(t) self.text = t end
+function Frame:SetText(t)
+  self.text = t
+  if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self, false) end
+end
 function Frame:GetText() return self.text end
 function Frame:SetFormattedText(fmt, ...) self.text = fmt:format(...) end
 function Frame:GetStringWidth() return #(self.text or "") * 6 end
@@ -186,7 +189,9 @@ function Frame:SetVerticalScroll(v) self.vscroll = v end
 function Frame:GetVerticalScrollRange() return 0 end
 function Frame:GetNumChildren() return #self.children end
 function Frame:GetChildren() return unpack(self.children) end
-function Frame:HasFocus() return false end
+function Frame:HasFocus() return self.focused or false end
+function Frame:SetFocus() self.focused = true end
+function Frame:ClearFocus() self.focused = false end
 function Frame:GetNumLetters() return #(self.text or "") end
 function Frame:IsForbidden() return false end
 function Frame:IsProtected() return false end
@@ -394,8 +399,20 @@ function H.installAPI(opts)
   env.GetLootSlotInfo = function(i) local s = H.loot[i]; if s then return 134400, "x", s.quantity or 1 end end
   env.GetLootSourceInfo = function(i) local s = H.loot[i]; if s then return unpack(s.sources) end end
 
+  H.itemNames = {}
   env.C_Item = {
-    GetItemInfo = function(id) return "Item " .. id, "|cffffffff|Hitem:" .. id .. "::|h[Item " .. id .. "]|h|r", 1, 1, 1, "", "", 1, "", 134400 end,
+    GetItemInfo = function(id)
+      if type(id) == "string" then
+        local m = id:match("item:(%d+)")
+        if m then id = tonumber(m) else
+          local want = id:lower()
+          for k, v in pairs(H.itemNames or {}) do if v:lower() == want then id = k; break end end
+          if type(id) == "string" then return nil end
+        end
+      end
+      local name = (H.itemNames and H.itemNames[id]) or ("Item " .. id)
+      return name, "|cffffffff|Hitem:" .. id .. "::|h[" .. name .. "]|h|r", 1, 1, 1, "", "", 1, "", 134400
+    end,
     GetItemIconByID = function() return 134400 end,
     GetDetailedItemLevelInfo = function() return 20 end,
   }
@@ -449,6 +466,16 @@ function H.installAPI(opts)
     if r and r.item then return "|cffffffff|Hitem:" .. r.item .. "::|h[" .. r.name .. "]|h|r" end
     if r and r.spell then return "|cffffd000|Henchant:" .. r.spell .. "|h[" .. r.name .. "]|h|r" end
   end
+  -- bags + bank: H.bags[bag] = { {id, count}, false, ... }
+  H.bags = {}
+  env.NUM_BAG_SLOTS, env.NUM_BANKBAGSLOTS, env.BANK_CONTAINER = 4, 6, -1
+  env.C_Container = {
+    GetContainerNumSlots = function(bag) return H.bags[bag] and #H.bags[bag] or 0 end,
+    GetContainerItemInfo = function(bag, slot)
+      local s = H.bags[bag] and H.bags[bag][slot]
+      if s then return { itemID = s[1], stackCount = s[2] or 1 } end
+    end,
+  }
   -- chat helpers
   H.chat = {}
   env.ChatFrame_OpenChat = function(text) H.chat[#H.chat + 1] = { open = text } end

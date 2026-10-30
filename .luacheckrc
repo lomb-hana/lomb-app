@@ -22,7 +22,7 @@ read_globals = {
   "CreateFrame", "UIParent", "GameTooltip", "Minimap", "UISpecialFrames", "DEFAULT_CHAT_FRAME",
   "Mixin", "BackdropTemplateMixin", "PlaySound", "SOUNDKIT", "ITEM_QUALITY_COLORS", "RAID_CLASS_COLORS",
   "GetCursorPosition", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
-  "ChatFrame_OpenChat", "ChatEdit_InsertLink", "C_Calendar", "C_Container", "C_DateAndTime",
+  "ChatFrame_OpenChat", "ChatEdit_InsertLink", "hooksecurefunc", "C_Calendar", "C_Container", "C_DateAndTime",
   "GetInventoryItemLink", "GetInventoryItemID", "GetContainerNumSlots", "GetContainerItemInfo", "GetContainerItemLink",
   -- secrets (12.x / Forever)
   "issecretvalue", "canaccessvalue",

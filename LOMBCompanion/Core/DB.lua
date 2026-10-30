@@ -18,6 +18,7 @@ local DEFAULTS = {
     toastPoint = nil,
     recordAttendance = true, -- note who's grouped with the organizer during guild calendar events
     shareAttendance = true,  -- share what we noted (names + snapshot counts per event)
+    shareBankFunds = true,   -- the bank character shares its gold as "guild bank funds" (nobody else's)
     officerRanks = 2,        -- the top N guild ranks can fix attendance (GM = rank 1)
     tooltips = true,         -- add LOMB lines to item tooltips ("Crafters in LOMB: ...")
     showCard = true,         -- bestiary card on target

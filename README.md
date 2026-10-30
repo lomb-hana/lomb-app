@@ -52,8 +52,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Bestiary rares filter](docs/screenshots/20-bestiary-filters.png) | ![Rare alert toast and chat line](docs/screenshots/21-rare-toast.png) |
 | **Events: attendance being recorded, officer view (v0.7)** | **Events: a past event, member view (v0.7)** |
 | ![Event attendance with officer controls](docs/screenshots/22-events-attendance.png) | ![Past event attendance](docs/screenshots/23-events-past-member.png) |
-| **Attendance summary, last 30 days (v0.7)** | |
-| ![Attendance summary](docs/screenshots/24-attendance-summary.png) | |
+| **Attendance summary, last 30 days (v0.7)** | **Bank: the bank character's ledger (v0.8)** |
+| ![Attendance summary](docs/screenshots/24-attendance-summary.png) | ![Bank ledger](docs/screenshots/25-bank-ledger.png) |
+| **Wishlist: needs and offers (v0.8)** | **Item tooltips: bank count and wishlist (v0.8)** |
+| ![Wishlist](docs/screenshots/26-wishlist.png) | ![Item tooltips with bank and wishlist lines](docs/screenshots/27-item-tooltip-bank-wishlist.png) |
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -140,9 +142,14 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 - **Attendance summary:** each member's attendance over the last 30 days. Attendance is kept for 90 days.
 - Two switches in Settings: record attendance, and share what I record.
 
-### v0.8: Bank & Wishlist
-- WoW: Forever doesn't have a guild bank, at least as far as anyone knows. Instead, a **bank-character ledger** shows what the guild's bank character is holding. It's updated whenever someone logs into that character.
-- **Wishlist:** what members need (for example, "need 4 Linen for bags") and what they can give away.
+### v0.8: Bank & Wishlist (built, awaiting in-game test)
+- WoW: Forever doesn't have a guild bank, at least as far as anyone knows. Instead, a **bank-character ledger** shows what the guild's bank character is holding. It's updated whenever someone plays that character: its bags are counted all the time, and its bank whenever the bank window is open.
+- **Which character is the bank:** a character whose name or guild note contains "bank" is picked up automatically. Anyone can tick or untick "This character is the guild bank" in Settings (it's per character). Only the bank character counts and shares anything; on everyone else the ledger is off.
+- **Recent changes:** what went in and out (for example "+20 Linen Cloth, 12m ago"). Moving things between the bags and the bank doesn't count, and the first look at the bank is just a starting point.
+- **Guild bank funds:** the bank character's own gold, and nobody else's. There's a switch to hide it.
+- **Wishlist:** what members need (for example, "need 4 Linen for bags") and what they can give away. Up to 20 entries per character; your own entries drop off after 60 days. Shift-click an item into the box, or type a name or a few words.
+- Clicking a guildmate's wishlist row starts a whisper in your chat box; you still press Enter yourself.
+- **Item tooltips** say how many the guild bank has, and who in the guild wants or offers that item. Bank items that someone wants are flagged in the Bank tab.
 - If a real guild bank shows up later, the addon will read that instead.
 
 ### v0.9: Raid-ready (raids open Dec 9)
@@ -186,6 +193,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.8.0 is built:** the Bank tab (the bank character's items, recent changes and guild bank funds, searchable, with more than one bank alt supported), the guild Wishlist (needs and offers, filters, search, click to whisper), and bank and wishlist lines on item tooltips.
 - **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. (v0.6 Quests & Items waits on ForeverDB.net's answer.)
 - **v0.5.0 is built:** Bestiary filters and sorting, zone completion, sighting counts, catch-up of bestiary records made while you were offline, and rare alerts (pop-up, sound and chat line, with the spot on the map).
 - **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
@@ -211,7 +219,7 @@ In plain English:
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
-**Commands:** `/lomb` (open/close), `/lomb roster | me | bestiary | settings | credits`, `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`. You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb bank`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`. You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
 
 ### For developers
 
@@ -237,6 +245,8 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - Nothing is uploaded to any website or server.
 - Rare alerts share where the spotter was standing (zone plus whole-number map spot) at that moment only. Turn it off with "Tell guildmates when I spot a rare".
 - Event attendance shares only which guildmates were in the organizer's group and how many snapshots they were seen in. No locations or anything else. Turn it off with "Share the event attendance I record".
+- The bank ledger is shared only from the guild's bank character (its items, recent changes and, if the switch is on, its own gold as "guild bank funds"). No one else's bags or gold are read for sharing.
+- The wishlist shares only what you add to it yourself (item, quantity, a short note).
 
 ---
 

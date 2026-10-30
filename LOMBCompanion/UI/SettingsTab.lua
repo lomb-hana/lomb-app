@@ -38,6 +38,15 @@ local OPTIONS = {
   { key = "recordAttendance", label = "Record attendance at guild events",
     tip = "During a guild calendar event, if you're grouped with the organizer, note who's in the group "
       .. "every 5 minutes (after combat). Officers (top 2 ranks) can correct it in the Events tab." },
+  { section = "Guild bank" },
+  { key = "isBankChar", label = "This character is the guild bank",
+    tip = "Per character. The bank character counts its bags and bank and shares the item list (and what went "
+      .. "in or out) with the guild. Ticked automatically if this character's name or guild note says \"bank\".",
+    get = function() return ns.Bank.IsBankChar() end,
+    set = function(v) ns.Bank.SetBankChar(v) end },
+  { key = "shareBankFunds", label = "Show the bank character's gold as guild bank funds",
+    tip = "Only ever the bank character's own gold. Nobody else's gold is read or shared.",
+    after = function() ns.Shared.MarkDirty("bk") end },
   { section = "Bestiary card" },
   { key = "showCard", label = "Show the card when I target a creature",
     after = function(v) if not v and ns.BestiaryCard then ns.BestiaryCard.Hide(true) end end },

@@ -2,9 +2,9 @@
 ## AllowLoadGameType: forever
 ## ExcludeLoadGameType: standard, classic
 ## Title: |cffb873ffLOMB|r Companion
-## Notes: Land of Make Believe guild companion: roster, crafters, personal stats, and a bestiary the guild fills in together.
+## Notes: Land of Make Believe guild companion: roster, crafters, events, bank ledger, wishlist, personal stats, and a bestiary the guild fills in together.
 ## Author: lomb-hana
-## Version: 0.7.0
+## Version: 0.8.0
 ## X-License: MIT
 ## X-Website: https://github.com/lomb-hana/lomb-app
 ## IconTexture: Interface\AddOns\LOMBCompanion\Media\logo
@@ -36,6 +36,8 @@ Modules\News.lua
 Modules\Profiles.lua
 Modules\Rares.lua
 Modules\Events.lua
+Modules\Bank.lua
+Modules\Wishlist.lua
 
 # UI
 UI\Theme.lua
@@ -48,6 +50,7 @@ UI\MeTab.lua
 UI\CraftersTab.lua
 UI\NewsTab.lua
 UI\EventsTab.lua
+UI\BankTab.lua
 UI\BoardTab.lua
 UI\MobPage.lua
 UI\BestiaryTab.lua
