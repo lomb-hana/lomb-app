@@ -1,8 +1,29 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4 and v0.6.3 is 0.8.5**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5 and v0.6.4 is 0.8.6**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.4 (in-game 0.8.6): Ask LOMB, 2026-10-30
+
+Pre-release, untested in game. Still on the v0.6 tag line because it answers from the ForeverDB.net snapshot; the in-game version goes on from 0.8.5.
+
+- **Ask LOMB tab** (between Quests & Items and Events): a question box with an input line, a scrolling history, example buttons ("Try", with "More" for others) and a Clear button. Press Enter to ask; the up and down arrows bring back earlier questions. Your question sits on a violet band; violet answer lines open the page they name (a quest, item, vendor, recipe, dungeon, herb or zone in Quests & Items, the Training page, or the Events or Crafters tab), and example questions ask themselves when clicked. The header always shows "Data from ForeverDB.net · https://foreverdb.net", and so does every answer that used it.
+- **`/lomb ask <question>`** prints the answer in your own chat window. It never sends anything to guild, party, say or any other channel. `/lomb ask` on its own opens the tab.
+- **Questions it answers** (plain words; punctuation, capitals and "please" don't matter, and shift-clicked item or quest links work):
+  - where a quest starts and where it's turned in; what comes after it in its chain (with the storyline position);
+  - who sells an item (your side and your zone first, top 5, with prices); how to make it (profession, skill, reagents, how to learn it); which guildmates can craft it (from shared recipes, online first);
+  - what an item disenchants into, and who in the guild can disenchant (Classic table, labelled);
+  - what drops an item: guild-recorded drops only, plus ForeverDB.net's notable dungeon loot picks;
+  - which gear set an item is in, with bonuses, your pieces and the "hidden in the current client" warning;
+  - where a herb or ore grows and where to level Herbalism, Mining, Skinning or Fishing;
+  - what to train now and at the next level;
+  - a dungeon's level range, minimum level and bosses; a zone's levels and counts; a battleground's levels; where an NPC stands;
+  - quests near your level, for a given level, in your zone or in a named zone (quests you've done are left out, your zone first);
+  - the next guild event from the calendar.
+- **When it can't tell:** it tries the question as a plain name (quest, item, vendor, NPC, herb, dungeon, zone, set), then offers the closest names in the bundle (so "defias brotherhod" still finds the quest), and otherwise says "I don't know that one." with three example questions to click.
+- It's pattern matching and name search over the bundled data, not an AI, and it works offline. Name lookups are built the first time you ask, not at login. The history is kept until you log out or reload (40 questions at most).
+- No new ForeverDB.net data and no new requests (still 685 in total for the snapshot).
 
 ## v0.6.3 (in-game 0.8.5): guides, 2026-10-30
 

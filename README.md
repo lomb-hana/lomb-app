@@ -72,10 +72,12 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Long Battle Bow item page with its disenchant results and guild enchanters](docs/screenshots/37-disenchant.png) | ![Defias Leather set page with set bonuses and pieces equipped, in bags, in bank and missing](docs/screenshots/38-gear-sets.png) |
 | **Zones: a zone's quests, vendors and gathering (v0.6.3)** | **Battlegrounds: basic info (v0.6.3)** |
 | ![Westfall zone page with its quest storylines and vendors](docs/screenshots/39-zones.png) | ![Warsong Gulch page with levels, team size, how to play and the Classic rules label](docs/screenshots/40-battleground.png) |
-| **Rogue poisons (v0.6.3)** | |
-| ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/41-rogue-poisons.png) | |
+| **Rogue poisons (v0.6.3)** | **Ask LOMB: quest turn-ins, chains and quests near your level (v0.6.4)** |
+| ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/41-rogue-poisons.png) | ![Ask LOMB tab answering where to turn in a quest, what comes next and which quests are near your level](docs/screenshots/42-ask-lomb-quests.png) |
+| **Ask LOMB: who sells it, how to make it, what it disenchants into (v0.6.4)** | **Ask LOMB: dungeons, typos, "I don't know" and the next guild event (v0.6.4)** |
+| ![Ask LOMB answering who sells Fine Thread, how to make Heavy Linen Bandage and what Battleforge Boots disenchant into](docs/screenshots/43-ask-lomb-sells-make.png) | ![Ask LOMB answering a dungeon question, a misspelt quest name, an unknown question and the next guild event](docs/screenshots/44-ask-lomb-more.png) |
 
-The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41.
+The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41. Shots 42-44 are the real answers the Ask LOMB tab gives for a level 18 rogue in Westfall (the guild event is sample data).
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -150,7 +152,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**) and the guides release `v0.6.3` (in-game **0.8.5**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**) and the Ask LOMB question box `v0.6.4` (in-game **0.8.6**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -171,6 +173,10 @@ Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0
   - **Gear sets:** the 5 sets up to level 30, with set bonuses, which pieces you have (equipped, in bags, or in your bank the last time you opened it) and where to get the rest (vendor, crafted, dungeon). Missing pieces can be added to the wishlist in one click. ForeverDB.net says these sets are hidden in the current client, so the page says they're unconfirmed.
   - **Zones:** each zone's quest count and level range (worked out from its quests), storylines, vendors and gathering (ForeverDB.net's dungeon list doesn't say which zone a dungeon is in). Battleground pages show levels, team size, how to win and how to play; the rules are Classic's and labelled.
   - **Rogue poisons:** under Training for rogues: the Poisons quest, the poisons up to level 30 with reagents, skill and cost, and suppliers and trainers seen in WoW: Forever.
+- **Ask LOMB (v0.6.4, in-game 0.8.6):** a question box in its own tab. Type a question in plain words and press Enter; the answer appears in a scrolling history, and violet lines open the matching page in Quests & Items (or ask a follow-up). It works entirely offline: answers come from the bundled ForeverDB.net snapshot and what the guild shares through the addon. It's a set of question patterns plus name search, not an AI, and it never says anything in chat. `/lomb ask <question>` prints the answer in your chat window, where only you see it.
+  - **It understands:** where a quest starts and is turned in, what comes next in a chain, who sells an item, how to make it, which guildmates can craft it, what it disenchants into, what drops it (guild-recorded only), which set it's in, where a herb or ore grows and where to level a gathering skill, what to train, a dungeon's level and bosses, a zone or battleground, where an NPC stands, quests near your level, for a level or in a zone, and the next guild event. Shift-clicked item links work too.
+  - **Examples:** "Where do I turn in The Defias Brotherhood?", "Who sells Fine Thread?", "How do I make Heavy Linen Bandage?", "What does Battleforge Boots disenchant into?", "Where can I find Briarthorn?", "Deadmines level and bosses", "Quests near my level", "What comes after Red Leather Bandanas?", "When is the next guild event?". The tab has buttons for these.
+  - **When it isn't sure,** it names the closest matches (so typos still work), and otherwise says "I don't know that one" with example questions to click. Answers that use ForeverDB.net data end with "Data from ForeverDB.net · https://foreverdb.net", and Classic-sourced facts keep their "(Classic data, may differ)" label. The history lasts until you log out or reload.
 
 ### v0.7: Events & Attendance (built, awaiting in-game test)
 - **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
@@ -232,6 +238,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.4 (in-game 0.8.6):** the Ask LOMB tab, an offline question box over the bundled ForeverDB.net data and the guild's shared data, and `/lomb ask <question>` (only you see the answer).
 - **v0.6.3 (in-game 0.8.5):** Training, Gathering, Zones (with battlegrounds) and Sets views, rogue poisons, disenchant info on item pages and tooltips, a level-up trainer reminder and `/lomb train`.
 - **v0.6.2 (in-game 0.8.4):** storylines are drop-down headers with level range and progress, and quests show done / in log / turn in where the game allows (plus turn-ins the addon sees itself).
 - **v0.6.1 (in-game 0.8.3):** quest chains are tagged "Part k of n" and grouped in the quest list.
@@ -262,7 +269,7 @@ In plain English:
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
-**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests), `/lomb train` (what's new at your class trainer). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests), `/lomb train` (what's new at your class trainer), `/lomb ask <question>` (ask LOMB; only you see the answer). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
 
 ### For developers
 

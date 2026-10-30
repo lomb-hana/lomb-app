@@ -6,6 +6,7 @@ local HELP = {
   "|cffb873ff/lomb <tab>|r  open a tab: %s",
   "|cffb873ff/lomb card|r  show / hide the bestiary card",
   "|cffb873ff/lomb train|r  what your class trainer has for you",
+  "|cffb873ff/lomb ask <question>|r  ask LOMB (only you see the answer)",
   "|cffb873ff/lomb sync|r  say hello to the guild now",
   "|cffb873ff/lomb status|r  sync status",
   "|cffb873ff/lomb debug|r  toggle debug messages",
@@ -28,6 +29,9 @@ end
 function ns.HandleSlash(msg)
   local cmd = (msg or ""):lower():match("^%s*(%S*)") or ""
   if cmd == "" then ns.UI.Toggle()
+  elseif cmd == "ask" then
+    -- keep the question's case and any shift-clicked links
+    ns.Ask.Slash((msg or ""):match("^%s*%S+%s*(.-)%s*$") or "")
   elseif cmd ~= "" and isTab(cmd) then ns.UI.Open(cmd)
   elseif cmd == "card" then ns.BestiaryCard.Toggle()
   elseif cmd == "sync" then
