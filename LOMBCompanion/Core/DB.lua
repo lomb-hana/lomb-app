@@ -22,6 +22,8 @@ local DEFAULTS = {
     officerRanks = 2,        -- the top N guild ranks can fix attendance (GM = rank 1)
     tooltips = true,         -- add LOMB lines to item tooltips ("Crafters in LOMB: ...")
     fdbTooltips = true,      -- add a ForeverDB.net line (sold by / made by / reagent) to item tooltips
+    deTooltips = true,       -- add "Disenchants into ..." (+ guild enchanters) to disenchantable gear tooltips
+    trainerReminder = true,  -- on level-up, print (to you only) what's new at your class trainer
     showCard = true,         -- bestiary card on target
     cardInCombat = true,     -- keep card up in combat (shows only what the game allows)
     cardLocked = false,
@@ -34,6 +36,7 @@ local DEFAULTS = {
   },
   guilds = {},     -- [guildKey] = { members = {}, peers = {} }
   bestiary = {},   -- [npcId] = mob record (see Modules/Bestiary.lua)
+  trainerCosts = {}, -- [classFile]["Name|rank"] = copper, noted at your class trainer (ForeverDB has no costs)
   seq = 0,
 }
 
@@ -45,6 +48,8 @@ local CHAR_DEFAULTS = {
   played = nil,      -- { total = s, level = s, at = epoch }
   lootLog = {},      -- newest first, capped
   firstLogin = nil,
+  trained = {},      -- [spellID] = true, ranks a class trainer listed as already learned
+  setBank = nil,     -- { i = {[itemID]=true}, t = epoch }: set pieces seen in this character's bank
   questsDone = {},   -- [questID] = epoch, turn-ins this addon saw (fallback for quest tracking)
 }
 

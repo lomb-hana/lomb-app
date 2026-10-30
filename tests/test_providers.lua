@@ -86,7 +86,7 @@ H.test("example module is NOT in the TOC; the real snapshot is", function()
     H.ok(not f:find("example"), "example file in TOC: " .. f)
     if f:find("^Data/ForeverDB/") then data = data + 1 end
   end
-  H.eq(data, 6, "Data/ForeverDB/*.lua in the TOC")
+  H.eq(data, 13, "Data/ForeverDB/*.lua in the TOC")
 end)
 
 H.done()

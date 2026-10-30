@@ -5,6 +5,7 @@ local HELP = {
   "|cffb873ff/lomb|r  open / close the window",
   "|cffb873ff/lomb <tab>|r  open a tab: %s",
   "|cffb873ff/lomb card|r  show / hide the bestiary card",
+  "|cffb873ff/lomb train|r  what your class trainer has for you",
   "|cffb873ff/lomb sync|r  say hello to the guild now",
   "|cffb873ff/lomb status|r  sync status",
   "|cffb873ff/lomb debug|r  toggle debug messages",
@@ -37,6 +38,8 @@ function ns.HandleSlash(msg)
   elseif cmd == "questcheck" then
     ns.QuestTrack.ScanLog(); ns.QuestTrack.ScanDone()
     ns.Print(ns.QuestTrack.Report())
+  elseif cmd == "train" then
+    ns.UI.Open("quests"); ns.QuestsTab.ShowTraining()
   elseif cmd == "debug" then
     ns.db.settings.debug = not ns.db.settings.debug
     ns.Print("Debug %s.", ns.db.settings.debug and "on" or "off")

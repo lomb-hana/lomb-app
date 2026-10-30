@@ -83,11 +83,13 @@ H.test("targeting a creature shows the card; loot fills the page", function()
   H.ok(page and page.shown, "standalone page open")
   H.eq(page.page.npcId, 3100)
   H.ok(page.page.used > 5, "page has lines")
-  -- ForeverDB sections stay hidden without the module
-  for i = 1, page.page.used do
-    local t = page.page.lines[i].left.text or ""
-    H.ok(not t:find("ForeverDB"), "no ForeverDB text without module")
-  end
+  -- the only ForeverDB facts for a plain boar are its (Classic) skinning facts, with the credit
+  local text = {}
+  for i = 1, page.page.used do text[#text + 1] = page.page.lines[i].left.text or "" end
+  text = table.concat(text, "\n")
+  H.ok(text:find("Skinning") and text:find("Classic data, may differ", 1, true), "skinning facts, labelled Classic")
+  H.ok(text:find("Data from ForeverDB.net", 1, true), "credit under ForeverDB facts")
+  H.ok(not text:find("Notable loot") and not text:find("Boss of"), "no other ForeverDB sections for a boar")
   noErrors("card")
 end)
 

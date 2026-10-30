@@ -49,6 +49,18 @@ local STATUS = {
 local function modeInfo(key)
   for i, m in ipairs(Tab.MODES) do if m.key == key then return m, i end end
 end
+Tab.ModeInfo = modeInfo
+
+-- More modes (UI/GuidesUI.lua) register here before the tab is built. A mode can bring
+-- its own: items(search, view) -> rows, render(page, key) -> ok, noun, count(items, view) -> text,
+-- filters(p, view) (sets f1/f2/f3 labels), filter(which, button) and onShow(key).
+function Tab.AddMode(def)
+  if modeInfo(def.key) then return end
+  Tab.MODES[#Tab.MODES + 1] = def
+end
+
+-- Extra sections for item pages: fn(page, itemID), called before the credit.
+Tab.ItemExtras = {}
 
 local function playerZone()
   local z = GetRealZoneText and ns.Compat.Call(GetRealZoneText)
@@ -170,6 +182,8 @@ end
 function Tab.Items()
   local FDB = ns.FDB
   local mode, search = view.mode, view.search[view.mode] or ""
+  local m = modeInfo(mode)
+  if m and m.items then return m.items(search, view) end
   local out = {}
   if mode == "quests" then
     local lv = Tab.LEVELS[view.level]
@@ -262,6 +276,8 @@ function Tab.Show(mode, key, fromLink)
     if mode == "quests" or mode == "vendors" then view.zone = false end
     if mode == "quests" then view.level = 2 end
     if mode == "recipes" then view.prof, view.skill = 0, 1 end
+    local m = modeInfo(mode)
+    if m.onShow then m.onShow(key, view) end
   end
   if not fromLink then ns.UI.Open("quests") end
   Tab.Refresh()
@@ -471,6 +487,7 @@ local function renderItem(page, id)
     for _, c in ipairs(crafters) do names[#names + 1] = ns.Compat.ShortName(c) or tostring(c) end
     add(page, { text = table.concat(names, ", "), wrap = true, size = 12, srcs = { "guild" } })
   end
+  for _, fn in ipairs(Tab.ItemExtras) do ns.SafeCall(fn, page, id) end
   if page.used <= 2 then
     add(page, { text = "The bundle has nothing more on this item: no Forever vendor, recipe, quest or dungeon pick.",
       size = 11, color = "muted", wrap = true })
@@ -614,15 +631,25 @@ local function renderDungeon(page, id)
   return true
 end
 
+-- helpers for other files that add modes (UI/GuidesUI.lua)
+Tab.H = {
+  add = add, section = section, credit = credit, link = link, itemIcon = itemIcon, questLine = questLine,
+  cycle = function(cur, n, button) return (cur - 1 + (button == "RightButton" and n - 1 or 1)) % n + 1 end,
+  playerZone = playerZone, playerLevel = playerLevel,
+  MUTED = MUTED, WARN = WARN, GOOD = GOOD, LINK = LINK, CHAIN = CHAIN,
+}
+
 local RENDER = { quests = renderQuest, items = renderItem, vendors = renderVendor, recipes = renderRecipe, dungeons = renderDungeon }
 
 function Tab.Render(page, mode, key)
   page.mode, page.key = mode, key
   page.used, page.y = 0, 0
-  local ok = key ~= nil and ns.FDB.Available() and RENDER[mode](page, key)
+  local m = modeInfo(mode)
+  local fn = RENDER[mode] or (m and m.render)
+  local ok = key ~= nil and ns.FDB.Available() and fn and fn(page, key)
   if not ok then
     for _, l in ipairs(page.lines) do l:Hide() end
-    page.empty:SetText(ns.FDB.Available() and "Pick something on the left."
+    page.empty:SetText(ns.FDB.Available() and (m and m.empty or "Pick something on the left.")
       or "The ForeverDB data files are missing from this install.")
     page.empty:Show()
     page.child:SetHeight(10)
@@ -674,7 +701,12 @@ UI.RegisterTab({
       if b.RegisterForClicks then b:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
       return b
     end
+    local function custom(which, button)
+      local m = modeInfo(view.mode)
+      if m and m.filter then m.filter(which, button, view); UI.Refresh("quests"); return true end
+    end
     p.f1 = filterButton(third, function(_, button)
+      if custom(1, button) then return end
       if view.mode == "recipes" then
         local _, _, n = profAt(1)
         view.prof = cycle(view.prof + 1, n + 1, button) - 1
@@ -685,12 +717,14 @@ UI.RegisterTab({
     end)
     p.f1:SetPoint("TOPLEFT", 6, -34)
     p.f2 = filterButton(third, function(_, button)
+      if custom(2, button) then return end
       if view.mode == "recipes" then view.skill = cycle(view.skill, #Tab.SKILLS, button)
       else view.level = cycle(view.level, #Tab.LEVELS, button) end
       UI.Refresh("quests")
     end)
     p.f2:SetPoint("LEFT", p.f1, "RIGHT", 4, 0)
-    p.f3 = filterButton(third, function()
+    p.f3 = filterButton(third, function(_, button)
+      if custom(3, button) then return end
       view.mine = not view.mine
       UI.Refresh("quests")
     end)
@@ -725,7 +759,7 @@ UI.RegisterTab({
 
     local rerender = ns.Debounce(0.3, function()
       if p:IsVisible() and p.page.key then Tab.Render(p.page, p.page.mode, p.page.key) end
-      if p:IsVisible() and (view.mode == "items" or view.mode == "recipes") then p.list:Refresh() end
+      if p:IsVisible() and (view.mode ~= "quests") then p.list:Refresh() end
     end)
     ns:On("GET_ITEM_INFO_RECEIVED", function() rerender() end)
     ns:Listen("QUESTS_CHANGED", function() if p:IsVisible() and view.mode == "quests" then Tab.Refresh() end end)
@@ -742,7 +776,10 @@ UI.RegisterTab({
     end
     -- filters for this mode
     p.f1:Show(); p.f2:Show(); p.f3:Show()
-    if view.mode == "quests" or view.mode == "vendors" then
+    for _, b in ipairs({ p.f1, p.f2, p.f3 }) do b:SetActive(false) end
+    if m.filters then
+      m.filters(p, view)
+    elseif view.mode == "quests" or view.mode == "vendors" then
       p.f1.label:SetText(view.zone and "This zone" or "All zones")
       p.f1:SetActive(view.zone)
       p.f1.tip = "Only what's in the zone you're in, or everywhere."
@@ -772,9 +809,10 @@ UI.RegisterTab({
 
     local items = FDB.Available() and Tab.Items() or {}
     p.list:SetItems(items)
-    local noun = ({ quests = "quest", items = "item", vendors = "vendor", recipes = "recipe", dungeons = "dungeon" })[view.mode]
+    local noun = m.noun or ({ quests = "quest", items = "item", vendors = "vendor", recipes = "recipe", dungeons = "dungeon" })[view.mode]
     local n = view.mode == "quests" and Tab.count or #items
     local text = ("%d %s%s"):format(n, noun, n == 1 and "" or "s")
+    if m.count then text = m.count(items, view) end
     if view.mode == "vendors" then text = text .. ", seen in WoW Forever" end
     if view.mode == "quests" and (view.zone and playerZone()) then text = text .. " in " .. playerZone() end
     p.count:SetText(text)

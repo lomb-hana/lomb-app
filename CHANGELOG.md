@@ -1,8 +1,29 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3 and v0.6.2 is 0.8.4**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4 and v0.6.3 is 0.8.5**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.3 (in-game 0.8.5): guides, 2026-10-30
+
+Pre-release, untested in game. Release tags stay on the v0.6 line because these are all ForeverDB.net features; the in-game version keeps counting from 0.8.4.
+
+- **Training view** (Quests & Items > Training): pick a class (yours by default) and a level band. **Train now** lists the ranks at or below your level that the game doesn't report as known, with "next at level N" underneath. Each level row lists the ranks it brings. Hunters can switch to pet skills. `/lomb train` opens it.
+  - **Level-up reminder:** when you level, a chat line only you see names the new ranks (and their cost once known), with a pointer to `/lomb train`. Switch: Settings > Training.
+  - **Known ranks** come from the game's spellbook check (`C_SpellBook.IsSpellKnown`, with older functions as guarded fallbacks). If the game won't say, the rank is marked "can't tell". Not tried on live servers yet.
+  - **Trainer costs:** ForeverDB.net has none. When you open your class trainer, the addon notes the costs and which ranks you already have, and shows them from then on.
+- **Rogue poisons** (under Training for rogues): the Poisons quest for each faction, the poisons up to level 30 with reagents, skill and cost, and suppliers and trainers seen in WoW: Forever.
+- **Gathering view:** Herbalism, Mining, Skinning and Fishing, filtered by profession and by your skill.
+  - Herb and ore nodes show the skill needed, what they give and the zones they grow in (by spawn count).
+  - **Where to level** shows the best zones for each skill band, with your band highlighted.
+  - Skinning lists beasts by zone with the skill they need; bestiary mob pages show it too. Fishing shows each zone's skill and catches.
+  - Spawn spots, skinning and fishing come from Classic data and are labelled "(Classic data, may differ)".
+- **Disenchanting:** item pages for uncommon, rare and epic weapons and armour show what they disenchant into, and material pages show what disenchants into them. Guild enchanters are listed (you, guildmates whose profile shows Enchanting, and shared recipe lists), with online ones in green. There's an optional tooltip line, switched on in Settings. The table is Classic data and labelled.
+- **Gear sets view:** the 5 item sets up to level 30, with bonuses, pieces you have (equipped, in bags, or in your bank when you last opened it) and where the rest come from. Missing pieces can be added to your wishlist. ForeverDB.net says all 5 are hidden in the current client, so each page says they're unconfirmed in WoW: Forever.
+- **Zones view:** every zone with its level range and faction (worked out from its quests, since ForeverDB.net lists neither), quest count and storylines, vendors and gathering. ForeverDB.net's dungeon list has no zones, so dungeons aren't on zone pages. **Battlegrounds** are in the same view: levels, team size, how to win and how to play. The rules are Classic's and labelled.
+- **Links between views:** item pages show "Part of a set", "Gathered from" and the guild-recorded drops. Mob pages show skinning. Zones link to quests, vendors and nodes.
+- New data in `LOMBCompanion/Data/ForeverDB/` (about 116 KB more, 1.1 MB in total): classes, gathering, disenchanting, item sets, poisons, zones and battlegrounds. 685 ForeverDB.net requests in total for this snapshot, one at a time and cached.
+- Mob loot stays guild-recorded only. Vendors and trainers never seen in WoW: Forever are still left out.
 
 ## v0.6.2 (in-game 0.8.4): storyline drop-downs and quest progress, 2026-10-30
 

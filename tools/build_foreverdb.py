@@ -123,6 +123,239 @@ def coord(v):
     return round(v, 1) if isinstance(v, (int, float)) else None
 
 
+GEAR_SKIP = ("Shirt", "Tabard", "Non-equippable", None)
+FACTION_CITY = {"Stormwind": "A", "Ironforge": "A", "Darnassus": "A", "Exodar": "A",
+                "Orgrimmar": "H", "Undercity": "H", "Thunder Bluff": "H", "Silvermoon": "H"}
+
+
+def rank_no(s):
+    m = re.search(r"(\d+)", s or "")
+    return int(m.group(1)) if m else 0
+
+
+def spell_side(name):
+    m = re.match(r"^(?:Teleport|Portal): (.+)$", name or "")
+    return FACTION_CITY.get(m.group(1).strip()) if m else None
+
+
+def build_features(item):
+    """The 0.8.5 feature tables, from the cache only. Returns a dict of tables plus counts."""
+    out = {"classes": {}, "gathering": {}, "disenchant": {}, "itemsets": {}, "poisons": {},
+           "battlegrounds": {}, "zones": {}, "setItems": [], "counts": {}}
+    counts = out["counts"]
+
+    # -- classes: trainer- and quest-learned ranks up to the level cap (no costs in the data)
+    nranks = 0
+    for c in C("classes")["data"]:
+        det = get("classes/" + c["name"].lower(), cache_only=True)
+        if not det:
+            continue
+        ab = []
+        for a in det["data"].get("abilities") or []:
+            if a.get("learned") not in ("trainer", "quest"):
+                continue
+            rk = [[r.get("spellId"), rank_no(r.get("rank")), r.get("level")] for r in a.get("ranks") or []
+                  if isinstance(r.get("level"), int) and 0 < r["level"] <= MAX_LEVEL and r.get("spellId")]
+            if not rk:
+                continue
+            nranks += len(rk)
+            pet = a.get("line") == "Beast Training" and a["name"] != "Beast Training"
+            ab.append({"n": a["name"], "ln": a.get("line") or None, "q": 1 if a["learned"] == "quest" else None,
+                       "pet": 1 if pet else None, "new": 1 if a.get("newInForever") else None,
+                       "s": spell_side(a["name"]), "r": rk})
+        ab.sort(key=lambda x: (x["r"][0][2], x["n"]))
+        out["classes"][c["name"].upper()] = {"n": c["name"], "a": ab}
+    counts["classRanks"] = nranks
+
+    # -- gathering
+    g = out["gathering"]
+    bad_items = []
+    for slug in ("herbalism", "mining"):
+        d = C("gathering/" + slug)["data"]
+        nodes, names = [], set()
+        for n in d.get("nodes") or []:
+            sk = n.get("skill")
+            if not isinstance(sk, int) or sk > MAX_SKILL:
+                continue
+            it = n.get("item") or {}
+            iid = it.get("itemId")
+            first = n["name"].split()[0].lower()
+            if iid and first not in (it.get("name") or "").lower():
+                bad_items.append("%s -> %s" % (n["name"], it.get("name")))
+                iid = None   # ForeverDB pairs some nodes with the wrong item; leave it out
+            if iid:
+                item(iid, it.get("name"))
+            also = []
+            for x in n.get("alsoGives") or []:
+                xid = x.get("itemId") if isinstance(x, dict) else x
+                if xid:
+                    item(xid, x.get("name") if isinstance(x, dict) else None)
+                    also.append(xid)
+            names.add(n["name"])
+            nodes.append({"n": n["name"], "sk": sk, "it": iid, "also": also or None, "sp": n.get("spawnPoints"),
+                          "fv": n.get("spotsSeenInForever") or None, "new": 1 if n.get("newInForever") else None,
+                          "tz": [[z["name"], z.get("spawnPoints")] for z in (n.get("topZones") or [])[:6]] or None})
+        nodes.sort(key=lambda x: (x["sk"], x["n"]))
+        zones = {}
+        for z in d.get("zones") or []:
+            nd = [[x["name"], x.get("skill"), x.get("spawnPoints")] for x in z.get("nodes") or []
+                  if x["name"] in names]
+            if nd:
+                zones[z["name"]] = {"id": z.get("mapId"), "sp": z.get("spawnPoints"),
+                                    "fv": z.get("spotsSeenInForever") or None, "nd": nd}
+        best = [[b.get("fromSkill"), b.get("toSkill"), [z["name"] for z in b.get("zones") or []]]
+                for b in d.get("bestZones") or [] if (b.get("fromSkill") or 0) < MAX_SKILL]
+        g[slug] = {"n": d.get("profession") or slug.title(), "note": d.get("note"), "nodes": nodes,
+                   "zones": zones, "best": best or None}
+        counts[slug] = len(nodes)
+    counts["badNodeItems"] = bad_items
+
+    sk = C("gathering/skinning")["data"]
+    zones, nb = {}, 0
+    for z in sk.get("zones") or []:
+        lv = z.get("levels") or {}
+        if (lv.get("min") or 0) > MAX_LEVEL or not z.get("mapId"):
+            continue
+        det = get("gathering/skinning", {"zone": z["mapId"]}, cache_only=True)
+        beasts = []
+        if det and (det["data"].get("zones") or []):
+            for b in det["data"]["zones"][0].get("beasts") or []:
+                if (b.get("minLevel") or 0) > MAX_LEVEL + 2:
+                    continue
+                gives = []
+                for x in b.get("gives") or []:
+                    if x.get("itemId"):
+                        item(x["itemId"], x.get("name"))
+                        gives.append(x["itemId"])
+                beasts.append({"id": b.get("npcId"), "n": b.get("name"), "lo": b.get("minLevel"), "hi": b.get("maxLevel"),
+                               "sk": b.get("skill"), "el": 1 if b.get("elite") else None, "sp": b.get("spawns"),
+                               "g": gives or None, "fv": 1 if b.get("seenInForever") else None,
+                               "sf": b.get("skinnedInForever") or None})
+            beasts.sort(key=lambda x: (x["lo"] or 0, x["n"] or ""))
+        nb += len(beasts)
+        skr = z.get("skill") or {}
+        zones[z["name"]] = {"id": z["mapId"], "lv": [lv.get("min"), lv.get("max")], "sk": [skr.get("min"), skr.get("max")],
+                            "sp": z.get("spawns"), "b": beasts or None}
+    best = [[b.get("fromSkill"), b.get("toSkill"), [x["name"] for x in b.get("zones") or []]]
+            for b in sk.get("bestZones") or [] if (b.get("fromSkill") or 0) < MAX_SKILL]
+    g["skinning"] = {"n": "Skinning", "note": sk.get("note"), "zones": zones, "best": best or None}
+    counts["skinningZones"], counts["beasts"] = len(zones), nb
+
+    fi = C("gathering/fishing")["data"]
+    fz = {}
+    for z in fi.get("zones") or []:
+        s = z.get("skill")
+        if not isinstance(s, int) or s > MAX_SKILL:
+            continue
+        loot = []
+        for x in (z.get("loot") or [])[:8]:
+            if x.get("itemId"):
+                item(x["itemId"], x.get("name"))
+                loot.append([x["itemId"], x.get("chance")])
+        fz[z["name"]] = {"id": z.get("mapId"), "sk": max(s, 0), "ne": z.get("noEscapeSkill"), "l": loot or None,
+                         "po": z.get("pools") or None, "cf": len(z.get("caughtInForever") or []) or None}
+    g["fishing"] = {"n": "Fishing", "note": fi.get("note"), "zones": fz}
+    counts["fishingZones"] = len(fz)
+
+    # -- disenchanting (all Classic data)
+    for i, r in enumerate(C("disenchant")["data"]):
+        res = []
+        for x in ((r.get("classic") or {}).get("results")) or []:
+            item(x.get("itemId"), x.get("name"))
+            res.append([x.get("itemId"), x.get("chancePercent"), x.get("min"), x.get("max")])
+        out["disenchant"][i + 1] = {"q": r.get("qualityId"), "k": 1 if r.get("kind") == "weapon" else 2,
+                                    "lo": r.get("itemLevelMin"), "hi": r.get("itemLevelMax"), "r": res,
+                                    "fv": 1 if r.get("seenInForever") else None}
+    counts["disenchantRows"] = len(out["disenchant"])
+
+    # -- item sets (the ones whose details were pulled: pieces a level-30 can use)
+    off = 0
+    while True:
+        r = get("itemsets", {"limit": 100, "offset": off}, cache_only=True)
+        if not r:
+            break
+        for s in r["data"]:
+            det = get("itemsets/%d" % s["id"], cache_only=True)
+            if not det:
+                continue
+            d = det["data"]
+            hidden = False
+            for iid in d.get("items") or []:
+                it = get("items/%d" % iid, cache_only=True)
+                if it and it["data"].get("dataNote"):
+                    hidden = True
+                out["setItems"].append(iid)
+            out["itemsets"][d["id"]] = {"n": d["name"], "i": d.get("items") or [],
+                                        "b": [[b.get("pieces"), b.get("text")] for b in d.get("bonuses") or []] or None,
+                                        "nc": 1 if hidden else None}
+        if (r.get("meta") or {}).get("next") is None:
+            break
+        off += 100
+    counts["itemsets"] = len(out["itemsets"])
+
+    # -- rogue poisons
+    p = C("poisons")["data"]
+    sk = p.get("skill") or {}
+    plist, more = [], 0
+    for x in p.get("poisons") or []:
+        if (x.get("learnAtLevel") or 99) > MAX_LEVEL or x.get("seasonOfDiscoveryLeftover"):
+            more += 1
+            continue
+        mk = x.get("makes") or {}
+        item(mk.get("itemId"), mk.get("name"))
+        rg = []
+        for r in x.get("reagents") or []:
+            item(r.get("itemId"), r.get("name"))
+            rg += [r.get("itemId"), r.get("count") or 1]
+        cost = x.get("trainerCost") if not is_classic(x.get("trainerCostSource")) else None
+        plist.append({"n": x["name"], "sp": x.get("spellId"), "lv": x.get("learnAtLevel"), "sk": x.get("skillYellow"),
+                      "mk": mk.get("itemId"), "mc": mk.get("count"), "rg": rg or None, "tc": cost,
+                      "ws": 1 if x.get("learnedWithSkill") else None})
+    plist.sort(key=lambda x: (x["lv"], x["n"]))
+    trainers = [{"id": t["npcId"], "n": t["name"], "s": side(t.get("faction")), "z": t.get("zone"),
+                 "x": coord(t.get("x")), "y": coord(t.get("y"))}
+                for t in p.get("rogueTrainers") or [] if t.get("seenInForever")]
+    sup = []
+    for s in p.get("suppliers") or []:
+        if not s.get("seenInForever"):
+            continue
+        sells = []
+        for x in s.get("sells") or []:
+            item(x.get("itemId"), x.get("name"))
+            sells += [x.get("itemId"), x.get("price") or 0, x.get("stack") or 1]
+        sup.append({"id": s["npcId"], "n": s["name"], "t": s.get("title"), "s": side(s.get("faction")),
+                    "z": s.get("zone"), "x": coord(s.get("x")), "y": coord(s.get("y")), "i": sells or None})
+    out["poisons"] = {
+        "skill": {"lv": sk.get("learnAtLevel"), "sp": sk.get("spellId"),
+                  "q": [[q.get("questId"), q.get("name"), side(q.get("faction"))] for q in sk.get("quests") or []]},
+        "list": plist, "more": more, "trainers": trainers, "suppliers": sup, "url": p.get("url")}
+    counts["poisons"], counts["poisonTrainers"], counts["poisonSuppliers"] = len(plist), len(trainers), len(sup)
+
+    # -- battlegrounds
+    for b in C("battlegrounds")["data"]:
+        out["battlegrounds"][b["id"]] = {
+            "n": b["name"], "lo": b.get("minLevel"), "hi": b.get("maxLevel"), "ts": b.get("teamSize"),
+            "k": b.get("kind"), "win": b.get("winCondition"), "cs": b.get("captureSeconds"),
+            "how": b.get("howToPlay") or None, "ob": [o.get("name") for o in b.get("objectives") or []] or None,
+            "rs": b.get("rulesSource"), "rn": b.get("rulesNote"), "new": 1 if b.get("newInForever") else None,
+            "ar": 1 if b.get("arena") else None, "ui": b.get("uiMapId"), "d": b.get("description"),
+            "slug": b.get("slug")}
+    counts["battlegrounds"] = len(out["battlegrounds"])
+
+    # -- zones (names and continents only; one entry per name)
+    zl = C(("zones", {"limit": 100, "offset": 0}))["data"]
+    names = {z["id"]: z["name"] for z in zl}
+    seen = set()
+    for z in sorted(zl, key=lambda z: z["id"]):
+        if z.get("type") not in (3, 6) or z["name"] in seen:
+            continue
+        seen.add(z["name"])
+        out["zones"][z["id"]] = {"n": z["name"], "c": names.get(z.get("parentId")) if z.get("type") == 3 else None,
+                                 "new": 1 if z.get("newInForever") else None, "bg": 1 if z.get("type") == 6 else None}
+    counts["zones"] = len(out["zones"])
+    return out
+
+
 # ---------------------------------------------------------------- build
 def main():
     os.makedirs(OUT, exist_ok=True)
@@ -276,6 +509,9 @@ def main():
                              "new": 1 if det.get("newInForever") else None,
                              "b": det.get("bosses") or None, "lo": loot or None}
 
+    # ---- features data (addon 0.8.5): classes, gathering, disenchanting, sets, poisons, battlegrounds, zones
+    feats = build_features(item)
+
     # ---- item details (quality, required level, slot) from the items list (required level <= 30).
     # Only for items the files above mention -- the full list is far too big to bundle.
     meta_by_id = {}
@@ -291,6 +527,20 @@ def main():
         if not r.get("data") or (r.get("meta") or {}).get("next") is None:
             break
         off += 100
+    # Uncommon-to-epic weapons and armour a level-30 can wear: bundled so the disenchant helper
+    # and item search cover them (name, quality, level, slot, item level, kind).
+    for it in meta_by_id.values():
+        q = it.get("qualityId") or 0
+        if (it.get("class") in ("Weapon", "Armor") and 2 <= q <= 4 and not it.get("speculation")
+                and not it.get("betaEvent") and it.get("inventoryType") not in GEAR_SKIP):
+            item(it["id"], it.get("name"), q)
+    # set pieces the list leaves out (the current client hides them): their own detail pages
+    for iid in feats["setItems"]:
+        if iid not in meta_by_id:
+            d = (get("items/%d" % iid, cache_only=True) or {}).get("data")
+            if d:
+                meta_by_id[iid] = d
+                item(iid, d.get("name"), d.get("qualityId"))
     for iid, e in items.items():
         it = meta_by_id.get(iid)
         if not it:
@@ -305,6 +555,8 @@ def main():
         else:
             slot = sub if sub and sub not in ("Other", "Junk") else cls
         e[:] = (e + [None, None])[:2] + [it.get("requiredLevel") or 0, slot or None]
+        if cls in ("Weapon", "Armor") and (e[1] or 0) >= 2 and inv not in GEAR_SKIP and it.get("itemLevel"):
+            e += [it["itemLevel"], 1 if cls == "Weapon" else 2]
     for iid in [k for k, e in items.items() if not e[0]]:
         del items[iid]   # nothing to show without a name
     for e in items.values():
@@ -318,7 +570,8 @@ def main():
         f.write(HEADER.format(date=SNAPSHOT, build=build))
         f.write("-- Snapshot info; the other files in this folder fill in ns.FDBData.\n")
         f.write("local _, ns = ...\n")
-        f.write("ns.FDBData = { snapshot = %s, build = %s, quests = {}, vendors = {}, professions = {}, dungeons = {}, items = {} }\n"
+        f.write("ns.FDBData = { snapshot = %s, build = %s, quests = {}, vendors = {}, professions = {}, dungeons = {}, items = {},"
+                " classes = {}, gathering = {}, disenchant = {}, itemsets = {}, poisons = {}, battlegrounds = {}, zones = {} }\n"
                 % (lua(SNAPSHOT), lua(build)))
     sizes["Core.lua"] = os.path.getsize(os.path.join(OUT, "Core.lua"))
 
@@ -342,11 +595,31 @@ def main():
                                   "Dungeons: [id] = { n, k=kind, p=players, lv, lr={min,max}, st=status, b=bosses, "
                                   "lo={{itemID, why}} notable loot (not drop tables) }")
     sizes["Items.lua"] = write("Items.lua", build, body("items", {k: v for k, v in items.items() if k}),
-                               "Items the other files mention: [itemID] = { name, quality, required level, slot/type }")
+                               "Items the other files mention, plus uncommon+ gear up to level %d: [itemID] = "
+                               "{ name, quality, required level, slot/type, item level, kind 1 weapon / 2 armour }" % MAX_LEVEL)
+    sizes["Classes.lua"] = write("Classes.lua", build, body("classes", feats["classes"]),
+                                 "Class abilities up to level %d: [CLASS] = { n, a={ {n, ln=line, q=1 quest-learned, "
+                                 "pet=1 pet skill, new=1, r={{spellID, rank, level},...}} } } (no trainer costs in the data)" % MAX_LEVEL)
+    sizes["Gathering.lua"] = write("Gathering.lua", build, body("gathering", feats["gathering"]),
+                                   "Herbalism, mining, skinning, fishing up to skill %d. Skills from the Forever client where "
+                                   "ForeverDB has them; spawn spots, beasts and fish are Classic data." % MAX_SKILL)
+    sizes["Disenchant.lua"] = write("Disenchant.lua", build, body("disenchant", feats["disenchant"]),
+                                    "Disenchant results by quality, kind and item level (Classic data, not confirmed in Forever): "
+                                    "{ q, k=1 weapon/2 armour, lo, hi, r={{itemID, chance%, min, max}} }")
+    sizes["ItemSets.lua"] = write("ItemSets.lua", build, body("itemsets", feats["itemsets"]),
+                                  "Item sets with pieces up to level %d: [setID] = { n, i={itemIDs}, b={{pieces, text}}, "
+                                  "nc=1 when the current client still hides its pieces }" % MAX_LEVEL)
+    sizes["Poisons.lua"] = write("Poisons.lua", build, body("poisons", feats["poisons"]),
+                                 "Rogue poisons up to level %d, the Poisons quests, and trainers/suppliers seen in Forever" % MAX_LEVEL)
+    sizes["Battlegrounds.lua"] = write("Battlegrounds.lua", build, body("battlegrounds", feats["battlegrounds"]),
+                                       "Battlegrounds: [id] = { n, lo, hi, ts=team size, k=kind, win, how={...}, ob={...}, "
+                                       "rs=rules source, rn=rules note, new, ar=1 arena, ui=uiMapId }")
+    sizes["Zones.lua"] = write("Zones.lua", build, body("zones", feats["zones"]),
+                               "Zones: [uiMapId] = { n, c=continent, new=1, bg=1 } (ForeverDB has no zone levels or factions)")
     total = sum(sizes.values())
     print(json.dumps({"quests": len(quests), "vendors": len(vendors),
                       "recipes": sum(len(p["r"]) for p in profs.values()), "professions": len(profs),
-                      "dungeons": len(dungeons), "items": len(items), "bytes": sizes, "total_kb": round(total / 1024, 1)},
+                      "dungeons": len(dungeons), "items": len(items), "features": feats["counts"], "bytes": sizes, "total_kb": round(total / 1024, 1)},
                      indent=1))
 
 

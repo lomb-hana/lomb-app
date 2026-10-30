@@ -320,7 +320,14 @@ function H.installAPI(opts)
   env.GetZoneText = function() return H.state.zone end
   env.GetMoney = function() return H.state.money end
   env.UnitLevel = function(u) if u == "player" then return H.state.level end local d = H.units[u]; return d and d.level end
-  env.UnitClass = function(u) if u == "player" then return "Hunter", "HUNTER", 3 end end
+  local CLASS = { HUNTER = { "Hunter", 3 }, ROGUE = { "Rogue", 4 }, MAGE = { "Mage", 8 }, WARRIOR = { "Warrior", 1 },
+    PALADIN = { "Paladin", 2 }, PRIEST = { "Priest", 5 }, SHAMAN = { "Shaman", 7 }, WARLOCK = { "Warlock", 9 }, DRUID = { "Druid", 11 } }
+  env.UnitClass = function(u)
+    if u ~= "player" then return end
+    local cf = H.state.class or "HUNTER"
+    local c = CLASS[cf] or { cf, 0 }
+    return c[1], cf, c[2]
+  end
   env.UnitRace = function() return "Night Elf" end
   env.UnitFactionGroup = function(u) if u == "player" then return H.state.faction, H.state.faction end end
   env.UnitXP = function() return 1200 end
@@ -378,6 +385,8 @@ function H.installAPI(opts)
   env.C_GuildInfo = { GuildRoster = function() H.state.rosterRequests = (H.state.rosterRequests or 0) + 1 end }
 
   -- addon messages
+  H.said = {}   -- SendChatMessage (the addon must never use it)
+  env.SendChatMessage = function(msg, channel, _, target) H.said[#H.said + 1] = { msg = msg, channel = channel, target = target } end
   H.sent = {}
   env.C_ChatInfo = {
     RegisterAddonMessagePrefix = function(p) H.state.prefix = p; return true end,

@@ -2,9 +2,9 @@
 ## AllowLoadGameType: forever
 ## ExcludeLoadGameType: standard, classic
 ## Title: |cffb873ffLOMB|r Companion
-## Notes: Land of Make Believe guild companion: roster, crafters, events, bank ledger, wishlist, personal stats, quests & items (ForeverDB.net data), and a bestiary the guild fills in together.
+## Notes: Land of Make Believe guild companion: roster, crafters, events, bank ledger, wishlist, personal stats, quests & items, training, gathering, disenchanting, gear sets and zones (ForeverDB.net data), and a bestiary the guild fills in together.
 ## Author: lomb-hana
-## Version: 0.8.4
+## Version: 0.8.5
 ## X-License: MIT
 ## X-Website: https://github.com/lomb-hana/lomb-app
 ## IconTexture: Interface\AddOns\LOMBCompanion\Media\logo
@@ -31,6 +31,13 @@ Data\ForeverDB\Quests.lua
 Data\ForeverDB\Vendors.lua
 Data\ForeverDB\Recipes.lua
 Data\ForeverDB\Dungeons.lua
+Data\ForeverDB\Classes.lua
+Data\ForeverDB\Gathering.lua
+Data\ForeverDB\Disenchant.lua
+Data\ForeverDB\ItemSets.lua
+Data\ForeverDB\Poisons.lua
+Data\ForeverDB\Battlegrounds.lua
+Data\ForeverDB\Zones.lua
 
 # Recording + sync
 Modules\Me.lua
@@ -47,6 +54,7 @@ Modules\Bank.lua
 Modules\Wishlist.lua
 Modules\QuestDB.lua
 Modules\QuestTrack.lua
+Modules\Guides.lua
 
 # UI
 UI\Theme.lua
@@ -65,6 +73,7 @@ UI\BoardTab.lua
 UI\MobPage.lua
 UI\BestiaryTab.lua
 UI\QuestsTab.lua
+UI\GuidesUI.lua
 UI\BestiaryCard.lua
 UI\RareToast.lua
 UI\SettingsTab.lua

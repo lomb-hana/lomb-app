@@ -66,8 +66,16 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Credits tab with the ForeverDB.net credit](docs/screenshots/32-credits-foreverdb.png) | ![Quest list with chains grouped and tagged Part 1 of 4 and so on](docs/screenshots/33-quest-chains.png) |
 | **Storyline drop-downs with quest progress (v0.6.2)** | |
 | ![Quest list with closed storyline headers showing level range and progress, and one open storyline with done, turn in and in log tags](docs/screenshots/34-quest-storylines.png) | |
+| **Training: what's new at your class trainer (v0.6.3)** | **Gathering: a herb node against your skill (v0.6.3)** |
+| ![Training view with Train now: four rogue ranks to learn and what comes at level 24](docs/screenshots/35-training.png) | ![Gathering view for Herbalism at skill 85 showing Briarthorn, what it gives and where it grows](docs/screenshots/36-gathering.png) |
+| **Item page: what it disenchants into and guild enchanters (v0.6.3)** | **Gear sets: pieces you have and where the rest come from (v0.6.3)** |
+| ![Long Battle Bow item page with its disenchant results and guild enchanters](docs/screenshots/37-disenchant.png) | ![Defias Leather set page with set bonuses and pieces equipped, in bags, in bank and missing](docs/screenshots/38-gear-sets.png) |
+| **Zones: a zone's quests, vendors and gathering (v0.6.3)** | **Battlegrounds: basic info (v0.6.3)** |
+| ![Westfall zone page with its quest storylines and vendors](docs/screenshots/39-zones.png) | ![Warsong Gulch page with levels, team size, how to play and the Classic rules label](docs/screenshots/40-battleground.png) |
+| **Rogue poisons (v0.6.3)** | |
+| ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/41-rogue-poisons.png) | |
 
-The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data.
+The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41.
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -142,7 +150,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**) and the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**) and the guides release `v0.6.3` (in-game **0.8.5**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -156,6 +164,13 @@ Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0
 - **Crafters links:** recipe info (skill, reagents, where to learn it) on crafter results, linking into the Recipes view.
 - **Item tooltips:** one optional line from the snapshot (who sells it, what makes it, what it's a reagent for). There's a switch in Settings.
 - **Not included:** quest rewards (ForeverDB.net doesn't have them yet, so the page says to check the quest window in game) and mob loot tables (those stay guild-recorded only).
+- **Guides (v0.6.3, in-game 0.8.5):** four more views in the Quests & Items tab, plus extra sections on item and mob pages. Everything links to everything else (a zone opens its quests, a herb opens its zones, a set piece opens its item page, and so on).
+  - **Training:** pick a class (yours by default) and see what each level brings, with a **Train now** page for ranks at or below your level. "Known" comes from the game's spellbook check, and the class trainer window marks what you already have. Costs show once you've opened your class trainer, because ForeverDB.net has no trainer costs. Optional chat reminder on level-up, only you see it (Settings > Training). `/lomb train` opens it. Hunters also get pet skills.
+  - **Gathering:** Herbalism, Mining, Skinning and Fishing. Each node shows the skill it needs, what it gives and where it grows. The **Where to level** page shows the best zones by skill band, with yours highlighted. Filter by "My skill". Skinning lists beasts by zone and skill; mob pages in the bestiary show the skill a beast needs. Spawn spots, skinning and fishing are Classic data and labelled.
+  - **Disenchanting:** item pages show what an uncommon, rare or epic weapon or armour piece disenchants into, and which items disenchant into a material. There's also an optional tooltip line (Settings). Guild enchanters (you, plus guildmates whose profile shows Enchanting) are listed, with online ones in green. The disenchant table is Classic data and labelled.
+  - **Gear sets:** the 5 sets up to level 30, with set bonuses, which pieces you have (equipped, in bags, or in your bank the last time you opened it) and where to get the rest (vendor, crafted, dungeon). Missing pieces can be added to the wishlist in one click. ForeverDB.net says these sets are hidden in the current client, so the page says they're unconfirmed.
+  - **Zones:** each zone's quest count and level range (worked out from its quests), storylines, vendors and gathering (ForeverDB.net's dungeon list doesn't say which zone a dungeon is in). Battleground pages show levels, team size, how to win and how to play; the rules are Classic's and labelled.
+  - **Rogue poisons:** under Training for rogues: the Poisons quest, the poisons up to level 30 with reagents, skill and cost, and suppliers and trainers seen in WoW: Forever.
 
 ### v0.7: Events & Attendance (built, awaiting in-game test)
 - **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
@@ -217,6 +232,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.3 (in-game 0.8.5):** Training, Gathering, Zones (with battlegrounds) and Sets views, rogue poisons, disenchant info on item pages and tooltips, a level-up trainer reminder and `/lomb train`.
 - **v0.6.2 (in-game 0.8.4):** storylines are drop-down headers with level range and progress, and quests show done / in log / turn in where the game allows (plus turn-ins the addon sees itself).
 - **v0.6.1 (in-game 0.8.3):** quest chains are tagged "Part k of n" and grouped in the quest list.
 - **v0.6.0 (in-game 0.8.2) is built:** the Quests & Items tab (quests, items, vendors, recipes and dungeons for levels 1–30 from a bundled ForeverDB.net snapshot), quest and boss lines in the bestiary, recipe info in Crafters, an optional ForeverDB.net tooltip line, and the ForeverDB.net credit and support line in Credits.
@@ -246,7 +262,7 @@ In plain English:
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
-**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests), `/lomb train` (what's new at your class trainer). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
 
 ### For developers
 
@@ -262,8 +278,8 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - **Game data:** World of Warcraft and WoW: Forever game data belong to **Blizzard Entertainment**. LOMB Companion is a fan-made guild addon and is **not affiliated with or endorsed by Blizzard Entertainment**.
 - **ForeverDB.net (approved):** quest, item, vendor, profession and dungeon data comes from the [ForeverDB.net](https://foreverdb.net) developer API, used with ForeverDB.net's approval for this guild addon. How we use it:
   - **Credit everywhere:** every tab, card and tooltip that shows their data says **"Data from ForeverDB.net"** with the link [https://foreverdb.net](https://foreverdb.net), and the Credits tab says so too. (Addons can't open web links in game, so clicking the credit copies the link.)
-  - **Bundled snapshot:** addons can't go online, so we fetch the data with the API occasionally (a few times a week at most, and after game patches), well under ForeverDB.net's limits, and ship it in its own clearly marked folder, `LOMBCompanion/Data/ForeverDB/` (about 800 KB). Each file starts with the credit and the snapshot date.
-  - **What's in it:** quests, vendors, professions/recipes and dungeons for levels 1–30, plus only the items those mention (name, quality, required level and slot).
+  - **Bundled snapshot:** addons can't go online, so we fetch the data with the API occasionally (a few times a week at most, and after game patches), well under ForeverDB.net's limits, and ship it in its own clearly marked folder, `LOMBCompanion/Data/ForeverDB/` (about 1.1 MB). Each file starts with the credit and the snapshot date.
+  - **What's in it:** quests, vendors, professions/recipes and dungeons for levels 1–30, plus only the items those mention (name, quality, required level and slot). Since v0.6.3 also class abilities by level, gathering nodes and zones, the disenchant table, item sets, rogue poisons, zones and battlegrounds.
   - **Classic data:** ForeverDB.net marks what was seen in WoW: Forever and what comes from Classic. Vendors and trainers never seen in Forever are left out. Quests from Classic data are kept but labelled "Classic data, may differ" (a small "c" in lists). Classic dungeon level ranges and bosses are labelled, Classic trainer costs are left out, and Classic drop sources for recipes just say "drop".
   - **The API key never ships:** it's kept off the addon and out of this repo.
   - **Not ours:** the data stays ForeverDB.net's. It isn't covered by this repo's MIT license, isn't resold, and isn't presented as our own. ForeverDB.net's labels (data seen in WoW Forever vs. Classic data) are kept.

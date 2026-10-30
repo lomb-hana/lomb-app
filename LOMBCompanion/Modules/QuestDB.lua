@@ -743,6 +743,12 @@ function FDB.MobInfo(npcId, ctx)
     end
     any = true
   end
+  -- skinning (Classic skill rule and skinning drops, labelled; see Modules/Guides.lua)
+  local sk = ns.Guides and ns.Guides.SkinningFor and ns.Guides.SkinningFor(npcId)
+  if sk then
+    out.skinning = { skill = sk.skill and (sk.skill .. "  |cff9a92a8" .. FDB.CLASSIC_NOTE .. "|r") or nil, items = sk.items or {} }
+    any = true
+  end
   return any and out or nil
 end
 

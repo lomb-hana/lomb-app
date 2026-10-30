@@ -33,6 +33,12 @@ local OPTIONS = {
   { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
   { key = "fdbTooltips", label = "Add ForeverDB.net info to item tooltips (vendors, recipes)",
     tip = "One line from the bundled ForeverDB.net snapshot: who sells it, what makes it, what it's a reagent for." },
+  { key = "deTooltips", label = "Show what gear disenchants into (and guild enchanters)",
+    tip = "Uncommon, rare and epic weapons and armour. The disenchant table is Classic data (it may differ on Forever)." },
+  { section = "Training" },
+  { key = "trainerReminder", label = "Remind me what's new at my class trainer when I level up",
+    tip = "A chat line only you see. Costs show once you've opened your class trainer (ForeverDB has no trainer costs). "
+      .. "/lomb train opens the list." },
   { section = "Rare alerts" },
   { key = "rareAlerts", label = "Show an alert when a rare is spotted (by me or a guildmate)" },
   { key = "rareSound", label = "Play a sound with rare alerts" },
