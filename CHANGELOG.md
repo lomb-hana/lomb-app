@@ -1,8 +1,18 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, and v0.6.1 is 0.8.3**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.1 (in-game 0.8.3): quest chains, 2026-10-30
+
+Small pre-release patch, untested in game.
+
+- **Chained quests are tagged** "Part 2 of 4" in the quest list, in a soft violet with a thin bar down the left of the row. The quest page shows the same, plus where a branch splits off.
+- **Chains are grouped:** a chain's quests are listed together in chain order, at the spot where its first listed quest would be. Quests that aren't in a chain keep their place, and quests with the same name stay separate lines.
+- Works out chains from the links already in the bundled ForeverDB.net data. There are no new requests and no new data.
+- **Branches and merges:** chains that branch (class letters, side quests) are cut into straight lines, longest first. A branch carries on the numbering of the quest it branches off, so "Part 5 of 5" counts along one real path. Each line is its own group in the list.
+- **Edge cases:** "of 4+" means the chain carries on past level 30. A chain that started above level 30 would show "Part ? of ?" (none in this snapshot). If links ever loop, those quests are ordered by level and name and marked as unclear (none in this snapshot). With a level or zone filter, the visible parts of a chain stay grouped and keep their real part numbers.
 
 ## v0.6.0 (in-game 0.8.2): Quests & Items, 2026-10-30
 

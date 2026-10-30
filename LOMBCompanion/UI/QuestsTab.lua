@@ -9,6 +9,7 @@ ns.QuestsTab = Tab
 
 local LIST_W = 250
 local MUTED, WARN, GOOD, LINK = "|cff9a92a8", "|cffe0b060", "|cff7fd18b", "|cffb873ff"
+local CHAIN = "|cffa98bd6"   -- soft LOMB violet for "Part 1 of 3" tags
 
 Tab.MODES = {
   { key = "quests", label = "Quests", search = "Search quests, NPCs, zones" },
@@ -65,12 +66,17 @@ local function createRow(list)
   row.hl:SetAllPoints()
   row.sel = W.Fill(row, "accentDim", "BACKGROUND")
   row.sel:SetAllPoints()
-  row.name = W.Text(row, "body", 11, "text")
-  row.name:SetPoint("LEFT", 6, 0)
-  row.name:SetWidth(LIST_W - 74)
-  row.name:SetWordWrap(false)
+  row.chain = W.Fill(row, "accent", "ARTWORK")   -- thin bar down the left of chained quests
+  row.chain:SetPoint("TOPLEFT", 1, -3)
+  row.chain:SetPoint("BOTTOMLEFT", 1, 3)
+  row.chain:SetWidth(2)
+  row.chain:SetAlpha(0.55)
   row.meta = W.Text(row, "narrow", 10, "muted", "RIGHT")
   row.meta:SetPoint("RIGHT", -4, 0)
+  row.name = W.Text(row, "body", 11, "text")
+  row.name:SetPoint("LEFT", 6, 0)
+  row.name:SetPoint("RIGHT", row.meta, "LEFT", -6, 0)
+  row.name:SetWordWrap(false)
   row:SetScript("OnClick", function(self) Tab.Select(self.item.key) end)
   return row
 end
@@ -78,6 +84,7 @@ end
 local function updateRow(row, item)
   row.name:SetText(item.text)
   row.meta:SetText(item.meta or "")
+  row.chain:SetShown(item.chain == true)
   row.sel:SetShown(Tab.selected[view.mode] == item.key)
 end
 
@@ -95,8 +102,11 @@ function Tab.Items()
     end
     local list = FDB.QuestList({ search = search, zone = view.zone and playerZone() or nil,
       minLevel = minL, maxLevel = maxL, side = view.mine and FDB.PlayerSide() or nil })
-    for _, e in ipairs(list) do
-      out[#out + 1] = { key = e.id, text = e.q.n, meta = (e.q.c and WARN .. "c|r " or "") .. (e.q.l > 0 and e.q.l or "-") }
+    for _, e in ipairs(FDB.GroupChains(list)) do
+      local part = FDB.ChainText(e.id)
+      out[#out + 1] = { key = e.id, text = e.q.n, chain = part ~= nil,
+        meta = (part and CHAIN .. part .. "|r  " or "") .. (e.q.c and WARN .. "c|r " or "")
+          .. (e.q.l > 0 and e.q.l or "-") }
     end
   elseif mode == "items" then
     for _, id in ipairs(FDB.ItemSearch(search)) do
@@ -263,6 +273,21 @@ local function renderQuest(page, id)
   local nx = FDB.NextQuests(id)
   if q.pv or #nx > 0 then
     section(page, "Quest chain")
+    local c = FDB.Chain(id)
+    if c then
+      add(page, { text = CHAIN .. FDB.ChainText(id) .. "|r", size = 12 })
+      local notes = {}
+      local from, into = c.line.from and FDB.Quest(c.line.from), c.line.into and FDB.Quest(c.line.into)
+      if from then notes[#notes + 1] = "Branches off " .. from.n .. "." end
+      if into then notes[#notes + 1] = "Leads into " .. into.n .. "." end
+      if c.more then notes[#notes + 1] = "Carries on past level 30." end
+      if c.earlier then notes[#notes + 1] = "Starts with quests above level 30, so the part can't be counted." end
+      if c.line.unclear then notes[#notes + 1] = "The order in this chain is unclear, so it's by level." end
+      if c.line.branch and not from and not into then
+        notes[#notes + 1] = "Other quests branch off this chain; parts count along the longest path."
+      end
+      if #notes > 0 then add(page, { text = table.concat(notes, " "), size = 11, color = "muted", wrap = true }) end
+    end
     if q.pv then
       add(page, { text = "Comes after", size = 11, color = "muted" })
       for _, p in ipairs(q.pv) do questLine(page, p, 8) end

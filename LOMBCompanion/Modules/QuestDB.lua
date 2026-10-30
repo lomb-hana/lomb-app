@@ -84,7 +84,7 @@ function FDB.Index()
   return idx
 end
 
-function FDB.ResetIndex() idx = nil end
+function FDB.ResetIndex() idx = nil; FDB.ResetChains() end
 
 ---------------------------------------------------------------------------
 -- Small helpers
@@ -192,6 +192,192 @@ function FDB.QuestList(opts)
       if a.q.n ~= b.q.n then return a.q.n < b.q.n end
       return a.id < b.id
     end)
+  end
+  return out
+end
+
+---------------------------------------------------------------------------
+-- Quest chains, worked out from the pv/nx links in the bundled data.
+--
+-- The links form small graphs, and some branch (class letters, side quests) or
+-- merge. To get a clear "Part k of n" each chain is cut into straight lines:
+-- the longest path first, then the longest path through what's left, and so on.
+-- A line that branches off (or leads into) another one carries on that line's
+-- numbering, so "Part 3 of 4" always counts along one real path through the
+-- quest. Links to quests outside the bundle (above level 30) set `more`.
+-- If the links ever loop, the remaining quests are ordered by level, name and
+-- id and marked `unclear`.
+---------------------------------------------------------------------------
+local chains
+
+local function questKey(Q, id)
+  local q = Q[id]
+  local l = (q.l and q.l > 0) and q.l or 99
+  return l, q.n or "", id
+end
+
+local function before(Q, a, b)
+  local la, na, ia = questKey(Q, a)
+  local lb, nb, ib = questKey(Q, b)
+  if la ~= lb then return la < lb end
+  if na ~= nb then return na < nb end
+  return ia < ib
+end
+
+-- Longest path through the unassigned quests `left` (a set). nil if they loop.
+local function longestPath(Q, nodes, left, succ, pred)
+  local indeg, ready, order = {}, {}, {}
+  for _, v in ipairs(nodes) do
+    if left[v] then
+      local n = 0
+      for p in pairs(pred[v] or {}) do if left[p] then n = n + 1 end end
+      indeg[v] = n
+      if n == 0 then ready[#ready + 1] = v end
+    end
+  end
+  while #ready > 0 do
+    table.sort(ready, function(a, b) return before(Q, b, a) end)   -- pop the "smallest"
+    local v = table.remove(ready)
+    order[#order + 1] = v
+    for s in pairs(succ[v] or {}) do
+      if left[s] then
+        indeg[s] = indeg[s] - 1
+        if indeg[s] == 0 then ready[#ready + 1] = s end
+      end
+    end
+  end
+  local count = 0
+  for _ in pairs(indeg) do count = count + 1 end
+  if #order < count then return nil end
+  local dist, from, best = {}, {}, nil
+  for _, v in ipairs(order) do
+    dist[v] = 1
+    local preds = {}
+    for p in pairs(pred[v] or {}) do if left[p] then preds[#preds + 1] = p end end
+    table.sort(preds, function(a, b) return before(Q, a, b) end)
+    for _, p in ipairs(preds) do
+      if dist[p] + 1 > dist[v] then dist[v] = dist[p] + 1; from[v] = p end
+    end
+    if not best or dist[v] > dist[best] or (dist[v] == dist[best] and before(Q, v, best)) then best = v end
+  end
+  local path, v = {}, best
+  while v do table.insert(path, 1, v); v = from[v] end
+  return path
+end
+
+local function buildChains()
+  local d = D()
+  chains = { of = {}, lines = {} }
+  if not d then return chains end
+  local Q = d.quests
+  local succ, pred, adj, ext = {}, {}, {}, {}
+  local function link(a, b)
+    if a == b then return end
+    succ[a] = succ[a] or {}; succ[a][b] = true
+    pred[b] = pred[b] or {}; pred[b][a] = true
+    adj[a] = adj[a] or {}; adj[a][b] = true
+    adj[b] = adj[b] or {}; adj[b][a] = true
+  end
+  for id, q in pairs(Q) do
+    for _, p in ipairs(q.pv or {}) do if Q[p] then link(p, id) else ext[id] = "before" end end
+    for _, n in ipairs(q.nx or {}) do
+      if Q[n] then link(id, n) elseif ext[id] ~= "before" then ext[id] = "after" end
+    end
+  end
+  local starts = {}
+  for id in pairs(adj) do starts[#starts + 1] = id end
+  table.sort(starts)
+  local seen = {}
+  for _, root in ipairs(starts) do
+    if not seen[root] then
+      local comp, stack = {}, { root }
+      seen[root] = true
+      while #stack > 0 do
+        local v = table.remove(stack)
+        comp[#comp + 1] = v
+        for w in pairs(adj[v]) do if not seen[w] then seen[w] = true; stack[#stack + 1] = w end end
+      end
+      table.sort(comp, function(a, b) return before(Q, a, b) end)
+      local branches = false
+      for _, v in ipairs(comp) do
+        local ns_, np = 0, 0
+        for _ in pairs(succ[v] or {}) do ns_ = ns_ + 1 end
+        for _ in pairs(pred[v] or {}) do np = np + 1 end
+        if ns_ > 1 or np > 1 then branches = true end
+      end
+      local left, remaining = {}, #comp
+      for _, v in ipairs(comp) do left[v] = true end
+      while remaining > 0 do
+        local path = longestPath(Q, comp, left, succ, pred)
+        local unclear = false
+        if not path then        -- the links loop: fall back to level / name / id order
+          path, unclear = {}, true
+          for _, v in ipairs(comp) do if left[v] then path[#path + 1] = v end end
+        end
+        for _, v in ipairs(path) do left[v] = nil end
+        remaining = remaining - #path
+        -- carry on the numbering of a line this one branches off or leads into
+        local offset, tail, from, into = 0, 0, nil, nil
+        for p in pairs(pred[path[1]] or {}) do
+          local c = chains.of[p]
+          if c and c.part > offset then offset, from = c.part, p end
+        end
+        for s in pairs(succ[path[#path]] or {}) do
+          local c = chains.of[s]
+          if c and c.total - c.part + 1 > tail then tail, into = c.total - c.part + 1, s end
+        end
+        local line = { ids = path, branch = branches or nil, unclear = unclear or nil, from = from, into = into }
+        chains.lines[#chains.lines + 1] = line
+        local total = offset + #path + tail
+        local more = ext[path[#path]] == "after" or nil
+        for k, v in ipairs(path) do
+          chains.of[v] = { line = line, part = offset + k, total = total, more = more,
+            earlier = (k == 1 and offset == 0 and ext[v] == "before") or nil }
+        end
+      end
+    end
+  end
+  return chains
+end
+
+-- { part, total, more, line = { ids, branch, unclear, from, into } } or nil
+function FDB.Chain(id)
+  if not chains then buildChains() end
+  return chains.of[id]
+end
+
+function FDB.ResetChains() chains = nil end
+
+-- "Part 2 of 3" ("of 3+" when the chain goes on past level 30; "Part ?" when it
+-- starts above level 30, which the bundle can't count).
+function FDB.ChainText(id)
+  local c = FDB.Chain(id)
+  if not c then return nil end
+  if c.earlier then return "Part ? of ?" end
+  return ("Part %d of %d%s"):format(c.part, c.total, c.more and "+" or "")
+end
+
+-- Takes a sorted quest list ({ id, q } entries) and pulls each chain line together
+-- in chain order, where the line's first listed quest sits. Other quests stay put.
+function FDB.GroupChains(list)
+  local byLine, out, done = {}, {}, {}
+  for _, e in ipairs(list) do
+    local c = FDB.Chain(e.id)
+    if c then
+      byLine[c.line] = byLine[c.line] or {}
+      table.insert(byLine[c.line], e)
+    end
+  end
+  for _, e in ipairs(list) do
+    local c = FDB.Chain(e.id)
+    if not c then
+      out[#out + 1] = e
+    elseif not done[c.line] then
+      done[c.line] = true
+      local group = byLine[c.line]
+      table.sort(group, function(a, b) return FDB.Chain(a.id).part < FDB.Chain(b.id).part end)
+      for _, g in ipairs(group) do out[#out + 1] = g end
+    end
   end
   return out
 end

@@ -234,4 +234,126 @@ H.test("recipe trainers: own faction first, the other faction marked", function(
   noErrors("recipe faction")
 end)
 
+H.test("quest chains: parts follow the links, branches carry the numbering", function()
+  local ns = H.boot()
+  local FDB = ns.FDB
+  -- Northshire: A Threat Within -> Kobold Camp Cleanup -> Investigate Echo Ridge -> Skirmish at Echo Ridge
+  local first = FDB.Chain(783)
+  H.ok(first, "783 is chained")
+  H.eq(first.part, 1)
+  for k, id in ipairs({ 783, 7, 15, 21 }) do
+    H.eq(FDB.Chain(id).line, first.line, id .. " same line")
+    H.eq(FDB.Chain(id).part, k, id .. " part")
+  end
+  H.eq(FDB.ChainText(783), "Part 1 of " .. first.total)
+  -- Report to Goldshire branches off Skirmish at Echo Ridge and keeps counting from it
+  local rg = FDB.Chain(54)
+  H.ok(rg.line ~= first.line, "branch is its own line")
+  H.eq(rg.part, 5)
+  H.eq(rg.line.from, 21)
+  H.ok(rg.line.branch, "marked as a branching chain")
+  -- a quest without links has no chain
+  H.eq(FDB.Chain(9), nil)
+  H.eq(FDB.ChainText(9), nil)
+  -- every chained quest: parts are in range, and each line counts up by one along real links
+  local lines = {}
+  for id in pairs(ns.FDBData.quests) do
+    local c = FDB.Chain(id)
+    if c then
+      H.ok(c.part >= 1 and c.part <= c.total, "part in range " .. id)
+      lines[c.line] = true
+    end
+  end
+  for line in pairs(lines) do
+    H.ok(not line.unclear, "no loops in the bundled data")
+    for k = 2, #line.ids do
+      local a, b = line.ids[k - 1], line.ids[k]
+      H.eq(FDB.Chain(b).part, FDB.Chain(a).part + 1)
+      local linked = false
+      for _, n in ipairs(FDB.NextQuests(a)) do if n == b then linked = true end end
+      H.ok(linked, a .. " leads to " .. b)
+    end
+  end
+  noErrors("chains")
+end)
+
+H.test("quest chains: made-up data covers loops, branches and links past level 30", function()
+  local ns = H.boot()
+  local FDB = ns.FDB
+  local function q(n, l, extra)
+    local t = { n = n, l = l, r = 1, s = "A", z = "Testland" }
+    for k, v in pairs(extra or {}) do t[k] = v end
+    return t
+  end
+  ns.FDBData.quests = {
+    -- straight chain whose last part is a lower level than the first
+    [1] = q("Alpha", 5, { nx = { 2 } }), [2] = q("Beta", 6, { pv = { 1 }, nx = { 3 } }), [3] = q("Gamma", 4, { pv = { 2 } }),
+    -- branch: 10 -> 11 -> 12 and 10 -> 13; 12 leads on past level 30
+    [10] = q("Root", 8, { nx = { 11, 13 } }), [11] = q("Long", 9, { pv = { 10 } }),
+    [12] = q("Longer", 9, { pv = { 11 }, nx = { 9999 } }), [13] = q("Side", 8, { pv = { 10 } }),
+    -- a loop: 20 -> 21 -> 20
+    [20] = q("Loop B", 3, { nx = { 21 } }), [21] = q("Loop A", 3, { nx = { 20 } }),
+    -- the first known part of a chain that starts above level 30
+    [30] = q("Late", 7, { pv = { 8888 }, nx = { 31 } }), [31] = q("Later", 7, { pv = { 30 } }),
+    [40] = q("Loner", 2),
+  }
+  FDB.ResetIndex()
+  H.eq(FDB.ChainText(1), "Part 1 of 3")
+  H.eq(FDB.ChainText(3), "Part 3 of 3")
+  H.eq(FDB.ChainText(10), "Part 1 of 3+")
+  H.eq(FDB.ChainText(12), "Part 3 of 3+")
+  H.eq(FDB.ChainText(13), "Part 2 of 2")
+  H.eq(FDB.Chain(13).line.from, 10)
+  H.ok(FDB.Chain(10).line.branch)
+  H.ok(FDB.Chain(20).line.unclear, "loop falls back")
+  H.eq(FDB.ChainText(21), "Part 1 of 2")   -- same level: by name, "Loop A" first
+  H.eq(FDB.ChainText(30), "Part ? of ?")
+  H.eq(FDB.ChainText(40), nil)
+  -- grouping: each line sits where its first listed quest is, in chain order
+  local list = FDB.GroupChains(FDB.QuestList({}))
+  local order = {}
+  for _, e in ipairs(list) do order[#order + 1] = e.id end
+  H.deepEq(order, { 40, 21, 20, 1, 2, 3, 30, 31, 10, 11, 12, 13 })
+  -- a filter that hides part of a chain keeps the rest grouped and in order
+  local band = FDB.GroupChains(FDB.QuestList({ minLevel = 4, maxLevel = 5 }))
+  H.deepEq({ band[1].id, band[2].id }, { 1, 3 })
+  FDB.ResetIndex()
+  noErrors("made-up chains")
+end)
+
+H.test("quest list: chained quests are tagged and grouped, others unchanged", function()
+  local ns = H.boot()
+  local Tab = ns.QuestsTab
+  Tab.Show("quests")
+  Tab.view.level, Tab.view.zone, Tab.view.mine = 3, false, false   -- levels 1-10, everywhere, both sides
+  local rows = Tab.Items()
+  local pos = {}
+  for i, r in ipairs(rows) do pos[r.key] = i end
+  -- Northshire's chain is together and in order
+  H.eq(pos[7], pos[783] + 1)
+  H.eq(pos[15], pos[783] + 2)
+  H.eq(pos[21], pos[783] + 3)
+  H.ok(rows[pos[783]].meta:find("Part 1 of", 1, true), "tag in the row")
+  H.ok(rows[pos[783]].chain, "chain bar")
+  -- quests outside chains keep their level order and have no tag
+  local plain, last = 0, 0
+  for _, r in ipairs(rows) do
+    if not ns.FDB.Chain(r.key) then
+      plain = plain + 1
+      H.ok(not r.chain and not r.meta:find("Part", 1, true), "untagged")
+      local l = ns.FDB.Quest(r.key).l
+      l = l > 0 and l or 99
+      H.ok(l >= last, "unchained quests stay in level order")
+      last = l
+    end
+  end
+  H.ok(plain > 50, "plenty of standalone quests")
+  -- the quest page says which part it is
+  Tab.Show("quests", 54)
+  local p = tab(ns, "quests").panel
+  H.ok(hasLine(p.page, "Part 5 of 5"))
+  H.ok(hasLine(p.page, "Branches off Skirmish at Echo Ridge."))
+  noErrors("tagged list")
+end)
+
 H.done()
