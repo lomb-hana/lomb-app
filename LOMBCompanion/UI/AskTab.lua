@@ -80,7 +80,14 @@ function Tab.Rows()
     end
     return rows
   end
-  for _, ans in ipairs(Ask.history) do
+  local prevRestored = false
+  for i, ans in ipairs(Ask.history) do
+    if i == 1 and ans.restored then
+      rows[#rows + 1] = { kind = "note", text = MUTED .. "Saved from earlier (answers as they were then):|r" }
+    elseif prevRestored and not ans.restored then
+      rows[#rows + 1] = { kind = "note", text = MUTED .. "Now:|r" }
+    end
+    prevRestored = ans.restored and true or false
     rows[#rows + 1] = { kind = "you", text = ans.q }
     for _, l in ipairs(ans.lines) do pushLine(rows, l) end
     if ans.data and FDB then

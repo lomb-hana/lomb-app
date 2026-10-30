@@ -1,8 +1,22 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5 and v0.6.4 is 0.8.6**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6 and v0.6.5 is 0.8.7**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.5 (in-game 0.8.7): local event times, minimap shortcut, saved Ask history, 2026-10-30
+
+Small pre-release patch, untested in game.
+
+- **Event times in your local time, everywhere.** The Events tab (list and detail) and Ask LOMB's "next guild event" answer show times like "Wed Nov 4 · 8:00 PM (your time)", on a 12-hour clock, with the end time on the detail view.
+  - The in-game calendar gives realm (server) times. The addon compares the calendar's current time (`C_DateAndTime.GetCurrentCalendarTime`) with the server's clock (`GetServerTime`, or your computer's clock if that's missing), rounds the difference to 15 minutes and converts every event to the real moment, so `date()` shows it in your time.
+  - If the difference can't be worked out (no calendar clock, or a gap bigger than 15 hours, which no time zone has), the time is left as the calendar shows it and labelled "(realm time, not converted; unverified until Nov 4)", or "(realm time?)" in the list.
+  - Not checked on live servers yet: whether WoW: Forever's calendar really uses realm time.
+- **Minimap button:** right-click now opens the Ask LOMB tab directly (opening the window if needed; if the ForeverDB.net data didn't load, it just opens the window). Left-click still opens and closes the window, Shift-click still opens Settings, and the bestiary card moved to **Ctrl-click** (`/lomb card` still works). The tooltip says so.
+- **Ask LOMB history is saved** per character (`LOMBCompanionCharDB.askHistory`) and comes back after a reload or log-in, under "Saved from earlier (answers as they were then)"; new answers follow under "Now:". Capped at the last 40 questions. **Clear** deletes the saved copy as well.
+  - Only the question and the answer's lines are saved (text, muted/warning style, and what a line opens). No timestamps, character data or anything else. Saved entries are cleaned again when loaded (bad entries dropped, long text trimmed).
+  - Saved answers aren't recalculated, so "in 26h" in an old event answer is as it was then. Ask again for fresh data.
+- No ForeverDB.net requests and no data changes.
 
 ## v0.6.4 (in-game 0.8.6): Ask LOMB, 2026-10-30
 

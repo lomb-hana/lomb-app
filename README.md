@@ -152,7 +152,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**) and the Ask LOMB question box `v0.6.4` (in-game **0.8.6**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) and the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -176,10 +176,11 @@ Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0
 - **Ask LOMB (v0.6.4, in-game 0.8.6):** a question box in its own tab. Type a question in plain words and press Enter; the answer appears in a scrolling history, and violet lines open the matching page in Quests & Items (or ask a follow-up). It works entirely offline: answers come from the bundled ForeverDB.net snapshot and what the guild shares through the addon. It's a set of question patterns plus name search, not an AI, and it never says anything in chat. `/lomb ask <question>` prints the answer in your chat window, where only you see it.
   - **It understands:** where a quest starts and is turned in, what comes next in a chain, who sells an item, how to make it, which guildmates can craft it, what it disenchants into, what drops it (guild-recorded only), which set it's in, where a herb or ore grows and where to level a gathering skill, what to train, a dungeon's level and bosses, a zone or battleground, where an NPC stands, quests near your level, for a level or in a zone, and the next guild event. Shift-clicked item links work too.
   - **Examples:** "Where do I turn in The Defias Brotherhood?", "Who sells Fine Thread?", "How do I make Heavy Linen Bandage?", "What does Battleforge Boots disenchant into?", "Where can I find Briarthorn?", "Deadmines level and bosses", "Quests near my level", "What comes after Red Leather Bandanas?", "When is the next guild event?". The tab has buttons for these.
-  - **When it isn't sure,** it names the closest matches (so typos still work), and otherwise says "I don't know that one" with example questions to click. Answers that use ForeverDB.net data end with "Data from ForeverDB.net · https://foreverdb.net", and Classic-sourced facts keep their "(Classic data, may differ)" label. The history lasts until you log out or reload.
+  - **When it isn't sure,** it names the closest matches (so typos still work), and otherwise says "I don't know that one" with example questions to click. Answers that use ForeverDB.net data end with "Data from ForeverDB.net · https://foreverdb.net", and Classic-sourced facts keep their "(Classic data, may differ)" label. Since v0.6.5 (in-game 0.8.7) the history is saved for each character and comes back after a reload or log-in (the last 40 questions, marked "Saved from earlier"); **Clear** deletes the saved copy too.
+  - **Minimap:** right-click the minimap button to go straight to Ask LOMB (left-click still opens and closes the window; Ctrl-click now shows the bestiary card).
 
 ### v0.7: Events & Attendance (built, awaiting in-game test)
-- **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
+- **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. Since v0.6.5 (in-game 0.8.7), times are shown in your own local time and labelled, for example "8:00 PM (your time)", here and in Ask LOMB. The calendar gives realm (server) times, so the addon converts them using the game's server clock. If it can't work out the difference, it shows the calendar's time labelled "(realm time, not converted; unverified until Nov 4)". The addon never changes the calendar and doesn't read it while you have the calendar window open.
 - **Attendance:** from 15 minutes before an event until it ends, anyone grouped with the organizer takes a snapshot of the group every 5 minutes (after combat, never during it). Anyone seen in the group at least once counts as present, and the percentage shows how much of the event they were there for.
 - **Shared and merged:** recordings from several guildmates are combined, so it works even if the organizer doesn't have the addon or someone disconnects. Only names and snapshot counts are shared.
 - **Officer fixes:** the top two guild ranks (changeable in saved settings) can mark someone present or remove them, and undo it. Everyone sees who made each fix. Fixes from anyone else are ignored.
@@ -238,6 +239,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.5 (in-game 0.8.7):** event times in your local time ("8:00 PM (your time)") in the Events tab and Ask LOMB, right-click on the minimap button opens Ask LOMB, and the Ask LOMB history is kept per character across reloads.
 - **v0.6.4 (in-game 0.8.6):** the Ask LOMB tab, an offline question box over the bundled ForeverDB.net data and the guild's shared data, and `/lomb ask <question>` (only you see the answer).
 - **v0.6.3 (in-game 0.8.5):** Training, Gathering, Zones (with battlegrounds) and Sets views, rogue poisons, disenchant info on item pages and tooltips, a level-up trainer reminder and `/lomb train`.
 - **v0.6.2 (in-game 0.8.4):** storylines are drop-down headers with level range and progress, and quests show done / in log / turn in where the game allows (plus turn-ins the addon sees itself).
@@ -265,7 +267,7 @@ In plain English:
    You should end up with `Interface/AddOns/LOMBCompanion/LOMBCompanion.toc`.
 3. Restart the game, or type `/reload` if you're already logged in.
 4. Make sure **LOMB Companion** is ticked in the AddOns list on the character select screen.
-5. Click the minimap button or type `/lomb` to open it. `/lomb help` lists every command.
+5. Click the minimap button or type `/lomb` to open it (right-click the button for Ask LOMB, Ctrl-click for the bestiary card, Shift-click for settings). `/lomb help` lists every command.
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
@@ -307,6 +309,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - Event attendance shares only which guildmates were in the organizer's group and how many snapshots they were seen in. No locations or anything else. Turn it off with "Share the event attendance I record".
 - The bank ledger is off unless someone ticks "This is a guild bank character". If they do, it's shared only from that character (its items, recent changes and, if the switch is on, its own gold as "guild bank funds"). No one else's bags or gold are read for sharing.
 - The wishlist shares only what you add to it yourself (item, quantity, a short note).
+- Ask LOMB never sends anything anywhere. Its history (your last 40 questions and the answers shown) is saved only in this character's own SavedVariables file on your computer, and Clear deletes it.
 
 ---
 

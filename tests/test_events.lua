@@ -321,4 +321,43 @@ H.test("calendar request + settings", function()
   H.eq(ns.db.settings.recordAttendance, false)
 end)
 
+H.test("Events tab shows times in the player's local time, labelled", function()
+  local ns = boot()
+  H.state.realmShift = -2 * 3600   -- realm two hours behind us
+  local start = H.epoch + 3 * 86400
+  H.calendar = { { at = start - 2 * 3600, title = "Stockades", by = "Oakenhollow", len = 5400 } }
+  ns.Events.ReadCalendar()
+  local rec = ns.Events.List("upcoming")[1]
+  H.eq(rec.start, start, "realm time converted to the real moment")
+  H.eq(rec.tzok, nil, "converted (nothing extra saved)")
+  local short = ns.EventsTab.When(rec)
+  local long = ns.EventsTab.When(rec, true)
+  local clock = date("%I:%M %p", start):gsub("^0", "")
+  H.ok(short:find(clock .. " (your time)", 1, true), short)
+  H.ok(long:find(clock .. " - " .. (date("%I:%M %p", start + 5400):gsub("^0", "")) .. " (your time)", 1, true), long)
+  -- no usable server clock: fall back to time() (still an epoch), still converted
+  local gst = GetServerTime
+  _G.GetServerTime = nil
+  local off, ok = ns.Events.RealmOffset(C_DateAndTime.GetCurrentCalendarTime())
+  H.eq(off, 7200); H.eq(ok, true)   -- realm behind: add two hours
+  -- an offset no time zone has: left as the calendar shows it, and labelled
+  _G.GetServerTime = function() return math.floor(H.epoch) + 30 * 3600 end
+  off, ok = ns.Events.RealmOffset(C_DateAndTime.GetCurrentCalendarTime())
+  H.eq(off, 0); H.eq(ok, false)
+  off, ok = ns.Events.RealmOffset(nil)
+  H.eq(off, 0); H.eq(ok, false)
+  ns.Events.ReadCalendar()
+  _G.GetServerTime = gst
+  local bad
+  for _, r in ipairs(ns.Events.List("upcoming")) do if r.tzok == false then bad = r end end
+  H.ok(bad, "record flagged as not converted")
+  H.ok(ns.EventsTab.When(bad):find("(realm time?)", 1, true), ns.EventsTab.When(bad))
+  H.ok(ns.EventsTab.When(bad, true):find("unverified until Nov 4", 1, true))
+  -- the tab itself renders the label
+  ns.UI.Open("events")
+  H.eq(#H.errors, 0, tostring(H.errors[1]))
+  H.state.realmShift = nil
+  H.calendar = {}
+end)
+
 H.done()

@@ -11,13 +11,13 @@ local view = Tab.view
 
 local function E() return ns.Events end
 
+-- Event times are shown in the player's local time ("8:00 PM (your time)"); see
+-- Events.RealmOffset for the conversion and the fallback when it can't be done.
 function Tab.When(rec, long)
-  local fmt = long and "%A, %b %d  ·  %I:%M %p" or "%a %b %d  ·  %I:%M %p"
-  local s = date(fmt, rec.start):gsub(" 0(%d)", " %1")
-  if long and rec.stop then
-    s = s .. (" - %s"):format((date("%I:%M %p", rec.stop):gsub("^0", "")))
-  end
-  return s
+  local day = date(long and "%A, %b %d" or "%a %b %d", rec.start):gsub(" 0(%d)", " %1")
+  local s = day .. "  ·  " .. E().Clock(rec.start)
+  if long and rec.stop then s = s .. " - " .. E().Clock(rec.stop) end
+  return s .. " " .. E().TimeLabel(rec, not long)
 end
 
 function Tab.Relative(rec, now)

@@ -1,5 +1,6 @@
 -- LOMB Companion: minimap button (no LibDBIcon dependency). Drag to move around
--- the minimap edge. Left-click: window. Right-click: card. Shift-click: settings.
+-- the minimap edge. Left-click: window. Right-click: Ask LOMB. Ctrl-click: bestiary
+-- card. Shift-click: settings.
 local _, ns = ...
 local T, W = ns.Theme, ns.Widgets
 local M = {}
@@ -14,6 +15,17 @@ function M.Position()
   local r = (Minimap:GetWidth() or 140) / 2 + 6
   b:ClearAllPoints()
   b:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * r, math.sin(angle) * r)
+end
+
+-- Right-click: straight to the Ask LOMB tab (the window opens if it's closed).
+-- Without the ForeverDB.net snapshot the tab is hidden, so open the window instead.
+function M.OpenAsk()
+  local FDB = ns.FDB
+  if FDB and FDB.Available and FDB.Available() then
+    ns.UI.Open("ask")
+  else
+    ns.UI.Open()
+  end
 end
 
 function M.Create()
@@ -43,7 +55,8 @@ function M.Create()
 
   b:SetScript("OnClick", function(_, button)
     if IsShiftKeyDown and IsShiftKeyDown() then ns.UI.Open("settings")
-    elseif button == "RightButton" then ns.BestiaryCard.Toggle()
+    elseif IsControlKeyDown and IsControlKeyDown() then ns.BestiaryCard.Toggle()
+    elseif button == "RightButton" then M.OpenAsk()
     else ns.UI.Toggle() end
   end)
   b:SetScript("OnDragStart", function(self)
@@ -62,7 +75,8 @@ function M.Create()
     tt:AddLine(ns.Sync and ns.Sync.Status() or "", 0.8, 0.78, 0.85)
     tt:AddLine(" ")
     tt:AddLine("|cffffffffLeft-click|r  open / close", 0.6, 0.57, 0.66)
-    tt:AddLine("|cffffffffRight-click|r  bestiary card", 0.6, 0.57, 0.66)
+    tt:AddLine("|cffffffffRight-click|r  Ask LOMB", 0.6, 0.57, 0.66)
+    tt:AddLine("|cffffffffCtrl-click|r  bestiary card", 0.6, 0.57, 0.66)
     tt:AddLine("|cffffffffShift-click|r  settings", 0.6, 0.57, 0.66)
     tt:AddLine("|cffffffffDrag|r  move", 0.6, 0.57, 0.66)
   end)

@@ -52,20 +52,41 @@ local function epochOf(ct)
 end
 E.EpochOf = epochOf
 
--- Calendar times are realm times; convert them with the realm's offset from our
--- clock (rounded to 15 minutes) so everybody ends up with the same epoch.
+-- Calendar times are realm (server) times; convert them with the realm's offset
+-- from our clock (rounded to 15 minutes) so everybody ends up with the same epoch,
+-- and every time we show is the player's own local time. Returns offset, ok.
+-- ok is false when the client didn't give us what we need (no calendar clock, or
+-- an offset no real time zone has): then times are left as the calendar shows
+-- them and labelled as realm time. Not checked against the live client before Nov 4.
+E.MAX_OFFSET = 15 * 3600
 function E.RealmOffset(nowCT)
   local calNow = epochOf(nowCT)
-  local srv = C.Call(GetServerTime) or time()
-  if not calNow then return 0 end
-  return math.floor((srv - calNow) / 900 + 0.5) * 900
+  local srv = C.Call(GetServerTime)
+  if type(srv) ~= "number" then srv = time() end
+  if not calNow then return 0, false end
+  local off = math.floor((srv - calNow) / 900 + 0.5) * 900
+  if math.abs(off) > E.MAX_OFFSET then return 0, false end
+  return off, true
+end
+
+-- "8:00 PM" in the player's local time (no leading zero).
+function E.Clock(epoch)
+  return (date("%I:%M %p", epoch):gsub("^0", ""))
+end
+
+-- How a record's times should be labelled.
+function E.TimeLabel(rec, short)
+  if rec and rec.tzok == false then
+    return short and "(realm time?)" or "(realm time, not converted; unverified until Nov 4)"
+  end
+  return "(your time)"
 end
 
 function E.Key(start, by)
   return ("%d@%s"):format(start, C.ShortName(by or "") ~= "" and C.ShortName(by) or "?")
 end
 
-function E.FromCalendar(ev, offset)
+function E.FromCalendar(ev, offset, tzok)
   if type(ev) ~= "table" or not E.TYPES[ev.calendarType] then return nil end
   local start = epochOf(ev.startTime)
   if not start then return nil end
@@ -75,10 +96,12 @@ function E.FromCalendar(ev, offset)
   if not stop or stop <= start or ev.dontDisplayEnd then stop = start + E.DEFAULT_LEN end
   local title = type(ev.title) == "string" and ev.title ~= "" and ev.title or "Guild event"
   local by = type(ev.invitedBy) == "string" and ev.invitedBy ~= "" and C.ShortName(ev.invitedBy) or nil
-  return {
+  local rec = {
     k = E.Key(start, by), title = title:sub(1, 60), start = start, stop = stop, by = by,
     ct = ev.calendarType, status = type(ev.inviteStatus) == "number" and ev.inviteStatus or nil,
   }
+  if tzok == false then rec.tzok = false end   -- times left in realm time
+  return rec
 end
 
 function E.CalendarOpen()
@@ -95,7 +118,8 @@ function E.ReadCalendar()
   if E.CalendarOpen() then return nil end
   local nowCT = C.Call(C_DateAndTime and C_DateAndTime.GetCurrentCalendarTime)
   if type(nowCT) ~= "table" or not nowCT.month then return nil end
-  local offset = E.RealmOffset(nowCT)
+  local offset, tzok = E.RealmOffset(nowCT)
+  E.tzok = tzok
   C.Call(C_Calendar.SetAbsMonth, nowCT.month, nowCT.year)
   local found, n = {}, 0
   for mo = -1, 1 do
@@ -104,7 +128,7 @@ function E.ReadCalendar()
     for day = 1, days do
       local count = C.Call(C_Calendar.GetNumDayEvents, mo, day) or 0
       for i = 1, count do
-        local rec = E.FromCalendar(C.Call(C_Calendar.GetDayEvent, mo, day, i), offset)
+        local rec = E.FromCalendar(C.Call(C_Calendar.GetDayEvent, mo, day, i), offset, tzok)
         if rec and not found[rec.k] then found[rec.k] = rec; n = n + 1 end
       end
     end

@@ -252,4 +252,145 @@ H.test("Ask LOMB tab: history, clickable lines, examples, clear", function()
   noErrors("tab")
 end)
 
+H.test("history is saved per character, survives a reload, and Clear wipes it", function()
+  local ns = boot()
+  ns.Ask.Submit("Who sells Fine Thread?")
+  ns.Ask.Submit("Where can I find Briarthorn?")
+  local saved = _G.LOMBCompanionCharDB.askHistory
+  H.eq(#saved, 2, "saved in the per-character SavedVariables")
+  H.eq(_G.LOMBCompanionDB.askHistory, nil, "not in the account-wide one")
+  -- only the question and the answer lines, nothing else
+  local allowed = { q = true, lines = true, data = true }
+  local lineKeys = { text = true, style = true, link = true, tab = true, ask = true }
+  for _, e in ipairs(saved) do
+    for k in pairs(e) do H.ok(allowed[k], "unexpected saved field " .. tostring(k)) end
+    for _, l in ipairs(e.lines) do
+      for k in pairs(l) do H.ok(lineKeys[k], "unexpected saved line field " .. tostring(k)) end
+      for _, v in pairs(l) do H.ok(type(v) ~= "function" and type(v) ~= "userdata", "plain values only") end
+    end
+    H.ok(getmetatable(e) == nil, "saved as a plain table")
+  end
+  H.eq(saved[1].q, "Who sells Fine Thread?")
+  H.ok(saved[1].data, "credit flag kept")
+
+  -- reload: the history comes back
+  local db, cdb = _G.LOMBCompanionDB, _G.LOMBCompanionCharDB
+  local ns2 = H.boot({ db = db, charDB = cdb })
+  H.eq(#ns2.Ask.history, 2, "history restored after reload")
+  H.eq(ns2.Ask.history[2].q, "Where can I find Briarthorn?")
+  H.ok(ns2.Ask.history[1].restored, "marked as from earlier")
+  ns2.UI.Open("ask")
+  local tab = ns2.AskTab
+  local rows = tab.Rows()
+  H.ok(plain(rows[1].text):find("Saved from earlier", 1, true), "earlier answers are marked")
+  local credits = 0
+  for _, r in ipairs(rows) do if r.kind == "credit" then credits = credits + 1 end end
+  H.eq(credits, 2, "credit lines come back too")
+  -- restored links still work
+  local link
+  for _, r in ipairs(rows) do if r.click and r.line.link then link = r.line; break end end
+  H.ok(link, "a clickable line survived")
+  tab.Open(link)
+  H.eq(ns2.UI.current, "quests", "and opens its page")
+  ns2.UI.Open("ask")
+  ns2.Ask.Submit("Deadmines level and bosses")
+  rows = tab.Rows()
+  local now
+  for _, r in ipairs(rows) do if r.kind == "note" and plain(r.text) == "Now:" then now = true end end
+  H.ok(now, "new answers start under Now:")
+  H.eq(#_G.LOMBCompanionCharDB.askHistory, 3)
+
+  -- capped at 40 questions
+  for i = 1, 45 do ns2.Ask.Submit("Quests for level " .. (i % 30 + 1)) end
+  H.eq(#ns2.Ask.history, 40)
+  H.eq(#_G.LOMBCompanionCharDB.askHistory, 40, "saved copy capped at 40")
+  -- a tampered/oversized saved file is cleaned on load
+  local big = {}
+  for i = 1, 60 do big[i] = { q = ("x"):rep(500), lines = { { text = "hi", fn = print, extra = "no" } }, who = "someone" } end
+  big[61] = "junk"
+  cdb = _G.LOMBCompanionCharDB
+  cdb.askHistory = big
+  local ns3 = H.boot({ db = _G.LOMBCompanionDB, charDB = cdb })
+  H.eq(#ns3.Ask.history, 39, "capped (the junk entry is dropped)")
+  H.eq(#ns3.Ask.history[1].q, 200, "long questions trimmed")
+  H.eq(ns3.Ask.history[1].who, nil, "unknown fields dropped")
+  H.eq(ns3.Ask.history[1].lines[1].fn, nil)
+  H.eq(ns3.Ask.history[1].lines[1].extra, nil)
+
+  -- Clear wipes the saved copy as well
+  ns3.UI.Open("ask")
+  ns3.AskTab.panel.clear:Click()
+  H.eq(#ns3.Ask.history, 0)
+  H.eq(_G.LOMBCompanionCharDB.askHistory, nil, "saved copy wiped")
+  local ns4 = H.boot({ db = _G.LOMBCompanionDB, charDB = _G.LOMBCompanionCharDB })
+  H.eq(#ns4.Ask.history, 0, "still empty after another reload")
+  noErrors("history")
+end)
+
+H.test("minimap: right-click opens Ask LOMB, ctrl-click the card, left-click as before", function()
+  local ns = boot()
+  local b = ns.Minimap.button
+  H.ok(not (ns.UI.frame and ns.UI.frame.shown), "closed to start")
+  b.scripts.OnClick(b, "RightButton")
+  H.ok(ns.UI.frame.shown, "window opened")
+  H.eq(ns.UI.current, "ask", "on the Ask LOMB tab")
+  ns.UI.Open("roster")
+  b.scripts.OnClick(b, "RightButton")
+  H.eq(ns.UI.current, "ask", "switches to Ask LOMB when already open")
+  b.scripts.OnClick(b, "LeftButton")
+  H.ok(not ns.UI.frame.shown, "left-click still toggles the window")
+  b.scripts.OnClick(b, "LeftButton")
+  H.ok(ns.UI.frame.shown)
+  local toggled = 0
+  local real = ns.BestiaryCard.Toggle
+  ns.BestiaryCard.Toggle = function() toggled = toggled + 1 end
+  _G.IsControlKeyDown = function() return true end
+  b.scripts.OnClick(b, "RightButton")
+  _G.IsControlKeyDown = function() return false end
+  ns.BestiaryCard.Toggle = real
+  H.eq(toggled, 1, "ctrl-click: bestiary card")
+  -- tooltip text
+  local lines = {}
+  local add = GameTooltip.AddLine
+  GameTooltip.AddLine = function(_, t) lines[#lines + 1] = plain(t or "") end
+  b.scripts.OnEnter(b)
+  GameTooltip.AddLine = add
+  local tt = table.concat(lines, "\n")
+  H.ok(tt:find("Right-click  Ask LOMB", 1, true), "tooltip names Ask LOMB:\n" .. tt)
+  H.ok(tt:find("Ctrl-click  bestiary card", 1, true), "tooltip names the card")
+  H.ok(tt:find("Left-click  open / close", 1, true))
+  -- without the ForeverDB snapshot the Ask tab is hidden: right-click just opens the window
+  ns.UI.Toggle()
+  local avail = ns.FDB.Available
+  ns.FDB.Available = function() return false end
+  ns.UI.current = "roster"
+  b.scripts.OnClick(b, "RightButton")
+  H.ok(ns.UI.frame.shown, "window opens")
+  H.ok(ns.UI.current ~= "ask", "not onto a hidden tab")
+  ns.FDB.Available = avail
+  noErrors("minimap")
+end)
+
+H.test("event answer uses the player's local time, labelled", function()
+  local ns = boot()
+  H.state.realmShift = 3600   -- realm clock an hour ahead of ours
+  H.calendar = { { at = H.epoch + 3600 + 86400 + 2 * 3600, title = "Deadmines run", by = "Oakenhollow", len = 7200 } }
+  ns.Events.ReadCalendar()
+  local start = H.epoch + 86400 + 2 * 3600
+  local a = ns.Ask.Answer("When is the next guild event?")
+  has(a, "at " .. ns.Events.Clock(start) .. " (your time)", "local time with the label")
+  has(a, "in 26h 0m", "converted from realm time")
+  H.ok(ns.Events.Clock(start):match("^%d+:%d%d [AP]M$"), "12-hour clock: " .. ns.Events.Clock(start))
+  -- the client gives an impossible offset: left in realm time and said so
+  local gst = GetServerTime
+  _G.GetServerTime = function() return math.floor(H.epoch) + 40 * 3600 end
+  ns.db.guilds = {}
+  ns.Events.ReadCalendar()
+  _G.GetServerTime = gst
+  a = ns.Ask.Answer("When is the next guild event?")
+  has(a, "realm time, not converted; unverified until Nov 4")
+  H.state.realmShift = nil
+  H.calendar = {}
+end)
+
 H.done()
