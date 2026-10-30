@@ -84,7 +84,7 @@ local function updateRow(row, r)
 end
 
 UI.RegisterTab({
-  id = "roster", label = "Roster", order = 1,
+  id = "roster", label = "Roster", order = 10,
   build = function(parent)
     local p = CreateFrame("Frame", nil, parent)
     local search = W.SearchBox(p, 180, "Search name, zone, class", function(text)

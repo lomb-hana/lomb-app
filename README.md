@@ -38,6 +38,12 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Settings tab](docs/screenshots/06-settings.png) | ![Credits tab](docs/screenshots/07-credits.png) |
 | **Bestiary card (small)** | **Minimap button** |
 | ![Bestiary card](docs/screenshots/03-card-small.png) | ![Minimap button](docs/screenshots/08-minimap-button.png) |
+| **Crafters (v0.2)** | **Crafters: search + whisper (v0.2)** |
+| ![Crafters tab](docs/screenshots/09-crafters.png) | ![Crafters search and whisper](docs/screenshots/10-crafters-search-whisper.png) |
+
+Item tooltips list guildmates who can craft the item (v0.2):
+
+![Crafters on item tooltips](docs/screenshots/11-item-tooltip-crafters.png)
 
 How the bestiary would look *if* ForeverDB.net approves using their data (not shipped):
 
@@ -76,7 +82,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 - **Bestiary card:** target a mob to see its level, type, family and health (when the game lets addons read them), plus how many times the guild has killed it and what it has dropped for guild members. Pin it to keep it on one mob, or expand it to a full bestiary page.
 - **Basic sync:** members with the addon recognize each other and automatically share level, class, professions, gear and playtime. There's an **off switch** in Settings if you'd rather not share.
 
-### v0.2: Who Can Craft
+### v0.2: Who Can Craft (built, awaiting in-game test)
 - Members share their professions and known recipes.
 - Search "who can craft X?" and whisper the crafter straight from the result.
 - Item tooltips get a line showing which guildmates can craft that item.
@@ -153,6 +159,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.2.0 is built:** the Crafters tab ("who can craft X?", filter by profession, online only, click to whisper, shift-click to link), crafter names on item tooltips, and a sidebar menu so more tabs fit. Recipes are read when you open a profession window and shared as recipe IDs only.
 - It has an offline test suite (a fake WoW API runs the whole addon, including the windows) plus a linter. Both pass.
 - **It can't be tested in the real game until WoW: Forever launches on November 4, 2026.** Expect a quick follow-up fix (v0.1.1) after launch, because the game's addon rules can change between beta and the live release.
 - Real testing needs at least two guild members running the addon.

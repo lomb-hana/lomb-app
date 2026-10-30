@@ -1,4 +1,4 @@
--- LOMB Companion: main window (title bar, tab strip, content, sync footer).
+-- LOMB Companion: main window (title bar, sidebar navigation, content, sync footer).
 local _, ns = ...
 local T, W = ns.Theme, ns.Widgets
 local UI = {}
@@ -7,10 +7,54 @@ ns.UI = UI
 UI.tabs = {}        -- registered tab definitions, in order
 UI.tabButtons = {}
 
--- tab = { id=, label=, order=, build(content) -> panel, refresh(panel) }
+-- tab = { id=, label=, order=, build(content) -> panel, refresh(panel), gap=bool (space above) }
 function UI.RegisterTab(tab)
   UI.tabs[#UI.tabs + 1] = tab
   table.sort(UI.tabs, function(a, b) return a.order < b.order end)
+end
+
+-- One sidebar entry: label, hover tint, accent bar + tint when active, optional badge.
+function UI.NavButton(parent, tab)
+  local S = T.sizes
+  local b = CreateFrame("Button", nil, parent)
+  b:SetHeight(S.nav.h)
+  b.bg = W.Fill(b, "accentDim", "BACKGROUND")
+  b.bg:SetAllPoints()
+  b.bg:Hide()
+  b.hover = W.Fill(b, "rowHover", "BACKGROUND")
+  b.hover:SetAllPoints()
+  b.hover:Hide()
+  b.bar = W.Fill(b, "accent", "ARTWORK")
+  b.bar:SetWidth(3)
+  b.bar:SetPoint("TOPLEFT", 0, 0)
+  b.bar:SetPoint("BOTTOMLEFT", 0, 0)
+  b.bar:Hide()
+  b.label = W.Text(b, "body", 11, "muted", "LEFT")
+  b.label:SetPoint("LEFT", 14, 0)
+  b.label:SetText(tab.label)
+  b.badge = W.Text(b, "narrow", 10, "accent", "RIGHT")
+  b.badge:SetPoint("RIGHT", -8, 0)
+  b:SetScript("OnEnter", function(self) if not self.active then self.hover:Show() end end)
+  b:SetScript("OnLeave", function(self) self.hover:Hide() end)
+  b:SetScript("OnClick", function()
+    if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON) end
+    UI.Select(tab.id)
+  end)
+  function b:SetActive(on)
+    self.active = on
+    self.bg:SetShown(on)
+    self.bar:SetShown(on)
+    if on then self.hover:Hide() end
+    self.label:SetTextColor(W.rgba(on and "text" or "muted"))
+  end
+  function b:SetBadge(text) self.badge:SetText(text or "") end
+  return b
+end
+
+-- Small count next to a sidebar entry ("3" new news items, etc.).
+function UI.SetBadge(id, text)
+  local b = UI.tabButtons[id]
+  if b then b:SetBadge(text) end
 end
 
 function UI.Create()
@@ -54,19 +98,26 @@ function UI.Create()
   close.label:SetFont(T.fonts.body, 16, "")
   close:SetPoint("RIGHT", -6, 0)
 
-  -- tabs
-  local x = S.pad
+  -- sidebar navigation
+  local nav = W.Panel(f, "panel", "border")
+  nav:SetPoint("TOPLEFT", 0, -(S.titleBar - 1))
+  nav:SetPoint("BOTTOMLEFT", 0, S.footer - 1)
+  nav:SetWidth(S.nav.w)
+  UI.nav = nav
+  local y = -8
   for i, tab in ipairs(UI.tabs) do
-    local b = W.Button(f, tab.label, S.tab.w, S.tab.h, function() UI.Select(tab.id) end)
-    b:SetPoint("TOPLEFT", x, -(S.titleBar + 6))
-    x = x + S.tab.w + 4
+    if tab.gap then y = y - 8 end
+    local b = UI.NavButton(nav, tab)
+    b:SetPoint("TOPLEFT", 1, y)
+    b:SetPoint("TOPRIGHT", -1, y)
+    y = y - S.nav.h - 2
     UI.tabButtons[tab.id] = b
     tab.index = i
   end
 
   -- content
   local content = CreateFrame("Frame", nil, f)
-  content:SetPoint("TOPLEFT", S.pad, -(S.titleBar + S.tab.h + 14))
+  content:SetPoint("TOPLEFT", S.nav.w + S.pad, -(S.titleBar + S.pad))
   content:SetPoint("BOTTOMRIGHT", -S.pad, S.footer + 6)
   UI.content = content
 

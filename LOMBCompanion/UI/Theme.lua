@@ -37,8 +37,10 @@ T.fonts = {
 }
 
 T.sizes = {
-  window   = { w = 660, h = 460 },
+  window   = { w = 780, h = 480 },
   titleBar = 34,
+  nav      = { w = 118, h = 26 },          -- left sidebar
+  content  = { w = 642 },                  -- window.w - nav.w - 2 * pad
   tab      = { w = 100, h = 26 },
   footer   = 22,
   pad      = 10,

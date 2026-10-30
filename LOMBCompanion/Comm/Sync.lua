@@ -3,6 +3,8 @@
 --   H  hello      { t="H", v=addonVersion, p=protocol }
 --   P  profile    { t="P", v, lv, cl, pr, il, pt }  or { t="P", off=true } when sharing is off
 --   B  bestiary   { t="B", n=npcId, ... }  (see Bestiary.BuildSyncPayload)
+--   D / W         shared per-member datasets (see Comm/Shared.lua)
+-- Other modules add message types with Sync.RegisterHandler(type, fn).
 -- Nothing is sent during boss encounters, PvP matches or chat lockdown, and
 -- trial accounts are receive-only.
 local _, ns = ...
@@ -53,7 +55,10 @@ function Sync.Send(tbl, priority)
 end
 
 function Sync.SendHello()
-  Sync.Send({ t = "H", p = ns.PROTOCOL }, Queue.ALERT)
+  local msg = { t = "H", p = ns.PROTOCOL }
+  -- revisions of the datasets we publish, so guildmates can ask for what they lack
+  if ns.Shared then msg.ds = ns.Shared.Digest() end
+  Sync.Send(msg, Queue.ALERT)
 end
 
 function Sync.SendProfile(force)
@@ -127,6 +132,12 @@ function Sync.IsNewerVersion(a, b)
 end
 
 local handlers = {}
+Sync.handlers = handlers
+
+function Sync.RegisterHandler(msgType, fn)
+  assert(type(msgType) == "string" and not handlers[msgType], "handler already registered")
+  handlers[msgType] = fn
+end
 
 handlers.H = function(sender, d)
   ns.Roster.UpdatePeer(sender, d)
@@ -140,6 +151,8 @@ handlers.H = function(sender, d)
       Sync.Backfill()
     end)
   end
+  if ns.Shared then ns.Shared.OnDigest(sender, d.ds) end
+  ns:Fire("PEER_HELLO", sender, d)
 end
 
 handlers.P = function(sender, d)

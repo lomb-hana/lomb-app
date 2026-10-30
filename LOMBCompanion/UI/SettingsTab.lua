@@ -11,6 +11,11 @@ local OPTIONS = {
     after = function() ns:Fire("PROFILE_CHANGED"); if ns.Sync then ns.Sync.SendProfile(true) end end },
   { key = "shareBestiary", label = "Share bestiary records (kills, loot, abilities)",
     tip = "Off = you neither send nor receive bestiary data. Your own records still work." },
+  { key = "shareRecipes", label = "Share the recipes I know (for \"who can craft\")",
+    tip = "Item and spell IDs of what you can make, read when you open a profession window. Off = guildmates won't see you as a crafter.",
+    after = function() ns.Shared.MarkDirty("rc") end },
+  { section = "Tooltips" },
+  { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
   { section = "Bestiary card" },
   { key = "showCard", label = "Show the card when I target a creature",
     after = function(v) if not v and ns.BestiaryCard then ns.BestiaryCard.Hide(true) end end },
@@ -24,26 +29,42 @@ local OPTIONS = {
 }
 
 UI.RegisterTab({
-  id = "settings", label = "Settings", order = 4,
+  id = "settings", label = "Settings", order = 90, gap = true,
   build = function(parent)
     local p = CreateFrame("Frame", nil, parent)
     p.checks = {}
+    -- options column scrolls with the mouse wheel once it outgrows the window
+    local scroll = CreateFrame("ScrollFrame", nil, p)
+    scroll:SetPoint("TOPLEFT", 0, 0)
+    scroll:SetPoint("BOTTOMRIGHT", -214, 0)
+    local body = CreateFrame("Frame", nil, scroll)
+    body:SetSize(420, 10)
+    scroll:SetScrollChild(body)
+    scroll:EnableMouseWheel(true)
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+      local max = math.max(0, body:GetHeight() - self:GetHeight())
+      self:SetVerticalScroll(math.min(max, math.max(0, self:GetVerticalScroll() - delta * 44)))
+    end)
+    p.scroll, p.body = scroll, body
     local y = 0
     for _, o in ipairs(OPTIONS) do
       if o.section then
-        local t = W.SectionTitle(p, o.section)
+        local t = W.SectionTitle(body, o.section)
         t:SetPoint("TOPLEFT", 0, -y)
         y = y + 22
       else
         local get = o.get or function() return S()[o.key] end
         local set = o.set or function(v) S()[o.key] = v end
-        local c = W.Check(p, o.label, get, function(v) set(v); if o.after then o.after(v) end end, o.tip)
+        local c = W.Check(body, o.label, get, function(v) set(v); if o.after then o.after(v) end end, o.tip)
         c:SetWidth(400)
         c:SetPoint("TOPLEFT", 8, -y)
+        c.key = o.key
         p.checks[#p.checks + 1] = c
+        p.checks[o.key] = c
         y = y + 22
       end
     end
+    body:SetHeight(y + 4)
 
     -- right column: data + actions
     local box = W.Panel(p, "panel", "border")

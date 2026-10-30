@@ -41,7 +41,7 @@ function Tab.Select(npcId)
 end
 
 UI.RegisterTab({
-  id = "bestiary", label = "Bestiary", order = 3,
+  id = "bestiary", label = "Bestiary", order = 60,
   build = function(parent)
     local p = CreateFrame("Frame", nil, parent)
     Tab.panel = p
@@ -63,7 +63,7 @@ UI.RegisterTab({
     local right = W.Panel(p, "panel", "border")
     right:SetPoint("TOPLEFT", left, "TOPRIGHT", 8, 0)
     right:SetPoint("BOTTOMRIGHT", 0, 0)
-    local width = (T.sizes.window.w - 2 * T.sizes.pad) - LIST_W - 8 - 20
+    local width = T.sizes.content.w - LIST_W - 8 - 20
     p.page = MobPage.New(right, width)
     p.page:SetPoint("TOPLEFT", 12, -10)
     p.page:SetPoint("BOTTOMRIGHT", -6, 8)

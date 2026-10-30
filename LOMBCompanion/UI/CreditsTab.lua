@@ -3,7 +3,7 @@ local _, ns = ...
 local T, W, UI = ns.Theme, ns.Widgets, ns.UI
 
 UI.RegisterTab({
-  id = "credits", label = "Credits", order = 5,
+  id = "credits", label = "Credits", order = 100,
   build = function(parent)
     local p = CreateFrame("Frame", nil, parent)
     local logo = p:CreateTexture(nil, "ARTWORK")

@@ -33,7 +33,9 @@ H.test("every tab opens and renders without errors", function()
   local ns = setup()
   SlashCmdList.LOMB("")
   H.ok(ns.UI.frame.shown, "window shown")
-  for _, id in ipairs({ "roster", "me", "bestiary", "settings", "credits" }) do
+  H.ok(#ns.UI.tabs >= 6, "tabs registered")
+  for _, t in ipairs(ns.UI.tabs) do
+    local id = t.id
     SlashCmdList.LOMB(id)
     H.eq(ns.UI.current, id)
     H.advance(2)
@@ -151,7 +153,7 @@ H.test("settings toggles: profile off sends off-profile, card off hides", functi
   local tab
   for _, t in ipairs(ns.UI.tabs) do if t.id == "settings" then tab = t end end
   H.ok(ns.db.settings.shareProfile)
-  tab.panel.checks[1]:Click()
+  tab.panel.checks.shareProfile:Click()
   H.ok(not ns.db.settings.shareProfile)
   H.advance(2)
   local sawOff = false
@@ -160,7 +162,7 @@ H.test("settings toggles: profile off sends off-profile, card off hides", functi
     if d and d:find("off") then sawOff = true end
   end
   H.ok(sawOff, "sent profile-off notice")
-  tab.panel.checks[3]:Click()   -- showCard
+  tab.panel.checks.showCard:Click()
   H.ok(not ns.db.settings.showCard)
   H.units.target = { name = "Wolf", level = 5, guid = H.guid(299, "W"), health = 1, healthMax = 1 }
   H.fire("PLAYER_TARGET_CHANGED")

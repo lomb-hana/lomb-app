@@ -3,19 +3,28 @@ local _, ns = ...
 
 local HELP = {
   "|cffb873ff/lomb|r  open / close the window",
-  "|cffb873ff/lomb roster|r | |cffb873ffme|r | |cffb873ffbestiary|r | |cffb873ffsettings|r | |cffb873ffcredits|r  open a tab",
+  "|cffb873ff/lomb <tab>|r  open a tab: %s",
   "|cffb873ff/lomb card|r  show / hide the bestiary card",
   "|cffb873ff/lomb sync|r  say hello to the guild now",
   "|cffb873ff/lomb status|r  sync status",
   "|cffb873ff/lomb debug|r  toggle debug messages",
 }
 
-local TABS = { roster = true, me = true, bestiary = true, settings = true, credits = true }
+local function isTab(id)
+  for _, tab in ipairs(ns.UI.tabs) do if tab.id == id then return true end end
+  return false
+end
+
+local function tabList()
+  local out = {}
+  for _, tab in ipairs(ns.UI.tabs) do out[#out + 1] = tab.id end
+  return table.concat(out, ", ")
+end
 
 function ns.HandleSlash(msg)
   local cmd = (msg or ""):lower():match("^%s*(%S*)") or ""
   if cmd == "" then ns.UI.Toggle()
-  elseif TABS[cmd] then ns.UI.Open(cmd)
+  elseif cmd ~= "" and isTab(cmd) then ns.UI.Open(cmd)
   elseif cmd == "card" then ns.BestiaryCard.Toggle()
   elseif cmd == "sync" then
     local ok, why = ns.Sync.CanSend()
@@ -26,7 +35,7 @@ function ns.HandleSlash(msg)
     ns.db.settings.debug = not ns.db.settings.debug
     ns.Print("Debug %s.", ns.db.settings.debug and "on" or "off")
   else
-    for _, line in ipairs(HELP) do ns.Print(line) end
+    for _, line in ipairs(HELP) do ns.Print(line:find("%%s") and line:format(tabList()) or line) end
   end
 end
 

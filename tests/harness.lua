@@ -362,7 +362,40 @@ function H.installAPI(opts)
   env.SecondsToTime = function(s) return tostring(s) .. "s" end
   env.FONT_COLOR_CODE_CLOSE = "|r"
   env.ITEM_QUALITY_COLORS = setmetatable({}, { __index = function() return { r = 1, g = 1, b = 1, hex = "|cffffffff" } end })
-  env.C_AddOns = { GetAddOnMetadata = function(_, k) if k == "Version" then return "0.1.0" end end }
+  env.C_AddOns = { GetAddOnMetadata = function(_, k) if k == "Version" then return H.tocVersion() end end }
+
+  -- profession windows (classic trade skill + craft APIs)
+  --   H.trade = { line = "Leatherworking", rows = { { name=, kind="optimal"|"header", item=id | spell=id } } }
+  H.trade, H.craft = nil, nil
+  env.GetTradeSkillLine = function() if H.trade then return H.trade.line, 75, 150 end return "UNKNOWN" end
+  env.GetNumTradeSkills = function() return H.trade and #H.trade.rows or 0 end
+  env.GetTradeSkillInfo = function(i)
+    local r = H.trade and H.trade.rows[i]
+    if r then return r.name, r.kind or "optimal", 0, false end
+  end
+  env.GetTradeSkillItemLink = function(i)
+    local r = H.trade and H.trade.rows[i]
+    if r and r.item then return "|cffffffff|Hitem:" .. r.item .. "::|h[" .. r.name .. "]|h|r" end
+  end
+  env.GetTradeSkillRecipeLink = function(i)
+    local r = H.trade and H.trade.rows[i]
+    if r and r.spell then return "|cffffd000|Henchant:" .. r.spell .. "|h[" .. r.name .. "]|h|r" end
+  end
+  env.GetCraftDisplaySkillLine = function() if H.craft then return H.craft.line, 75, 150 end end
+  env.GetNumCrafts = function() return H.craft and #H.craft.rows or 0 end
+  env.GetCraftInfo = function(i)
+    local r = H.craft and H.craft.rows[i]
+    if r then return r.name, "", r.kind or "optimal", 0 end
+  end
+  env.GetCraftItemLink = function(i)
+    local r = H.craft and H.craft.rows[i]
+    if r and r.item then return "|cffffffff|Hitem:" .. r.item .. "::|h[" .. r.name .. "]|h|r" end
+    if r and r.spell then return "|cffffd000|Henchant:" .. r.spell .. "|h[" .. r.name .. "]|h|r" end
+  end
+  -- chat helpers
+  H.chat = {}
+  env.ChatFrame_OpenChat = function(text) H.chat[#H.chat + 1] = { open = text } end
+  env.ChatEdit_InsertLink = function(link) H.chat[#H.chat + 1] = { link = link }; return true end
 
   H.state = {
     player = "Testy", realm = "Forever", guild = opts.guild == false and nil or (opts.guild or "Land of Make Believe"),
@@ -376,6 +409,13 @@ end
 ---------------------------------------------------------------------------
 -- load the addon (in TOC order) into a fresh namespace
 ---------------------------------------------------------------------------
+function H.tocVersion()
+  for line in io.lines(H.addonDir .. "LOMBCompanion.toc") do
+    local v = line:match("^## Version:%s*(%S+)")
+    if v then return v end
+  end
+end
+
 function H.tocFiles()
   local files = {}
   for line in io.lines(H.addonDir .. "LOMBCompanion.toc") do

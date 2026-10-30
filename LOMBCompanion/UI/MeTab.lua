@@ -19,7 +19,7 @@ local function tile(parent, label)
 end
 
 UI.RegisterTab({
-  id = "me", label = "Me", order = 2,
+  id = "me", label = "Me", order = 20,
   build = function(parent)
     local p = CreateFrame("Frame", nil, parent)
     p.header = W.Text(p, "title", 18, "text")

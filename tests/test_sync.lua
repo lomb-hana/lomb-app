@@ -3,7 +3,8 @@ local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 print("Sync (end-to-end through serializer, chunker, queue)")
 
 local CORE = { "Core/Init.lua", "Core/Compat.lua", "Core/DB.lua", "Comm/Serializer.lua", "Comm/Chunker.lua",
-  "Comm/Queue.lua", "Data/Providers.lua", "Modules/Me.lua", "Modules/Roster.lua", "Modules/Bestiary.lua", "Comm/Sync.lua" }
+  "Comm/Queue.lua", "Data/Providers.lua", "Modules/Me.lua", "Modules/Roster.lua", "Modules/Bestiary.lua", "Comm/Sync.lua",
+  "Comm/Shared.lua" }
 
 local function boot(opts)
   H.frames, H.onUpdateFrames, H.timers = {}, {}, {}
