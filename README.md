@@ -8,6 +8,8 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 
 > **Status:** v0.1–v0.5, v0.7 and v0.8 are built and pass their offline tests. They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.6 (Quests & Items, using ForeverDB.net data) is in progress now that ForeverDB.net approved our API access, and v0.9 raid tools wait for the live game.
 
+> ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
+
 ---
 
 ## Contents
@@ -240,6 +242,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
   - **Not ours:** the data stays ForeverDB.net's. It isn't covered by this repo's MIT license, isn't resold, and isn't presented as our own. ForeverDB.net's labels (data seen in WoW Forever vs. Classic data) are kept.
   - ForeverDB.net isn't affiliated with Blizzard Entertainment, and neither are we.
   - If ForeverDB.net ever asks us to change or remove anything, we will.
+  - **Support ForeverDB.net:** their work is what keeps this project going. If the addon helps you, consider [buying them a coffee](https://buymeacoffee.com/foreverdb).
 - **Guild-recorded data:** bestiary sightings, kills and loot come from Land of Make Believe members playing the game. These are tagged **GUILD**. Facts read live from your game client are tagged **GAME**.
 - **Wowhead:** linked to only. Its data isn't copied or collected.
 
