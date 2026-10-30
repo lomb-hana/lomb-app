@@ -1,0 +1,94 @@
+-- LOMB Companion: SavedVariables (account-wide + per character), defaults, migration.
+local _, ns = ...
+local DB = {}
+ns.DB = DB
+
+DB.SCHEMA = 1
+
+local DEFAULTS = {
+  schema = DB.SCHEMA,
+  settings = {
+    shareProfile = true,     -- gear, professions, playtime
+    shareBestiary = true,    -- kills / loot / sightings you record
+    showCard = true,         -- bestiary card on target
+    cardInCombat = true,     -- keep card up in combat (shows only what the game allows)
+    cardLocked = false,
+    cardPoint = nil,         -- { point, relPoint, x, y }
+    cardPinned = false,
+    windowPoint = nil,
+    lastTab = "roster",
+    minimap = { hide = false, angle = 215 },
+    debug = false,
+  },
+  guilds = {},     -- [guildKey] = { members = {}, peers = {} }
+  bestiary = {},   -- [npcId] = mob record (see Modules/Bestiary.lua)
+  seq = 0,
+}
+
+local CHAR_DEFAULTS = {
+  schema = DB.SCHEMA,
+  deaths = 0,
+  kills = 0,
+  levelTimes = {},   -- [level] = total /played seconds when reached
+  played = nil,      -- { total = s, level = s, at = epoch }
+  lootLog = {},      -- newest first, capped
+  firstLogin = nil,
+}
+
+local function fill(dst, src)
+  for k, v in pairs(src) do
+    if type(v) == "table" then
+      if type(dst[k]) ~= "table" then dst[k] = {} end
+      fill(dst[k], v)
+    elseif dst[k] == nil then
+      dst[k] = v
+    end
+  end
+  return dst
+end
+DB.Fill = fill
+
+function DB.Migrate(db)
+  db.schema = db.schema or 0
+  -- schema 0 -> 1: nothing to convert yet (first release)
+  db.schema = DB.SCHEMA
+end
+
+function DB.Load()
+  if type(LOMBCompanionDB) ~= "table" then LOMBCompanionDB = {} end
+  if type(LOMBCompanionCharDB) ~= "table" then LOMBCompanionCharDB = {} end
+  ns.db = fill(LOMBCompanionDB, DEFAULTS)
+  ns.char = fill(LOMBCompanionCharDB, CHAR_DEFAULTS)
+  DB.Migrate(ns.db)
+  ns.char.firstLogin = ns.char.firstLogin or time()
+end
+
+function DB.NextSeq()
+  ns.db.seq = (ns.db.seq or 0) + 1
+  return ns.db.seq
+end
+
+-- Per-guild bucket, keyed by guild name + realm so alts in other guilds don't mix.
+function DB.Guild()
+  local guildName = ns.Compat.Call(GetGuildInfo, "player")
+  if not guildName then return nil end
+  local realm = ns.Compat.Call(GetNormalizedRealmName) or ""
+  local key = guildName .. "@" .. realm
+  local g = ns.db.guilds[key]
+  if not g then
+    g = { name = guildName, members = {}, peers = {} }
+    ns.db.guilds[key] = g
+  end
+  return g, key
+end
+
+-- Rough size of a table once saved, for the Settings tab.
+function DB.ApproxSize(t, seen)
+  seen = seen or {}
+  if type(t) ~= "table" then return #tostring(t) + 2 end
+  if seen[t] then return 0 end
+  seen[t] = true
+  local n = 2
+  for k, v in pairs(t) do n = n + DB.ApproxSize(k, seen) + DB.ApproxSize(v, seen) + 4 end
+  return n
+end

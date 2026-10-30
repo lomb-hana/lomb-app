@@ -1,0 +1,47 @@
+## Interface: 16001
+## AllowLoadGameType: forever
+## ExcludeLoadGameType: standard, classic
+## Title: |cffb873ffLOMB|r Companion
+## Notes: Land of Make Believe guild companion: roster, personal stats, and a bestiary the guild fills in together.
+## Author: lomb-hana
+## Version: 0.1.0
+## X-License: MIT
+## X-Website: https://github.com/lomb-hana/lomb-app
+## IconTexture: Interface\AddOns\LOMBCompanion\Media\logo
+## SavedVariables: LOMBCompanionDB
+## SavedVariablesPerCharacter: LOMBCompanionCharDB
+
+# Core
+Core\Init.lua
+Core\Compat.lua
+Core\DB.lua
+
+# Comm (serialize -> chunk -> throttled queue -> guild addon channel)
+Comm\Serializer.lua
+Comm\Chunker.lua
+Comm\Queue.lua
+
+# Data providers (game / guild / foreverdb)
+Data\Providers.lua
+# Data\ForeverDB.lua   <- generated file goes here ONLY if ForeverDB approves bundling
+
+# Recording + sync
+Modules\Me.lua
+Modules\Roster.lua
+Modules\Bestiary.lua
+Comm\Sync.lua
+
+# UI
+UI\Theme.lua
+UI\Widgets.lua
+UI\MainFrame.lua
+UI\RosterTab.lua
+UI\MeTab.lua
+UI\MobPage.lua
+UI\BestiaryTab.lua
+UI\BestiaryCard.lua
+UI\SettingsTab.lua
+UI\CreditsTab.lua
+UI\Minimap.lua
+
+Core\Slash.lua
