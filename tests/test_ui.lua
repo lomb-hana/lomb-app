@@ -34,6 +34,7 @@ H.test("every tab opens and renders without errors", function()
   SlashCmdList.LOMB("")
   H.ok(ns.UI.frame.shown, "window shown")
   H.ok(#ns.UI.tabs >= 6, "tabs registered")
+  ns.Bank.SetBankChar(true)   -- the Bank tab is hidden until a bank character exists
   for _, t in ipairs(ns.UI.tabs) do
     local id = t.id
     SlashCmdList.LOMB(id)

@@ -11,13 +11,15 @@ local HELP = {
 }
 
 local function isTab(id)
-  for _, tab in ipairs(ns.UI.tabs) do if tab.id == id then return true end end
+  for _, tab in ipairs(ns.UI.tabs) do if tab.id == id and ns.UI.TabVisible(tab) then return true end end
   return false
 end
 
 local function tabList()
   local out = {}
-  for _, tab in ipairs(ns.UI.tabs) do out[#out + 1] = tab.id end
+  for _, tab in ipairs(ns.UI.tabs) do
+    if ns.UI.TabVisible(tab) then out[#out + 1] = tab.id end
+  end
   return table.concat(out, ", ")
 end
 

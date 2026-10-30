@@ -6,7 +6,8 @@
 -- log of what came in and went out, and shares the list with the guild.
 -- Gold: only the bank character's gold is ever shared, shown as "guild bank funds",
 -- and only if "Share guild bank funds" is on. Nobody else's gold is ever read for
--- sharing. Ledger sharing is on by default only on the bank character itself.
+-- sharing. Nothing happens at all unless someone ticks "This is a guild bank
+-- character" in Settings on that character; the Bank tab stays hidden until then.
 local _, ns = ...
 local C = ns.Compat
 local B = ns:NewModule("Bank")
@@ -28,20 +29,12 @@ local function me()
 end
 B.Me = me
 
--- Is this character the guild's bank character?
--- An explicit Settings choice wins; otherwise a name or guild note containing "bank".
-function B.AutoDetect()
-  local key = ns.playerKey or ""
-  if C.ShortName(key):lower():find("bank", 1, true) then return true end
-  local row = ns.Roster and ns.Roster.byName[key]
-  if row and row.note and row.note:lower():find("bank", 1, true) then return true end
-  return false
-end
+-- Is this character a guild bank character? Only if someone ticked it in Settings on
+-- this character. Nothing is guessed from names or notes (the guild has no bank alt).
 function B.IsBankChar()
-  local b = me()
-  if b.isBank ~= nil then return b.isBank end
-  return B.AutoDetect()
+  return me().isBank == true
 end
+
 function B.SetBankChar(v)
   me().isBank = v and true or false
   if v then B.ScanBags() end
@@ -235,6 +228,13 @@ local function each()
 end
 B.Each = each
 
+-- Does the guild have any bank character (ours, or one a guildmate shares)?
+-- The Bank tab and the "Guild bank has" tooltip line only exist when it does.
+function B.Exists()
+  if B.IsBankChar() then return true end
+  return each()() ~= nil
+end
+
 function B.Ledgers()
   local out = {}
   for owner, d in each() do
@@ -261,6 +261,7 @@ function B.HasItem(itemID)
 end
 
 function B.TooltipLine(itemID)
+  if not B.Exists() then return nil end
   local n = B.HasItem(itemID)
   if n > 0 then return ("Guild bank has: |cffffffff%d|r"):format(n) end
 end
@@ -280,7 +281,6 @@ function B:Login()
 end
 
 ns:Listen("ROSTER_UPDATED", function()
-  -- a guild note saying "bank" may only show up once the roster has loaded
   if B.IsBankChar() and not me().bagsAt then B.ScanSoon() end
 end)
 ns:On("BAG_UPDATE_DELAYED", function() if B.IsBankChar() then B.ScanSoon() end end)

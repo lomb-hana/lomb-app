@@ -39,9 +39,9 @@ local OPTIONS = {
     tip = "During a guild calendar event, if you're grouped with the organizer, note who's in the group "
       .. "every 5 minutes (after combat). Officers (top 2 ranks) can correct it in the Events tab." },
   { section = "Guild bank" },
-  { key = "isBankChar", label = "This character is the guild bank",
-    tip = "Per character. The bank character counts its bags and bank and shares the item list (and what went "
-      .. "in or out) with the guild. Ticked automatically if this character's name or guild note says \"bank\".",
+  { key = "isBankChar", label = "This is a guild bank character",
+    tip = "Per character, off unless you tick it. A bank character counts its bags and bank and shares the item "
+      .. "list (and what went in or out) with the guild. The Bank tab only shows up once a guild bank character exists.",
     get = function() return ns.Bank.IsBankChar() end,
     set = function(v) ns.Bank.SetBankChar(v) end },
   { key = "shareBankFunds", label = "Show the bank character's gold as guild bank funds",

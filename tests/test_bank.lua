@@ -52,7 +52,7 @@ local function bags(contents) H.bags[0] = contents end
 local function vault(contents) H.bags[-1] = contents end
 _ = setup
 
-H.test("only the bank character scans; detection by guild note and the Settings override", function()
+H.test("only a ticked bank character scans; 'bank' in the name or note doesn't tick it", function()
   local ns = boot()
   local B = ns.Bank
   bags({ { LINEN, 20 }, false, { COPPER, 5 } })
@@ -60,14 +60,18 @@ H.test("only the bank character scans; detection by guild note and the Settings 
   H.ok(not B.ScanBags(), "no scan")
   H.eq(B.Me().bagsAt, nil)
   H.eq(B.Build(), nil, "nothing to share")
-  -- guild note says bank
+  -- a guild note saying bank is ignored (no auto-detect)
   H.roster[1].note = "Guild Bank alt"
   H.fire("GUILD_ROSTER_UPDATE")
   H.advance(20)
-  H.ok(B.IsBankChar(), "guild note 'bank' marks it")
-  H.ok(B.Me().bagsAt, "scanned once detected")
+  H.ok(not B.IsBankChar(), "guild note 'bank' does nothing")
+  H.eq(B.Me().bagsAt, nil)
+  H.ok(not B.Exists())
+  -- only the Settings tick makes it a bank character
+  B.SetBankChar(true)
+  H.ok(B.IsBankChar())
+  H.ok(B.Me().bagsAt, "scanned once ticked")
   H.eq(B.Me().bags[LINEN], 20)
-  -- explicit override wins over the note
   B.SetBankChar(false)
   H.ok(not B.IsBankChar())
   H.eq(B.Build(), nil)
@@ -75,15 +79,54 @@ H.test("only the bank character scans; detection by guild note and the Settings 
   H.ok(B.IsBankChar())
 end)
 
-H.test("name containing 'bank' is detected at login", function()
-  local ns = boot({ player = "Lombbank" })
-  H.state.player = "Lombbank"
-  local B = ns.Bank
-  -- ns.playerKey was set at login with the default name; check detection helper directly
+H.test("no bank character: Bank tab hidden, no tooltip line; appears once one is ticked or shared", function()
+  local ns = boot()
+  local B, UI = ns.Bank, ns.UI
   ns.playerKey = "Lombbank-Forever"
-  H.ok(B.AutoDetect(), "name match")
+  H.ok(not B.IsBankChar(), "a name with 'bank' isn't auto-ticked")
   ns.playerKey = "Testy-Forever"
-  H.ok(not B.AutoDetect())
+  UI.Open("roster")
+  H.ok(not UI.tabButtons.bank:IsShown(), "Bank hidden in the sidebar")
+  H.ok(UI.tabButtons.wishlist:IsShown(), "Wishlist has its own entry")
+  UI.Open("bank")
+  H.eq(UI.current, "roster", "can't open a hidden tab")
+  ns.HandleSlash("bank")
+  H.eq(UI.current, "roster", "/lomb bank does nothing while hidden")
+  ns.Wishlist.Add("n", "Wool Cloth", 2)
+  local function bankLine(id)
+    for _, l in ipairs(ns.Tooltip.LinesFor(id)) do if tostring(l):find("Guild bank has") then return true end end
+  end
+  H.eq(B.TooltipLine(WOOL), nil, "no 'Guild bank has' line")
+  H.ok(not bankLine(WOOL))
+  -- a guildmate shares a bank character's ledger
+  local now = H.epoch
+  deliver(ns, "Vaultkeep-Forever", { t = "D", k = "bk", r = now, d = { i = { WOOL, 40 }, b = now } })
+  H.ok(B.Exists())
+  H.ok(UI.tabButtons.bank:IsShown(), "Bank appears")
+  H.ok(bankLine(WOOL), "tooltip line now")
+  UI.Open("bank")
+  H.eq(UI.current, "bank")
+  -- they untick it: the off marker hides the tab again and we fall back
+  deliver(ns, "Vaultkeep-Forever", { t = "D", k = "bk", r = now + 60, off = true })
+  H.ok(not B.Exists())
+  H.ok(not UI.tabButtons.bank:IsShown(), "hidden again")
+  H.eq(UI.current, "roster", "fell back to the first tab")
+  -- ticking our own character shows it too
+  B.SetBankChar(true)
+  H.ok(UI.tabButtons.bank:IsShown())
+end)
+
+H.test("rare alerts are silent by default; the sound is an option", function()
+  local ns = boot()
+  H.eq(ns.db.settings.rareSound, false)
+  local played = 0
+  _G.PlaySound = function() played = played + 1 end
+  _G.SOUNDKIT = _G.SOUNDKIT or { RAID_WARNING = 8959 }
+  ns.Rares.Alert({ n = 1, nm = "Mor'Ladim", z = "Duskwood", by = "Oakenhollow-Forever" })
+  H.eq(played, 0, "no sound")
+  ns.db.settings.rareSound = true
+  ns.Rares.Alert({ n = 2, nm = "Mor'Ladim", z = "Duskwood", by = "Oakenhollow-Forever" })
+  H.ok(played >= 1, "sound when ticked")
 end)
 
 H.test("change log: in/out, bag<->bank moves cancel, first bank look is a baseline", function()
@@ -263,14 +306,12 @@ end)
 
 H.test("Bank tab: ledger view, search, next bank alt, empty states", function()
   local ns = boot()
+  bags({ { LINEN, 20 }, { COPPER, 5 }, { WOOL, 3 } })
+  ns.Bank.SetBankChar(true)
   ns.UI.Open("bank")
   local Tab = ns.BankTab
   local p = Tab.panel
   H.ok(p, "tab built")
-  H.ok(p.empty:IsShown(), "no bank character yet")
-  H.ok(p.empty.text:find("bank"), p.empty.text)
-  bags({ { LINEN, 20 }, { COPPER, 5 }, { WOOL, 3 } })
-  ns.Bank.SetBankChar(true)
   ns.Wishlist.Add("n", "Copper Ore", 2)
   ns.UI.Refresh("bank")
   H.eq(#p.items.items, 3)
@@ -293,13 +334,12 @@ H.test("Bank tab: ledger view, search, next bank alt, empty states", function()
   H.ok(p.title.text:find("Testy"), p.title.text)
 end)
 
-H.test("Wishlist view: filters, add form, shift-click fills the box, whisper prefill, remove", function()
+H.test("Wishlist tab: filters, add form, shift-click fills the box, whisper prefill, remove", function()
   local ns = boot()
-  ns.UI.Open("bank")
-  local Tab = ns.BankTab
+  ns.UI.Open("wishlist")
+  H.eq(ns.UI.current, "wishlist", "own tab, no bank character needed")
+  local Tab = ns.WishTab
   local p = Tab.panel
-  p.wishBtn:Click()
-  H.ok(p.wish:IsShown() and not p.bank:IsShown())
   H.ok(p.wishEmpty:IsShown())
   -- shift-click an item while the item box has focus
   p.itemBox:SetFocus()
@@ -327,7 +367,7 @@ H.test("Wishlist view: filters, add form, shift-click fills the box, whisper pre
   -- a guildmate's row: click opens a prefilled whisper, nothing is sent
   local now = H.epoch
   deliver(ns, "Oakenhollow-Forever", { t = "D", k = "wl", r = now, d = { e = { { k = "g", i = COPPER, q = 8, t = now + 10 } } } })
-  ns.UI.Refresh("bank")
+  ns.UI.Refresh("wishlist")
   local theirs = p.wishList.items[1]
   H.eq(theirs.owner, "Oakenhollow-Forever")
   H.chat = {}

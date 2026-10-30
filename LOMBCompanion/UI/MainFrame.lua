@@ -7,7 +7,8 @@ ns.UI = UI
 UI.tabs = {}        -- registered tab definitions, in order
 UI.tabButtons = {}
 
--- tab = { id=, label=, order=, build(content) -> panel, refresh(panel), gap=bool (space above) }
+-- tab = { id=, label=, order=, build(content) -> panel, refresh(panel), gap=bool (space above),
+--         shown=function() -> bool (optional: the tab is only listed while this is true) }
 function UI.RegisterTab(tab)
   UI.tabs[#UI.tabs + 1] = tab
   table.sort(UI.tabs, function(a, b) return a.order < b.order end)
@@ -49,6 +50,38 @@ function UI.NavButton(parent, tab)
   end
   function b:SetBadge(text) self.badge:SetText(text or "") end
   return b
+end
+
+function UI.TabVisible(tab)
+  if not tab.shown then return true end
+  local ok, on = pcall(tab.shown)
+  return ok and on and true or false
+end
+
+-- Place the sidebar entries, skipping tabs that are hidden right now.
+function UI.LayoutNav()
+  if not UI.nav then return end
+  local S = T.sizes
+  local y = -8
+  for _, tab in ipairs(UI.tabs) do
+    local b = UI.tabButtons[tab.id]
+    if UI.TabVisible(tab) then
+      if tab.gap then y = y - 8 end
+      b:ClearAllPoints()
+      b:SetPoint("TOPLEFT", 1, y)
+      b:SetPoint("TOPRIGHT", -1, y)
+      b:Show()
+      y = y - S.nav.h - 2
+    else
+      b:Hide()
+    end
+  end
+  -- the open tab just disappeared: fall back to the first one
+  if UI.frame and UI.frame:IsShown() and UI.current then
+    for _, tab in ipairs(UI.tabs) do
+      if tab.id == UI.current and not UI.TabVisible(tab) then UI.Select(UI.tabs[1].id) end
+    end
+  end
 end
 
 -- Small count next to a sidebar entry ("3" new news items, etc.).
@@ -104,16 +137,11 @@ function UI.Create()
   nav:SetPoint("BOTTOMLEFT", 0, S.footer - 1)
   nav:SetWidth(S.nav.w)
   UI.nav = nav
-  local y = -8
   for i, tab in ipairs(UI.tabs) do
-    if tab.gap then y = y - 8 end
-    local b = UI.NavButton(nav, tab)
-    b:SetPoint("TOPLEFT", 1, y)
-    b:SetPoint("TOPRIGHT", -1, y)
-    y = y - S.nav.h - 2
-    UI.tabButtons[tab.id] = b
+    UI.tabButtons[tab.id] = UI.NavButton(nav, tab)
     tab.index = i
   end
+  UI.LayoutNav()
 
   -- content
   local content = CreateFrame("Frame", nil, f)
@@ -154,7 +182,7 @@ function UI.Select(id)
   UI.Create()
   local found
   for _, tab in ipairs(UI.tabs) do
-    if tab.id == id then found = tab end
+    if tab.id == id and UI.TabVisible(tab) then found = tab end
   end
   found = found or UI.tabs[1]
   for _, tab in ipairs(UI.tabs) do
