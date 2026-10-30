@@ -14,6 +14,10 @@ local OPTIONS = {
   { key = "shareRecipes", label = "Share the recipes I know (for \"who can craft\")",
     tip = "Item and spell IDs of what you can make, read when you open a profession window. Off = guildmates won't see you as a crafter.",
     after = function() ns.Shared.MarkDirty("rc") end },
+  { key = "shareActivity", label = "Share my news and leaderboard stats",
+    tip = "Level-ups, rare kills and new recipes for the News tab; kills, rares and milestone times for the " ..
+      "Leaderboard. Off = you're left out of both (your roster level still shows).",
+    after = function() ns.Shared.MarkDirty("st"); ns.Shared.MarkDirty("nw") end },
   { section = "Tooltips" },
   { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
   { section = "Bestiary card" },

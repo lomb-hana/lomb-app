@@ -40,6 +40,12 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Bestiary card](docs/screenshots/03-card-small.png) | ![Minimap button](docs/screenshots/08-minimap-button.png) |
 | **Crafters (v0.2)** | **Crafters: search + whisper (v0.2)** |
 | ![Crafters tab](docs/screenshots/09-crafters.png) | ![Crafters search and whisper](docs/screenshots/10-crafters-search-whisper.png) |
+| **News (v0.3)** | **News: milestones only (v0.3)** |
+| ![News tab](docs/screenshots/12-news.png) | ![News filtered to milestones](docs/screenshots/13-news-milestones.png) |
+| **Leaderboard: levels (v0.3)** | **Leaderboard: kills this week (v0.3)** |
+| ![Leaderboard levels](docs/screenshots/14-leaderboard-levels.png) | ![Leaderboard weekly kills](docs/screenshots/15-leaderboard-kills-week.png) |
+| **Leaderboard: firsts (v0.3)** | |
+| ![Leaderboard firsts](docs/screenshots/16-leaderboard-firsts.png) | |
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -87,10 +93,13 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 - Search "who can craft X?" and whisper the crafter straight from the result.
 - Item tooltips get a line showing which guildmates can craft that item.
 
-### v0.3: News & Milestones
-- **Guild news feed:** level-ups, joins and leaves, first kills of rares, new recipes and other milestones.
+### v0.3: News & Milestones (built, awaiting in-game test)
+- **Guild news feed:** level-ups, joins and leaves, rare kills, new recipes and milestones, with a filter and an unread count on the News tab.
+  - Level-ups, joins and leaves come from the guild roster, so they include members without the addon. Ones that happened while you were offline are marked with "~".
+  - Rare kills and new recipes come from guildmates with the addon. When several of you kill the same rare together it's one line.
 - **Milestones:** first to level 10, 20, and so on up to 60, for the whole guild and per class.
-- **Fun leaderboards:** levels, kills and first to 60, weekly and all-time. These are just for fun, since shared stats can't be fully verified.
+- **Fun leaderboards:** levels, kills, rares, hours played and "firsts". Kills and rares can be shown for this week (since the Tuesday reset) or all time. These are just for fun, since shared stats can't be fully verified.
+- **Off switch** in Settings: "Share my news and leaderboard stats". Hours played are only shared if profile sharing is on too.
 
 ### v0.4: Profiles & Gear
 - **Member profiles:** equipped gear, average item level, empty slots, level progress and professions.
@@ -159,6 +168,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
 - **v0.2.0 is built:** the Crafters tab ("who can craft X?", filter by profession, online only, click to whisper, shift-click to link), crafter names on item tooltips, and a sidebar menu so more tabs fit. Recipes are read when you open a profession window and shared as recipe IDs only.
 - It has an offline test suite (a fake WoW API runs the whole addon, including the windows) plus a linter. Both pass.
 - **It can't be tested in the real game until WoW: Forever launches on November 4, 2026.** Expect a quick follow-up fix (v0.1.1) after launch, because the game's addon rules can change between beta and the live release.

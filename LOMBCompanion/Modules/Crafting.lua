@@ -103,11 +103,12 @@ function Crafting.Absorb(profName, items, spells)
   if not profName then return 0 end
   local e = profEntry(profName)
   e.n = e.n or {}
-  local added = 0
+  local added, fresh = 0, {}
   local function add(set, prefix, id, name)
     if not set[id] then
       set[id] = true
       added = added + 1
+      fresh[#fresh + 1] = { prefix, id }
     end
     if type(name) == "string" then e.n[prefix .. id] = name end
   end
@@ -126,6 +127,9 @@ function Crafting.Absorb(profName, items, spells)
   if added > 0 then
     ns.Debug("learned %d %s recipe(s)", added, profName)
     ns.Shared.MarkDirty("rc")
+    -- a handful of new ones on a profession we'd already read = freshly learned
+    -- (the first read of a profession adds everything at once: not news)
+    if count > 0 and added <= 3 then ns:Fire("RECIPES_LEARNED", profName, fresh) end
   end
   return added
 end

@@ -184,8 +184,8 @@ end)
 
 H.test("newer version notice shows once", function()
   local ns = boot()
-  deliver(ns, "Future-Forever", { t = "H", v = "0.2.0", p = 1 })
-  deliver(ns, "Future2-Forever", { t = "H", v = "0.3.0", p = 1 })
+  deliver(ns, "Future-Forever", { t = "H", v = "9.1.0", p = 1 })
+  deliver(ns, "Future2-Forever", { t = "H", v = "9.2.0", p = 1 })
   local count = 0
   for _, l in ipairs(DEFAULT_CHAT_FRAME.lines) do if l:find("newer") then count = count + 1 end end
   H.eq(count, 1)

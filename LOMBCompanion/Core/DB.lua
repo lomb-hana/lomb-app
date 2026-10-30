@@ -11,6 +11,7 @@ local DEFAULTS = {
     shareProfile = true,     -- gear, professions, playtime (shared automatically; off switch in Settings)
     shareBestiary = true,    -- kills / loot / sightings you record
     shareRecipes = true,     -- which items/enchants you can craft (item and spell IDs only)
+    shareActivity = true,    -- news (level-ups, rare kills, new recipes) + leaderboard stats
     tooltips = true,         -- add LOMB lines to item tooltips ("Crafters in LOMB: ...")
     showCard = true,         -- bestiary card on target
     cardInCombat = true,     -- keep card up in combat (shows only what the game allows)

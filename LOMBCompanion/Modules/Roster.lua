@@ -23,10 +23,20 @@ local function lastOnlineHours(index)
   return (y or 0) * 8760 + (m or 0) * 730 + (d or 0) * 24 + (h or 0)
 end
 
+-- Roster changes since the last scan (also across logouts, via the saved
+-- per-member level): GUILD_JOIN(name), GUILD_LEAVE(name),
+-- GUILD_LEVELUP(name, newLevel, oldLevel, classFile, away).
+-- `away` = true when the change happened while we were logged off (first scan
+-- of the session), so its time is only "sometime since your last login".
+Roster.scansThisSession = 0
+
 function Roster.Scan()
   local g = ns.DB.Guild()
   local members, byName = {}, {}
   local total = C.Call(GetNumGuildMembers) or 0
+  local seeded = g and g.rosterSeeded
+  local away = Roster.scansThisSession == 0
+  local changes = {}
   for i = 1, total do
     local name, rankName, rankIndex, level, className, zone, _, _, online, status, classFile =
       C.Call(GetGuildRosterInfo, i)
@@ -41,7 +51,17 @@ function Roster.Scan()
       if g then
         local peer = g.peers[full]
         row.peer = peer
-        local mem = g.members[full] or {}
+        local mem = g.members[full]
+        if not mem then
+          mem = {}
+          if seeded then changes[#changes + 1] = { "GUILD_JOIN", full } end
+        elseif mem.gone then
+          mem.gone = nil
+          changes[#changes + 1] = { "GUILD_JOIN", full }
+        end
+        if seeded and type(level) == "number" and type(mem.level) == "number" and level > mem.level then
+          changes[#changes + 1] = { "GUILD_LEVELUP", full, level, mem.level, classFile, away }
+        end
         if online then mem.seen = time() end
         mem.level, mem.class = level, classFile
         g.members[full] = mem
@@ -51,9 +71,21 @@ function Roster.Scan()
       byName[full] = row
     end
   end
+  -- leavers: only trust a complete roster (some clients list online members only)
+  if g and seeded and total > 0 and #members == total then
+    for name, mem in pairs(g.members) do
+      if not byName[name] and not mem.gone then
+        mem.gone = time()
+        changes[#changes + 1] = { "GUILD_LEAVE", name }
+      end
+    end
+  end
+  if g and total > 0 and #members == total then g.rosterSeeded = true end
+  if total > 0 then Roster.scansThisSession = Roster.scansThisSession + 1 end
   Roster.members, Roster.byName = members, byName
   Roster.online = 0
   for _, r in ipairs(members) do if r.online then Roster.online = Roster.online + 1 end end
+  for _, c in ipairs(changes) do ns:Fire(unpack(c, 1, 6)) end
   ns:Fire("ROSTER_UPDATED", members)
 end
 Roster.ScanSoon = ns.Debounce(0.5, Roster.Scan)
