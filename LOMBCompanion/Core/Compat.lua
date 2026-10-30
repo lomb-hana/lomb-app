@@ -9,7 +9,7 @@ local _, ns = ...
 local C = {}
 ns.Compat = C
 
-local unpack = unpack or table.unpack
+local unpack = unpack or table.unpack -- luacheck: ignore 143
 
 ---------------------------------------------------------------------------
 -- Secret values

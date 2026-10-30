@@ -9,7 +9,7 @@ H.addonDir = H.root .. "/LOMBCompanion/"
 -- tiny test framework
 ---------------------------------------------------------------------------
 H.passed, H.failed = 0, 0
-local current = "?"
+local current = "?" -- luacheck: ignore 231
 function H.test(name, fn)
   current = name
   local ok, err = xpcall(fn, debug.traceback)
@@ -101,8 +101,10 @@ H.newRegion = newRegion
 FrameMT.__index = function(_, k)
   local m = Frame[k]
   if m then return m end
-  -- any other widget method is a harmless no-op returning nothing
-  return function() end
+  -- any other widget method (CamelCase) is a harmless no-op returning nothing;
+  -- plain lowercase fields stay nil, like on real frames
+  if type(k) == "string" and k:find("^%u") then return function() end end
+  return nil
 end
 
 function Frame:RegisterEvent(e) self.events[e] = true end
@@ -201,9 +203,9 @@ function H.installAPI(opts)
   opts = opts or {}
   local env = _G
   env.UIParent = newRegion("Frame", nil, "UIParent")
-  env.UIParent.w, env.UIParent.h = 1920, 1080
+  env.UIParent.w, env.UIParent.h, env.UIParent.shown = 1920, 1080, true
   env.Minimap = newRegion("Frame", env.UIParent, "Minimap")
-  env.Minimap.w, env.Minimap.h = 140, 140
+  env.Minimap.w, env.Minimap.h, env.Minimap.shown = 140, 140, true
   env.GameTooltip = newRegion("GameTooltip", env.UIParent, "GameTooltip")
   env.DEFAULT_CHAT_FRAME = { lines = {}, AddMessage = function(self, m) self.lines[#self.lines + 1] = m end }
   env.CreateFrame = function(kind, name, parent) return newRegion(kind, parent, name) end

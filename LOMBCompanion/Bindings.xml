@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="LOMBCOMPANION_TOGGLE" header="LOMBCOMPANION" category="ADDONS">
+    LOMBCompanion_ToggleWindow()
+  </Binding>
+  <Binding name="LOMBCOMPANION_CARD" category="ADDONS">
+    LOMBCompanion_ToggleCard()
+  </Binding>
+</Bindings>
