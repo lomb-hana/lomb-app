@@ -13,7 +13,7 @@ local OPTIONS = {
       ns:Fire("PROFILE_CHANGED"); ns.Shared.MarkDirty("gr")
       if ns.Sync then ns.Sync.SendProfile(true) end
     end },
-  { key = "shareBestiary", label = "Share bestiary records (kills, loot, abilities)",
+  { key = "shareBestiary", label = "Share bestiary records (kills, sightings, loot, abilities)",
     tip = "Off = you neither send nor receive bestiary data. Your own records still work." },
   { key = "shareRecipes", label = "Share the recipes I know (for \"who can craft\")",
     tip = "Item and spell IDs of what you can make, read when you open a profession window. Off = guildmates won't see you as a crafter.",
@@ -22,8 +22,14 @@ local OPTIONS = {
     tip = "Level-ups, rare kills and new recipes for the News tab; kills, rares and milestone times for the " ..
       "Leaderboard. Off = you're left out of both (your roster level still shows).",
     after = function() ns.Shared.MarkDirty("st"); ns.Shared.MarkDirty("nw") end },
+  { key = "shareRares", label = "Tell guildmates when I spot a rare",
+    tip = "Sends the rare's name and level, the zone, and where you are on the map (e.g. 45, 62) when you see it. "
+      .. "At most once per rare every 10 minutes. Nothing else about where you are is sent." },
   { section = "Tooltips" },
   { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
+  { section = "Rare alerts" },
+  { key = "rareAlerts", label = "Show an alert when a rare is spotted (by me or a guildmate)" },
+  { key = "rareSound", label = "Play a sound with rare alerts" },
   { section = "Bestiary card" },
   { key = "showCard", label = "Show the card when I target a creature",
     after = function(v) if not v and ns.BestiaryCard then ns.BestiaryCard.Hide(true) end end },
@@ -87,7 +93,11 @@ UI.RegisterTab({
     p.stats:SetSpacing(3)
 
     local b1 = W.Button(box, "Reset positions", 180, 22, function()
-      S().cardPoint, S().windowPoint, S().cardPinned = nil, nil, false
+      S().cardPoint, S().windowPoint, S().cardPinned, S().toastPoint = nil, nil, false, nil
+      if ns.RareToast.frame then
+        ns.RareToast.frame:ClearAllPoints()
+        ns.RareToast.frame:SetPoint("TOP", UIParent, "TOP", 0, -150)
+      end
       if ns.BestiaryCard.frame then
         ns.BestiaryCard.frame:ClearAllPoints()
         ns.BestiaryCard.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 260, -140)
@@ -96,6 +106,12 @@ UI.RegisterTab({
       UI.frame:ClearAllPoints(); UI.frame:SetPoint("CENTER")
     end)
     b1:SetPoint("BOTTOMLEFT", 10, 40)
+    local b0 = W.Button(box, "Preview a rare alert", 180, 22, function()
+      ns.RareToast.Show({ n = 0, nm = "Mother Fang", lv = 10, cl = "rare", z = "Elwynn Forest", x = 62, y = 79,
+        by = ns.playerKey, t = time() })
+    end)
+    b0:SetPoint("BOTTOMLEFT", 10, 68)
+    b0.tip = "Shows what an alert looks like (nothing is sent). Drag the alert to move it."
     local b2 = W.Button(box, "Clear bestiary data", 180, 22, function()
       W.Confirm("Clear the bestiary saved on this computer?\nGuildmates' copies are not affected, and some records will sync back.",
         function()

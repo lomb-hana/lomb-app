@@ -3,6 +3,8 @@
 --   H  hello      { t="H", v=addonVersion, p=protocol }
 --   P  profile    { t="P", v, lv, cl, pr, il, pt }  or { t="P", off=true } when sharing is off
 --   B  bestiary   { t="B", n=npcId, ... }  (see Bestiary.BuildSyncPayload)
+--   BR relay      { t="BR", n=npcId, w=recorder, ... } someone else's record, passed on
+--                 to a guildmate who was offline when it was made (catch-up)
 --   D / W         shared per-member datasets (see Comm/Shared.lua)
 -- Other modules add message types with Sync.RegisterHandler(type, fn).
 -- Nothing is sent during boss encounters, PvP matches or chat lockdown, and
@@ -16,12 +18,17 @@ Sync.FLUSH_MAX = 30           -- npcs per flush
 Sync.BACKFILL_MAX = 20        -- npcs sent when a new guildmate shows up
 Sync.BACKFILL_COOLDOWN = 300
 Sync.PROFILE_COOLDOWN = 30
+Sync.CATCHUP_MAX = 40         -- our own records sent to a guildmate coming back online
+Sync.RELAY_MAX = 30           -- other people's records passed on by the one chosen relay
+Sync.CATCHUP_COOLDOWN = 600   -- per guildmate
 
 Sync.stats = { received = 0, bad = 0, sessionPeers = 0 }
 Sync.sessionPeers = {}
 Sync.lastProfileSent = -1e9
 Sync.lastBackfill = -1e9
 Sync.newerVersionSeen = nil
+Sync.lastCatchUp = {}
+Sync.since = nil              -- when we were last online (from the previous session)
 
 local Serializer, Chunker, Queue = ns.Serializer, ns.Chunker, ns.Queue
 
@@ -58,6 +65,8 @@ function Sync.SendHello()
   local msg = { t = "H", p = ns.PROTOCOL }
   -- revisions of the datasets we publish, so guildmates can ask for what they lack
   if ns.Shared then msg.ds = ns.Shared.Digest() end
+  -- when we were last online, so guildmates can send what we missed
+  if Sync.since and ns.db.settings.shareBestiary then msg.bs = Sync.since end
   Sync.Send(msg, Queue.ALERT)
 end
 
@@ -115,6 +124,42 @@ function Sync.Backfill()
   return n
 end
 
+-- One online guildmate passes on everyone else's records; the choice is the
+-- alphabetically first of us (excluding the newcomer), so it's the same everywhere.
+function Sync.IsRelay(newcomer)
+  local first = ns.playerKey
+  for who in pairs(Sync.sessionPeers) do
+    if who ~= newcomer and who < first then first = who end
+  end
+  return first == ns.playerKey
+end
+
+-- A guildmate is back: send our records made since `since`, and if we're the
+-- relay, other people's too (except ones who are online to send their own).
+function Sync.CatchUp(sender, since)
+  if not ns.db.settings.shareBestiary then return 0, 0 end
+  if type(since) ~= "number" or since < 1.5e9 or since > time() then return Sync.Backfill(), 0 end
+  local nowT = GetTime()
+  if Sync.lastCatchUp[sender] and nowT - Sync.lastCatchUp[sender] < Sync.CATCHUP_COOLDOWN then return 0, 0 end
+  Sync.lastCatchUp[sender] = nowT
+  local mine, sent = ns.Bestiary.ChangedSince(since, "me"), 0
+  for i = 1, math.min(#mine, Sync.CATCHUP_MAX) do
+    Sync.SendMob(mine[i].id)
+    sent = sent + 1
+  end
+  local relayed = 0
+  if Sync.IsRelay(sender) then
+    for _, e in ipairs(ns.Bestiary.ChangedSince(since, "others")) do
+      if relayed >= Sync.RELAY_MAX then break end
+      if e.who ~= sender and not Sync.sessionPeers[e.who] then
+        local payload = ns.Bestiary.BuildRelayPayload(e.id, e.who)
+        if payload and Sync.Send(payload, Queue.BULK) then relayed = relayed + 1 end
+      end
+    end
+  end
+  return sent, relayed
+end
+
 ---------------------------------------------------------------------------
 -- Receiving
 ---------------------------------------------------------------------------
@@ -148,7 +193,7 @@ handlers.H = function(sender, d)
     -- so a guild full of addon users doesn't all reply at the same moment
     ns.After(2 + math.random() * 8, function()
       Sync.SendProfile()
-      Sync.Backfill()
+      Sync.CatchUp(sender, d.bs)
     end)
   end
   if ns.Shared then ns.Shared.OnDigest(sender, d.ds) end
@@ -163,6 +208,14 @@ end
 handlers.B = function(sender, d)
   if not ns.db.settings.shareBestiary then return end   -- sharing off = no exchange either way
   ns.Bestiary.ApplyRemote(sender, d)
+end
+
+handlers.BR = function(_, d)
+  if not ns.db.settings.shareBestiary then return end
+  local who = d.w
+  if type(who) ~= "string" or #who > 64 or not who:find("^[^%s%-]+%-[^%s]+$") then return end
+  if who == ns.playerKey then return end      -- nobody else speaks for our own records
+  ns.Bestiary.ApplyRemote(who, d)
 end
 
 function Sync.Handle(sender, d)
@@ -220,6 +273,10 @@ function Sync:Login()
   ns.Every(10, function() Sync.assembler:Purge() end)
   ns.Every(Sync.FLUSH_INTERVAL, Sync.FlushBestiary)
   ns.Every(60, function() if Sync.profileDirty then Sync.SendProfile() end end)
+  -- remember when we were last online (read back at the next login for catch-up)
+  Sync.since = ns.db.lastOnline
+  ns.db.lastOnline = time()
+  ns.Every(60, function() ns.db.lastOnline = time() end)
   -- jittered hello so a raid of logins doesn't collide
   ns.After(6 + math.random() * 6, function()
     Sync.SendHello()

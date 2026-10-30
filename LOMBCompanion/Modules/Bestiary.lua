@@ -8,7 +8,9 @@
 --   rec = { [recorder "Name-Realm"] = {
 --     k  = kills, c = corpses looted, m = copper looted,
 --     i  = { [itemID] = times dropped }, q = { [itemID] = total quantity },
---     fk = first kill (epoch), t = last change (epoch) } }
+--     s  = sightings (different spawns seen), fk = first kill (epoch),
+--     t  = last change (epoch) } }
+--   rs = { t, by, z, x, y } last time a guildmate spotted it as a rare (local only)
 -- Each recorder's entry is only ever replaced by that recorder's newer copy, so
 -- syncing is idempotent and the guild total is simply the sum over recorders.
 local _, ns = ...
@@ -23,6 +25,7 @@ B.LOOT_LOG_MAX = 50
 B.dirty = {}            -- [npcId] = true -> needs syncing
 B.countedGUIDs = {}     -- corpses/kills already counted this session
 B.lootedGUIDs = {}
+B.seenGUIDs = {}        -- spawns already counted as a sighting this session
 B.unattributedLoot = 0  -- loot we couldn't tie to a mob (secret GUID in combat)
 B.live = nil            -- live snapshot of the current target
 B.pendingTargetRefresh = false
@@ -127,6 +130,14 @@ function B.RecordSighting(snap)
   local z = zoneName()
   if z and not m.z[z] and countKeys(m.z) < B.MAX_ZONES then m.z[z] = true; changed = true end
   m.ls = now()
+  -- count each spawn once per session ("seen 40 times" across the guild)
+  if snap.guid and not B.seenGUIDs[snap.guid] then
+    B.seenGUIDs[snap.guid] = true
+    local r = B.MyRecord(m, true)
+    r.s = (r.s or 0) + 1
+    r.t = now()
+    changed = true
+  end
   if changed then B.MarkDirty(snap.npcId) end
   return m
 end
@@ -274,11 +285,12 @@ end
 ---------------------------------------------------------------------------
 -- Pure function (unit tested): sum all recorders.
 function B.Aggregate(m)
-  local agg = { kills = 0, corpses = 0, money = 0, items = {}, qty = {}, recorders = 0 }
+  local agg = { kills = 0, corpses = 0, money = 0, items = {}, qty = {}, recorders = 0, seen = 0 }
   local firstKill, firstKiller
   for who, r in pairs(m.rec or {}) do
     agg.recorders = agg.recorders + 1
     agg.kills = agg.kills + (r.k or 0)
+    agg.seen = agg.seen + math.max(r.s or 0, r.k or 0)
     agg.corpses = agg.corpses + (r.c or 0)
     agg.money = agg.money + (r.m or 0)
     for itemID, n in pairs(r.i or {}) do agg.items[itemID] = (agg.items[itemID] or 0) + n end
@@ -336,7 +348,7 @@ ns.Providers.Register({
       classification = m.cl, creatureType = m.ct, family = m.fam, healthMax = m.hp,
       zones = next(m.z or {}) and zonesList(m) or nil,
       kills = agg.kills, firstKiller = agg.firstKiller, firstSeen = m.fs, lastSeen = m.ls,
-      recorders = agg.recorders,
+      recorders = agg.recorders, seen = agg.seen > 0 and agg.seen or nil,
       loot = agg.loot, abilities = abilities,
     }
   end,
@@ -346,31 +358,105 @@ function B.Merged(npcId)
   return ns.Providers.Merge(npcId, { live = B.live })
 end
 
+-- Filters and sort orders for the Bestiary tab.
+B.FILTERS = {
+  { key = "all",      label = "All creatures" },
+  { key = "rare",     label = "Rares" },
+  { key = "elite",    label = "Elites" },
+  { key = "zone",     label = "This zone" },
+  { key = "killed",   label = "Guild killed" },
+  { key = "unkilled", label = "Not killed yet" },
+  { key = "mine",     label = "Killed by me" },
+}
+B.SORTS = {
+  { key = "name",   label = "Sort: name" },
+  { key = "level",  label = "Sort: level" },
+  { key = "kills",  label = "Sort: kills" },
+  { key = "recent", label = "Sort: recent" },
+}
+
+local function isRare(cl) return cl == "rare" or cl == "rareelite" end
+local function isElite(cl) return cl == "elite" or cl == "rareelite" or cl == "worldboss" end
+B.IsRare = isRare
+
+local function matches(q, ...)
+  if q == "" then return true end
+  for i = 1, select("#", ...) do
+    local v = select(i, ...)
+    if type(v) == "string" and v:lower():find(q, 1, true) then return true end
+  end
+  return false
+end
+
+local function passes(filter, it, here)
+  if filter == "rare" then return isRare(it.cl) end
+  if filter == "elite" then return isElite(it.cl) end
+  if filter == "zone" then return here ~= nil and it.zones[here] == true end
+  if filter == "killed" then return (it.kills or 0) > 0 end
+  if filter == "unkilled" then return (it.kills or 0) == 0 end
+  if filter == "mine" then return (it.mine or 0) > 0 end
+  return true
+end
+
 -- Sorted list of known mobs for the Bestiary tab (guild-recorded + static data).
-function B.List(search)
+-- opts: { filter = key, sort = key, zone = name for the "zone" filter } (or just a search string)
+function B.List(search, opts)
+  opts = opts or {}
   local q = search and search:lower() or ""
+  local filter, here = opts.filter or "all", opts.zone or zoneName()
   local out, seen = {}, {}
   for npcId, m in pairs(ns.db.bestiary) do
     seen[npcId] = true
-    if q == "" or (m.nm or ""):lower():find(q, 1, true) then
+    local zs = ""
+    for z in pairs(m.z or {}) do zs = zs .. " " .. z end
+    if matches(q, m.nm, zs, m.ct, m.fam) then
       local agg = B.Aggregate(m)
-      out[#out + 1] = { npcId = npcId, name = m.nm or ("NPC " .. npcId), level = m.lv, levelMax = m.lx,
-        cl = m.cl, kills = agg.kills, ls = m.ls }
+      local mine = m.rec and m.rec[ns.playerKey]
+      local it = { npcId = npcId, name = m.nm or ("NPC " .. npcId), level = m.lv, levelMax = m.lx,
+        cl = m.cl, kills = agg.kills, seen = agg.seen, mine = mine and mine.k or 0, ls = m.ls, zones = m.z or {},
+        spotted = m.rs }
+      if passes(filter, it, here) then out[#out + 1] = it end
     end
   end
   for npcId, src in pairs(ns.Providers.StaticMobIds()) do
     if not seen[npcId] then
       local p = ns.Providers.Get(src)
       local m = p and p.mobs[npcId]
-      if m and (q == "" or (m.name or ""):lower():find(q, 1, true)) then
-        out[#out + 1] = { npcId = npcId, name = m.name or ("NPC " .. npcId), level = m.level,
-          levelMax = m.levelMax, cl = m.classification, kills = 0, static = src }
+      if m and matches(q, m.name, m.creatureType, m.family) then
+        local zones = {}
+        for _, z in ipairs(type(m.zones) == "table" and m.zones or {}) do zones[z] = true end
+        local it = { npcId = npcId, name = m.name or ("NPC " .. npcId), level = m.level,
+          levelMax = m.levelMax, cl = m.classification, kills = 0, seen = 0, mine = 0, static = src, zones = zones }
+        if passes(filter, it, here) then out[#out + 1] = it end
       end
     end
   end
-  table.sort(out, function(a, b) return (a.name or "") < (b.name or "") end)
+  local sort = opts.sort or "name"
+  table.sort(out, function(a, b)
+    if sort == "level" and (a.level or 0) ~= (b.level or 0) then return (a.level or 0) > (b.level or 0) end
+    if sort == "kills" and (a.kills or 0) ~= (b.kills or 0) then return (a.kills or 0) > (b.kills or 0) end
+    if sort == "recent" and (a.ls or 0) ~= (b.ls or 0) then return (a.ls or 0) > (b.ls or 0) end
+    if (a.name or "") ~= (b.name or "") then return (a.name or "") < (b.name or "") end
+    return a.npcId < b.npcId
+  end)
   return out
 end
+
+-- Completion for a zone: how many of the creatures known there the guild (and you) have killed.
+function B.ZoneStats(zone)
+  zone = zone or zoneName()
+  local st = { zone = zone, known = 0, killed = 0, mine = 0 }
+  if not zone then return st end
+  local list = B.List("", { filter = "zone", zone = zone })
+  for _, it in ipairs(list) do
+    st.known = st.known + 1
+    if (it.kills or 0) > 0 then st.killed = st.killed + 1 end
+    if (it.mine or 0) > 0 then st.mine = st.mine + 1 end
+  end
+  st.pct = st.known > 0 and math.floor(st.killed / st.known * 100 + 0.5) or 0
+  return st
+end
+B.ZoneName = zoneName
 
 ---------------------------------------------------------------------------
 -- Sync helpers (used by Comm/Sync.lua)
@@ -389,8 +475,33 @@ function B.BuildSyncPayload(npcId)
   return {
     t = "B", n = npcId, nm = m.nm, lv = m.lv, lx = m.lx, cl = m.cl, ct = m.ct, hp = m.hp,
     z = zones, sp = spells,
-    r = r and { k = r.k, c = r.c, m = r.m, i = r.i, q = r.q, fk = r.fk, t = r.t } or nil,
+    r = r and { k = r.k, c = r.c, m = r.m, s = r.s, i = r.i, q = r.q, fk = r.fk, t = r.t } or nil,
   }
+end
+
+-- Pass on someone else's record (catch-up for a guildmate who was offline).
+function B.BuildRelayPayload(npcId, who)
+  local m = ns.db.bestiary[npcId]
+  local r = m and m.rec[who]
+  if not r or who == ns.playerKey then return nil end
+  return { t = "BR", n = npcId, w = who, nm = m.nm, lv = m.lv, lx = m.lx, cl = m.cl, ct = m.ct,
+    r = { k = r.k, c = r.c, m = r.m, s = r.s, i = r.i, q = r.q, fk = r.fk, t = r.t } }
+end
+
+-- Records changed after `since`: { { id=, who=, t= }, ... } newest first.
+-- who = "me" for our own, "others" for everyone else's.
+function B.ChangedSince(since, who)
+  local out = {}
+  for npcId, m in pairs(ns.db.bestiary) do
+    for rec, r in pairs(m.rec or {}) do
+      local mine = rec == ns.playerKey
+      if (r.t or 0) > since and ((who == "me") == mine) then
+        out[#out + 1] = { id = npcId, who = rec, t = r.t or 0 }
+      end
+    end
+  end
+  table.sort(out, function(a, b) if a.t ~= b.t then return a.t > b.t end return a.id < b.id end)
+  return out
 end
 
 local function validCount(v) return type(v) == "number" and v >= 0 and v < 1e9 and v end
@@ -428,6 +539,7 @@ function B.ApplyRemote(sender, d)
     local old = m.rec[sender]
     if not old or (old.t or 0) < r.t then
       local clean = { k = validCount(r.k) or 0, c = validCount(r.c) or 0, m = validCount(r.m) or 0,
+        s = validCount(r.s) or nil,
         fk = validTime(r.fk) or nil, t = r.t, i = {}, q = {} }
       local items = 0
       for itemID, n in pairs(type(r.i) == "table" and r.i or {}) do

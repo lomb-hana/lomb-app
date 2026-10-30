@@ -48,6 +48,8 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Leaderboard firsts](docs/screenshots/16-leaderboard-firsts.png) | ![Member profile](docs/screenshots/17-profile.png) |
 | **Profile from an inspect, no addon (v0.4)** | **Roster with "Hide alts" (v0.4)** |
 | ![Profile filled in by inspecting](docs/screenshots/18-profile-inspected.png) | ![Roster hiding alts](docs/screenshots/19-roster-hide-alts.png) |
+| **Bestiary filtered to rares, with sightings and last spot (v0.5)** | **Rare alert from a guildmate (v0.5)** |
+| ![Bestiary rares filter](docs/screenshots/20-bestiary-filters.png) | ![Rare alert toast and chat line](docs/screenshots/21-rare-toast.png) |
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -111,11 +113,15 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Your main is only shared once you pick one.
 - **Inspect:** when you inspect a guildmate yourself, their gear is remembered on your computer so their profile can show it even if they don't have the addon. It's never sent to anyone.
 
-### v0.5: Bestiary+
-- **Full bestiary page for every mob:** level, type and family, elite or rare, where it's been seen, abilities seen, loot, seen and killed counts, and completion % per zone.
-- **Guild loot recording:** each member's addon records what drops after a fight and shares it, so the bestiary's loot tables grow as the guild plays.
-- **Rare alerts** when a rare mob is spotted.
-- Leaderboards for kills and rares.
+### v0.5: Bestiary+ (built, awaiting in-game test)
+- **Filters and sorting:** the Bestiary list can show all creatures, rares, elites, this zone, guild-killed, not killed yet, or killed by me, sorted by name, level, kills or most recent. Click to step forward, right-click to step back.
+- **Zone completion:** the list shows how many creatures known in your current zone the guild has killed (e.g. "Westfall: 31 of 38 killed (82%)").
+- **Sightings:** each different spawn you see is counted once, and the mob page shows guild sightings and your own kills next to guild kills.
+- **Catching up:** when you log in, guildmates send you the bestiary records they made since you were last online. One guildmate also passes on records from members who are offline now, so nothing is missed.
+- **Rare alerts:** when you or a guildmate spots a rare, a LOMB-styled alert pops up (with a sound) and a line appears in chat. Click the alert to open the rare in the Bestiary; drag it to move it.
+  - What's shared: the rare's name and level, the zone, and the spotter's map spot as whole numbers (e.g. 61, 72). Nothing else about where you are.
+  - Each rare is announced at most once every 10 minutes per person, several guildmates spotting the same rare show as one alert, and there are no pop-ups during boss fights or PvP matches.
+  - Three switches in Settings: tell guildmates, show alerts, play a sound. "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items
 - Quest info (who gives it and which mobs you need), item details and vendor info.
@@ -173,6 +179,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.5.0 is built:** Bestiary filters and sorting, zone completion, sighting counts, catch-up of bestiary records made while you were offline, and rare alerts (pop-up, sound and chat line, with the spot on the map).
 - **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
 - **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
 - **v0.2.0 is built:** the Crafters tab ("who can craft X?", filter by profession, online only, click to whisper, shift-click to link), crafter names on item tooltips, and a sidebar menu so more tabs fit. Recipes are read when you open a profession window and shared as recipe IDs only.
@@ -220,6 +227,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - No personal info about anyone goes in this repo.
 - Member data like levels, gear and professions stays inside the game and the guild. It's saved on members' own computers and shared only over the in-game guild addon channel.
 - Nothing is uploaded to any website or server.
+- Rare alerts share where the spotter was standing (zone plus whole-number map spot) at that moment only. Turn it off with "Tell guildmates when I spot a rare".
 
 ---
 

@@ -4,7 +4,7 @@
 ## Title: |cffb873ffLOMB|r Companion
 ## Notes: Land of Make Believe guild companion: roster, crafters, personal stats, and a bestiary the guild fills in together.
 ## Author: lomb-hana
-## Version: 0.4.0
+## Version: 0.5.0
 ## X-License: MIT
 ## X-Website: https://github.com/lomb-hana/lomb-app
 ## IconTexture: Interface\AddOns\LOMBCompanion\Media\logo
@@ -34,6 +34,7 @@ Comm\Shared.lua
 Modules\Crafting.lua
 Modules\News.lua
 Modules\Profiles.lua
+Modules\Rares.lua
 
 # UI
 UI\Theme.lua
@@ -49,6 +50,7 @@ UI\BoardTab.lua
 UI\MobPage.lua
 UI\BestiaryTab.lua
 UI\BestiaryCard.lua
+UI\RareToast.lua
 UI\SettingsTab.lua
 UI\CreditsTab.lua
 UI\Minimap.lua

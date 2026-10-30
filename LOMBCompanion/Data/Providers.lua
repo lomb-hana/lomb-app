@@ -27,7 +27,7 @@ if ns then ns.Providers = P end
 P.FIELDS = {
   "name", "level", "levelMax", "classification", "creatureType", "family",
   "health", "healthMax", "zones", "kills", "firstKiller", "firstSeen", "lastSeen",
-  "recorders",
+  "recorders", "seen",
 }
 -- Sections that only exist when a provider supplies them (hidden otherwise).
 P.SECTIONS = { "boss", "notableLoot", "skinning", "quests" }

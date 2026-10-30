@@ -172,6 +172,19 @@ function C.PlayerMapID()
   end
 end
 
+-- Player position on the current map as whole percents (0-100), or nil when
+-- the game doesn't give one (instances, restricted areas).
+function C.PlayerMapPos()
+  local mapID = C.PlayerMapID()
+  if not mapID or not (C_Map and C_Map.GetPlayerMapPosition) then return nil end
+  local pos = C.Call(C_Map.GetPlayerMapPosition, mapID, "player")
+  if type(pos) ~= "table" and type(pos) ~= "userdata" then return nil end
+  local ok, x, y = pcall(function() return pos:GetXY() end)
+  x, y = ok and C.Safe(x), ok and C.Safe(y)
+  if type(x) ~= "number" or type(y) ~= "number" or (x == 0 and y == 0) then return nil end
+  return math.floor(x * 100 + 0.5), math.floor(y * 100 + 0.5)
+end
+
 function C.MapName(mapID)
   if not mapID then return nil end
   if C_Map and C_Map.GetMapInfo then

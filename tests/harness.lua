@@ -353,13 +353,17 @@ function H.installAPI(opts)
     GetDetailedItemLevelInfo = function() return 20 end,
   }
   env.C_Spell = { GetSpellInfo = function(id) return { name = "Spell " .. id, iconID = 136243 } end }
-  env.C_Map = { GetBestMapForUnit = function() return 1429 end, GetMapInfo = function() return { name = H.state.zone } end }
+  env.C_Map = { GetBestMapForUnit = function() return 1429 end, GetMapInfo = function() return { name = H.state.zone } end,
+    GetPlayerMapPosition = function()
+      local p = H.state.pos or { 0.452, 0.618 }
+      return { GetXY = function() return p[1], p[2] end }
+    end }
   env.RAID_CLASS_COLORS = setmetatable({}, { __index = function() return { r = 0.7, g = 0.7, b = 0.7 } end })
   env.SlashCmdList = {}
   env.UISpecialFrames = {}
   env.BINDING_HEADER_LOMBCOMPANION = nil
   env.PlaySound = function() end
-  env.SOUNDKIT = { IG_MAINMENU_OPEN = 1, IG_MAINMENU_CLOSE = 2, U_CHAT_SCROLL_BUTTON = 3, IG_CHARACTER_INFO_TAB = 4 }
+  env.SOUNDKIT = { IG_MAINMENU_OPEN = 1, IG_MAINMENU_CLOSE = 2, U_CHAT_SCROLL_BUTTON = 3, IG_CHARACTER_INFO_TAB = 4, RAID_WARNING = 8959 }
   env.GetCursorPosition = function() return 0, 0 end
   env.IsShiftKeyDown = function() return false end
   env.IsControlKeyDown = function() return false end

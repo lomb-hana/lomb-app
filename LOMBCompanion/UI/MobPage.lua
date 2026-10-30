@@ -195,6 +195,18 @@ function MobPage.Render(page, npcId)
   if type(zones) == "table" and #zones > 0 then fact(page, "Seen in", table.concat(zones, ", "), zSrc) end
   local kills, kSrc = V("kills")
   if kills and kills > 0 then fact(page, "Guild kills", W.Thousands(kills), kSrc, merged.alt.kills) end
+  local seen, seenSrc = V("seen")
+  if seen and seen > 0 then fact(page, "Guild sightings", W.Thousands(seen), seenSrc) end
+  local rec0 = ns.db.bestiary[npcId]
+  local mine = rec0 and rec0.rec and rec0.rec[ns.playerKey]
+  if mine and (mine.k or 0) > 0 then fact(page, "Your kills", W.Thousands(mine.k), "guild") end
+  local rs = rec0 and rec0.rs
+  if rs and rs.t then
+    local where = rs.z or "?"
+    if rs.x and rs.y then where = ("%s (%d, %d)"):format(where, rs.x, rs.y) end
+    local by = rs.by == ns.playerKey and "you" or ns.Compat.ShortName(rs.by) or "?"
+    fact(page, "Last spotted", ("%s by %s, %s"):format(where, by, ago(rs.t)), "guild")
+  end
   local fk, fkSrc = V("firstKiller")
   if fk then fact(page, "First guild kill", ns.Compat.ShortName(fk), fkSrc) end
   local rec, recSrc = V("recorders")

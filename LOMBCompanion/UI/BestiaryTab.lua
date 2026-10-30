@@ -8,6 +8,8 @@ ns.BestiaryTab = Tab
 
 local LIST_W = 220
 local search = ""
+local view = { filter = 1, sort = 1 }
+Tab.view = view
 
 local function createRow(list)
   local row = CreateFrame("Button", nil, list)
@@ -27,8 +29,11 @@ end
 local function updateRow(row, item)
   local cls = item.cl and T.classification[item.cl]
   row.name:SetText(cls and ("|c" .. T.hex(cls[2]) .. item.name .. "|r") or item.name)
-  row.meta:SetText(("%s%s"):format(MobPage.LevelText(item.level, item.levelMax),
-    (item.kills or 0) > 0 and ("  |cffb873ff" .. item.kills .. "|r") or ""))
+  local extra = (item.kills or 0) > 0 and ("  |cffb873ff" .. item.kills .. "|r") or ""
+  if item.spotted and item.spotted.t and time() - item.spotted.t < 3600 then
+    extra = extra .. "  |cfff2c75c" .. MobPage.Ago(item.spotted.t) .. "|r"
+  end
+  row.meta:SetText(MobPage.LevelText(item.level, item.levelMax) .. extra)
   row.sel:SetShown(Tab.selected == item.npcId)
 end
 
@@ -54,10 +59,26 @@ UI.RegisterTab({
       UI.Refresh("bestiary")
     end)
     p.search:SetPoint("TOPLEFT", 6, -6)
+    local B = ns.Bestiary
+    local half = (LIST_W - 16) / 2
+    p.filter = W.Button(left, B.FILTERS[1].label, half, 20, function(_, button)
+      view.filter = (view.filter - 1 + (button == "RightButton" and #B.FILTERS - 1 or 1)) % #B.FILTERS + 1
+      UI.Refresh("bestiary")
+    end)
+    p.filter:SetPoint("TOPLEFT", 6, -34)
+    p.filter.tip = "Show: all, rares, elites, this zone, killed or not, killed by me. Right-click goes back."
+    if p.filter.RegisterForClicks then p.filter:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
+    p.sort = W.Button(left, B.SORTS[1].label, half, 20, function(_, button)
+      view.sort = (view.sort - 1 + (button == "RightButton" and #B.SORTS - 1 or 1)) % #B.SORTS + 1
+      UI.Refresh("bestiary")
+    end)
+    p.sort:SetPoint("LEFT", p.filter, "RIGHT", 4, 0)
+    if p.sort.RegisterForClicks then p.sort:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
     p.count = W.Text(left, "narrow", 10, "muted")
-    p.count:SetPoint("TOPLEFT", 8, -34)
+    p.count:SetPoint("TOPLEFT", 8, -60)
+    p.count:SetWidth(LIST_W - 16)
     p.list = W.List(left, 20, createRow, updateRow)
-    p.list:SetPoint("TOPLEFT", 2, -50)
+    p.list:SetPoint("TOPLEFT", 2, -76)
     p.list:SetPoint("BOTTOMRIGHT", -2, 4)
 
     local right = W.Panel(p, "panel", "border")
@@ -71,9 +92,19 @@ UI.RegisterTab({
     return p
   end,
   refresh = function(p)
-    local items = ns.Bestiary.List(search)
+    local B = ns.Bestiary
+    local f, so = B.FILTERS[view.filter], B.SORTS[view.sort]
+    p.filter.label:SetText(f.label)
+    p.filter:SetActive(f.key ~= "all")
+    p.sort.label:SetText(so.label)
+    local items = B.List(search, { filter = f.key, sort = so.key })
     p.list:SetItems(items)
-    p.count:SetText(("%d creature%s known"):format(#items, #items == 1 and "" or "s"))
+    local text = ("%d creature%s"):format(#items, #items == 1 and "" or "s")
+    local zs = B.ZoneStats()
+    if zs.zone and zs.known > 0 then
+      text = text .. ("  ·  %s: %d of %d killed (%d%%)"):format(zs.zone, zs.killed, zs.known, zs.pct)
+    end
+    p.count:SetText(text)
     if not Tab.selected then
       local live = ns.Bestiary.live
       Tab.selected = (live and live.npcId) or (items[1] and items[1].npcId)
