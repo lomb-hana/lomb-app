@@ -30,62 +30,64 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 ## Screenshots
 
 > **Previews only.** These are mock-ups with sample data that mirror the addon's real layout and look. WoW: Forever isn't out yet, so they're not in-game captures.
+>
+> The images are sorted into feature folders; see [docs/screenshots](docs/screenshots/README.md) for what's in each.
 
 | Bestiary card + full page | Roster |
 |---|---|
-| ![Bestiary card and full page](docs/screenshots/04-bestiary-expanded.png) | ![Roster tab](docs/screenshots/01-roster.png) |
+| ![Bestiary card and full page](docs/screenshots/bestiary/04-bestiary-expanded.png) | ![Roster tab](docs/screenshots/core/01-roster.png) |
 | **Me** | **Bestiary tab** |
-| ![Me tab](docs/screenshots/02-me.png) | ![Bestiary tab](docs/screenshots/05-bestiary-tab.png) |
+| ![Me tab](docs/screenshots/core/02-me.png) | ![Bestiary tab](docs/screenshots/bestiary/05-bestiary-tab.png) |
 | **Settings** | **Credits** |
-| ![Settings tab](docs/screenshots/06-settings.png) | ![Credits tab](docs/screenshots/07-credits.png) |
+| ![Settings tab](docs/screenshots/core/06-settings.png) | ![Credits tab](docs/screenshots/core/07-credits.png) |
 | **Bestiary card (small)** | **Minimap button** |
-| ![Bestiary card](docs/screenshots/03-card-small.png) | ![Minimap button](docs/screenshots/08-minimap-button.png) |
+| ![Bestiary card](docs/screenshots/bestiary/03-card-small.png) | ![Minimap button](docs/screenshots/core/08-minimap-button.png) |
 | **Crafters (v0.2)** | **Crafters: search + whisper (v0.2)** |
-| ![Crafters tab](docs/screenshots/09-crafters.png) | ![Crafters search and whisper](docs/screenshots/10-crafters-search-whisper.png) |
+| ![Crafters tab](docs/screenshots/crafting/09-crafters.png) | ![Crafters search and whisper](docs/screenshots/crafting/10-crafters-search-whisper.png) |
 | **News (v0.3)** | **News: milestones only (v0.3)** |
-| ![News tab](docs/screenshots/12-news.png) | ![News filtered to milestones](docs/screenshots/13-news-milestones.png) |
+| ![News tab](docs/screenshots/news/12-news.png) | ![News filtered to milestones](docs/screenshots/news/13-news-milestones.png) |
 | **Leaderboard: levels (v0.3)** | **Leaderboard: kills this week (v0.3)** |
-| ![Leaderboard levels](docs/screenshots/14-leaderboard-levels.png) | ![Leaderboard weekly kills](docs/screenshots/15-leaderboard-kills-week.png) |
+| ![Leaderboard levels](docs/screenshots/news/14-leaderboard-levels.png) | ![Leaderboard weekly kills](docs/screenshots/news/15-leaderboard-kills-week.png) |
 | **Leaderboard: firsts (v0.3)** | **Member profile (v0.4)** |
-| ![Leaderboard firsts](docs/screenshots/16-leaderboard-firsts.png) | ![Member profile](docs/screenshots/17-profile.png) |
+| ![Leaderboard firsts](docs/screenshots/news/16-leaderboard-firsts.png) | ![Member profile](docs/screenshots/profiles-gear/17-profile.png) |
 | **Profile from an inspect, no addon (v0.4)** | **Roster with "Hide alts" (v0.4)** |
-| ![Profile filled in by inspecting](docs/screenshots/18-profile-inspected.png) | ![Roster hiding alts](docs/screenshots/19-roster-hide-alts.png) |
+| ![Profile filled in by inspecting](docs/screenshots/profiles-gear/18-profile-inspected.png) | ![Roster hiding alts](docs/screenshots/core/19-roster-hide-alts.png) |
 | **Bestiary filtered to rares, with sightings and last spot (v0.5)** | **Rare alert from a guildmate (v0.5)** |
-| ![Bestiary rares filter](docs/screenshots/20-bestiary-filters.png) | ![Rare alert toast and chat line](docs/screenshots/21-rare-toast.png) |
+| ![Bestiary rares filter](docs/screenshots/bestiary/20-bestiary-filters.png) | ![Rare alert toast and chat line](docs/screenshots/bestiary/21-rare-toast.png) |
 | **Events: attendance being recorded, officer view (v0.7)** | **Events: a past event, member view (v0.7)** |
-| ![Event attendance with officer controls](docs/screenshots/22-events-attendance.png) | ![Past event attendance](docs/screenshots/23-events-past-member.png) |
+| ![Event attendance with officer controls](docs/screenshots/events/22-events-attendance.png) | ![Past event attendance](docs/screenshots/events/23-events-past-member.png) |
 | **Attendance summary, last 30 days (v0.7)** | **Optional Bank tab, only if a bank character is ticked (v0.8)** |
-| ![Attendance summary](docs/screenshots/24-attendance-summary.png) | ![Bank ledger](docs/screenshots/25-bank-ledger.png) |
+| ![Attendance summary](docs/screenshots/events/24-attendance-summary.png) | ![Bank ledger](docs/screenshots/bank-wishlist/25-bank-ledger.png) |
 | **Wishlist tab: needs and offers (v0.8.1)** | **Item tooltips: wishlist lines (v0.8.1)** |
-| ![Wishlist](docs/screenshots/26-wishlist.png) | ![Item tooltips with wishlist lines](docs/screenshots/27-item-tooltip-bank-wishlist.png) |
+| ![Wishlist](docs/screenshots/bank-wishlist/26-wishlist.png) | ![Item tooltips with wishlist lines](docs/screenshots/bank-wishlist/27-item-tooltip-bank-wishlist.png) |
 | **Quests & Items: quests in this zone near my level (v0.6)** | **Quests & Items: item lookup (v0.6)** |
-| ![Quests & Items, quest page](docs/screenshots/28-quests.png) | ![Quests & Items, item page](docs/screenshots/29-item-lookup.png) |
+| ![Quests & Items, quest page](docs/screenshots/quests-items/28-quests.png) | ![Quests & Items, item page](docs/screenshots/quests-items/29-item-lookup.png) |
 | **Quests & Items: a recipe and where to learn it (v0.6)** | **Quests & Items: a dungeon (v0.6)** |
-| ![Quests & Items, recipe page](docs/screenshots/30-recipe.png) | ![Quests & Items, dungeon page](docs/screenshots/31-dungeon.png) |
+| ![Quests & Items, recipe page](docs/screenshots/quests-items/30-recipe.png) | ![Quests & Items, dungeon page](docs/screenshots/quests-items/31-dungeon.png) |
 | **Credits with ForeverDB.net (v0.6)** | **Quest chains tagged and grouped (v0.6.1)** |
-| ![Credits tab with the ForeverDB.net credit](docs/screenshots/32-credits-foreverdb.png) | ![Quest list with chains grouped and tagged Part 1 of 4 and so on](docs/screenshots/33-quest-chains.png) |
+| ![Credits tab with the ForeverDB.net credit](docs/screenshots/core/32-credits-foreverdb.png) | ![Quest list with chains grouped and tagged Part 1 of 4 and so on](docs/screenshots/quests-items/33-quest-chains.png) |
 | **Storyline drop-downs with quest progress (v0.6.2)** | |
-| ![Quest list with closed storyline headers showing level range and progress, and one open storyline with done, turn in and in log tags](docs/screenshots/34-quest-storylines.png) | |
+| ![Quest list with closed storyline headers showing level range and progress, and one open storyline with done, turn in and in log tags](docs/screenshots/quests-items/34-quest-storylines.png) | |
 | **Training: what's new at your class trainer (v0.6.3)** | **Gathering: a herb node against your skill (v0.6.3)** |
-| ![Training view with Train now: four rogue ranks to learn and what comes at level 24](docs/screenshots/35-training.png) | ![Gathering view for Herbalism at skill 85 showing Briarthorn, what it gives and where it grows](docs/screenshots/36-gathering.png) |
+| ![Training view with Train now: four rogue ranks to learn and what comes at level 24](docs/screenshots/guides/35-training.png) | ![Gathering view for Herbalism at skill 85 showing Briarthorn, what it gives and where it grows](docs/screenshots/guides/36-gathering.png) |
 | **Item page: what it disenchants into and guild enchanters (v0.6.3)** | **Gear sets: pieces you have and where the rest come from (v0.6.3)** |
-| ![Long Battle Bow item page with its disenchant results and guild enchanters](docs/screenshots/37-disenchant.png) | ![Defias Leather set page with set bonuses and pieces equipped, in bags, in bank and missing](docs/screenshots/38-gear-sets.png) |
+| ![Long Battle Bow item page with its disenchant results and guild enchanters](docs/screenshots/guides/37-disenchant.png) | ![Defias Leather set page with set bonuses and pieces equipped, in bags, in bank and missing](docs/screenshots/guides/38-gear-sets.png) |
 | **Zones: a zone's quests, vendors and gathering (v0.6.3)** | **Battlegrounds: basic info (v0.6.3)** |
-| ![Westfall zone page with its quest storylines and vendors](docs/screenshots/39-zones.png) | ![Warsong Gulch page with levels, team size, how to play and the Classic rules label](docs/screenshots/40-battleground.png) |
+| ![Westfall zone page with its quest storylines and vendors](docs/screenshots/guides/39-zones.png) | ![Warsong Gulch page with levels, team size, how to play and the Classic rules label](docs/screenshots/guides/40-battleground.png) |
 | **Rogue poisons (v0.6.3)** | **Ask LOMB: quest turn-ins, chains and quests near your level (v0.6.4)** |
-| ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/41-rogue-poisons.png) | ![Ask LOMB tab answering where to turn in a quest, what comes next and which quests are near your level](docs/screenshots/42-ask-lomb-quests.png) |
+| ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/guides/41-rogue-poisons.png) | ![Ask LOMB tab answering where to turn in a quest, what comes next and which quests are near your level](docs/screenshots/ask-lomb/42-ask-lomb-quests.png) |
 | **Ask LOMB: who sells it, how to make it, what it disenchants into (v0.6.4)** | **Ask LOMB: dungeons, typos, "I don't know" and the next guild event (v0.6.4)** |
-| ![Ask LOMB answering who sells Fine Thread, how to make Heavy Linen Bandage and what Battleforge Boots disenchant into](docs/screenshots/43-ask-lomb-sells-make.png) | ![Ask LOMB answering a dungeon question, a misspelt quest name, an unknown question and the next guild event](docs/screenshots/44-ask-lomb-more.png) |
+| ![Ask LOMB answering who sells Fine Thread, how to make Heavy Linen Bandage and what Battleforge Boots disenchant into](docs/screenshots/ask-lomb/43-ask-lomb-sells-make.png) | ![Ask LOMB answering a dungeon question, a misspelt quest name, an unknown question and the next guild event](docs/screenshots/ask-lomb/44-ask-lomb-more.png) |
 
 The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41. Shots 42-44 are the real answers the Ask LOMB tab gives for a level 18 rogue in Westfall (the guild event is sample data).
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
-![Crafters on item tooltips](docs/screenshots/11-item-tooltip-crafters.png)
+![Crafters on item tooltips](docs/screenshots/crafting/11-item-tooltip-crafters.png)
 
 Mock-up of the bestiary with ForeverDB.net sections (v0.6 shows quest and boss lines from the bundled snapshot):
 
-![Bestiary with ForeverDB sections](docs/screenshots/05-bestiary-tab-with-foreverdb.png)
+![Bestiary with ForeverDB sections](docs/screenshots/bestiary/05-bestiary-tab-with-foreverdb.png)
 
 ---
 
