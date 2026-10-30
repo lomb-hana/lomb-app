@@ -2,11 +2,11 @@
 
 **The guild addon for Land of Make Believe in WoW: Forever.**
 
-LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1 through v0.8 are built** (except v0.6, which waits on ForeverDB.net) and get their first in-game test when **WoW: Forever launches on November 4, 2026**.
+LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1 through v0.8 are built** (v0.6 is next, now that ForeverDB.net has approved our use of their API) and get their first in-game test when **WoW: Forever launches on November 4, 2026**.
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1–v0.5, v0.7 and v0.8 are built and pass their offline tests. They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.6 waits on ForeverDB.net, and v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.5, v0.7 and v0.8 are built and pass their offline tests. They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.6 (Quests & Items, using ForeverDB.net data) is in progress now that ForeverDB.net approved our API access, and v0.9 raid tools wait for the live game.
 
 ---
 
@@ -61,7 +61,7 @@ Item tooltips list guildmates who can craft the item (v0.2):
 
 ![Crafters on item tooltips](docs/screenshots/11-item-tooltip-crafters.png)
 
-How the bestiary would look *if* ForeverDB.net approves using their data (not shipped):
+How the bestiary looks with ForeverDB.net data (approved; coming in v0.6):
 
 ![Bestiary with ForeverDB sections](docs/screenshots/05-bestiary-tab-with-foreverdb.png)
 
@@ -132,7 +132,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 ### v0.6: Quests & Items
 - Quest info (who gives it and which mobs you need), item details and vendor info.
 - Item tooltips show things like "the guild has seen this drop X times" and "this is on a guildmate's wishlist".
-- Uses **ForeverDB.net** data **if they approve** (see [Data & credits](#data--credits)).
+- Uses **ForeverDB.net** data, with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"**.
 
 ### v0.7: Events & Attendance (built, awaiting in-game test)
 - **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
@@ -195,7 +195,7 @@ In plain English:
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
 - **v0.8.1 is built:** the guild Wishlist in its own tab (needs and offers, filters, search, click to whisper) with wishlist lines on item tooltips. The Bank tab (a bank character's items, recent changes and funds) is hidden unless someone ticks "This is a guild bank character". Rare alerts are now silent by default.
-- **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. (v0.6 Quests & Items waits on ForeverDB.net's answer.)
+- **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. (v0.6 Quests & Items comes next, using ForeverDB.net data.)
 - **v0.5.0 is built:** Bestiary filters and sorting, zone completion, sighting counts, catch-up of bestiary records made while you were offline, and rare alerts (pop-up, sound and chat line, with the spot on the map).
 - **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
 - **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
@@ -233,7 +233,13 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 ## Data & credits
 
 - **Game data:** World of Warcraft and WoW: Forever game data belong to **Blizzard Entertainment**. LOMB Companion is a fan-made guild addon and is **not affiliated with or endorsed by Blizzard Entertainment**.
-- **ForeverDB.net (pending):** we've asked [ForeverDB.net](https://foreverdb.net) whether we can include their quest, item, vendor and profession data in the addon. **We won't use any of their data unless they approve.** If they do, every place it appears will say **"Data from ForeverDB.net"**, with a link to [https://foreverdb.net](https://foreverdb.net).
+- **ForeverDB.net (approved):** quest, item, vendor, profession and dungeon data comes from the [ForeverDB.net](https://foreverdb.net) developer API, used with ForeverDB.net's approval for this guild addon. How we use it:
+  - **Credit everywhere:** every tab, card and tooltip that shows their data says **"Data from ForeverDB.net"** with the link [https://foreverdb.net](https://foreverdb.net), and the Credits tab says so too. (Addons can't open web links in game, so clicking the credit copies the link.)
+  - **Bundled snapshot:** addons can't go online, so we fetch the data with the API occasionally (a few times a week at most, and after game patches), well under ForeverDB.net's limits, and ship it in its own clearly marked data file.
+  - **The API key never ships:** it's kept off the addon and out of this repo.
+  - **Not ours:** the data stays ForeverDB.net's. It isn't covered by this repo's MIT license, isn't resold, and isn't presented as our own. ForeverDB.net's labels (data seen in WoW Forever vs. Classic data) are kept.
+  - ForeverDB.net isn't affiliated with Blizzard Entertainment, and neither are we.
+  - If ForeverDB.net ever asks us to change or remove anything, we will.
 - **Guild-recorded data:** bestiary sightings, kills and loot come from Land of Make Believe members playing the game. These are tagged **GUILD**. Facts read live from your game client are tagged **GAME**.
 - **Wowhead:** linked to only. Its data isn't copied or collected.
 
@@ -255,4 +261,4 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 
 The addon's code is MIT licensed. See [LICENSE](LICENSE).
 
-The MIT license covers **only our code**. It doesn't cover Blizzard's game data or any third-party data. If ForeverDB.net data is ever added, it will live in its own clearly marked file that stays ForeverDB.net's: it may not be reused, resold or presented as anyone else's, and it keeps their credit and rules.
+The MIT license covers **only our code**. It doesn't cover Blizzard's game data or any third-party data. ForeverDB.net data lives in its own clearly marked file that stays ForeverDB.net's: it may not be reused, resold or presented as anyone else's, and it keeps their credit and rules.
