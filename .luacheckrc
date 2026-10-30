@@ -29,7 +29,7 @@ read_globals = {
   -- units
   "GetServerTime", "GetNumGroupMembers", "IsInRaid", "IsInGroup", "C_Calendar", "C_DateAndTime", "CalendarFrame",
   "UnitExists", "UnitIsPlayer", "UnitGUID", "UnitName", "UnitLevel", "UnitClassification", "UnitCreatureType",
-  "UnitCreatureFamily", "UnitHealth", "UnitHealthMax", "UnitIsDead", "UnitIsTapDenied", "UnitCanAttack",
+  "UnitCreatureFamily", "UnitFactionGroup", "UnitHealth", "UnitHealthMax", "UnitIsDead", "UnitIsTapDenied", "UnitCanAttack",
   "UnitReaction", "UnitClass", "UnitRace", "UnitXP", "UnitXPMax", "UnitAffectingCombat", "UnitFullName",
   -- player / account
   "GetMoney", "GetRealmName", "GetNormalizedRealmName", "GetTime", "InCombatLockdown", "IsInGuild", "GetGuildInfo",
@@ -46,3 +46,6 @@ read_globals = {
 
 files["tests/"] = { std = "+busted", globals = { "_ENV" }, ignore = { "111", "112", "113", "122", "142", "143" } }
 files["tools/"] = { ignore = { "113" } }
+
+-- generated ForeverDB.net data (one record per line; long lines are expected)
+files["LOMBCompanion/Data/ForeverDB/"] = { max_line_length = false }

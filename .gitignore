@@ -2,3 +2,5 @@ dist/
 *.zip
 .DS_Store
 tests/out/
+__pycache__/
+*.pyc

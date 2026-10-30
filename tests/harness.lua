@@ -322,6 +322,7 @@ function H.installAPI(opts)
   env.UnitLevel = function(u) if u == "player" then return H.state.level end local d = H.units[u]; return d and d.level end
   env.UnitClass = function(u) if u == "player" then return "Hunter", "HUNTER", 3 end end
   env.UnitRace = function() return "Night Elf" end
+  env.UnitFactionGroup = function(u) if u == "player" then return H.state.faction, H.state.faction end end
   env.UnitXP = function() return 1200 end
   env.UnitXPMax = function() return 3000 end
   H.gear = {}
@@ -483,7 +484,7 @@ function H.installAPI(opts)
 
   H.state = {
     player = "Testy", realm = "Forever", guild = opts.guild == false and nil or (opts.guild or "Land of Make Believe"),
-    level = 12, money = 123456, zone = "Elwynn Forest", combat = false, encounter = false,
+    level = 12, money = 123456, zone = "Elwynn Forest", faction = "Alliance", combat = false, encounter = false,
     instanceType = "none", trial = false, lockdown = false,
     skills = { { "Professions", true, 0, 0 }, { "Skinning", false, 75, 150 }, { "Leatherworking", false, 60, 150 },
       { "Secondary Skills", true, 0, 0 }, { "Cooking", false, 40, 75 }, { "Swords", false, 60, 60 } },

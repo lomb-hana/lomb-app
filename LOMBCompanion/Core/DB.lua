@@ -21,6 +21,7 @@ local DEFAULTS = {
     shareBankFunds = true,   -- the bank character shares its gold as "guild bank funds" (nobody else's)
     officerRanks = 2,        -- the top N guild ranks can fix attendance (GM = rank 1)
     tooltips = true,         -- add LOMB lines to item tooltips ("Crafters in LOMB: ...")
+    fdbTooltips = true,      -- add a ForeverDB.net line (sold by / made by / reagent) to item tooltips
     showCard = true,         -- bestiary card on target
     cardInCombat = true,     -- keep card up in combat (shows only what the game allows)
     cardLocked = false,

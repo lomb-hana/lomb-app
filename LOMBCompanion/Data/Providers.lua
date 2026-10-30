@@ -4,8 +4,10 @@
 -- source, so players can always tell where a number came from:
 --   "game"      what the client tells us right now (live target)
 --   "guild"     what LOMB members recorded and synced
---   "foreverdb" ForeverDB.net data -- ONLY if a Data/ForeverDB.lua module is
---               shipped (pending their permission). Nothing is fetched at runtime.
+--   "foreverdb" ForeverDB.net data, used with permission: a snapshot bundled in
+--               Data/ForeverDB/ (not MIT-licensed) and registered by
+--               Modules/QuestDB.lua. Nothing is fetched at runtime. Quests a mob
+--               gives and dungeon boss notes only -- mob loot stays guild-recorded.
 --
 -- Provider interface:
 --   Providers.Register{
@@ -147,8 +149,9 @@ P.SOURCE_LABEL = { game = "game", guild = "guild", foreverdb = "ForeverDB" }
 
 ---------------------------------------------------------------------------
 -- Optional data module hook.
--- A generated Data/ForeverDB.lua (see Data/ForeverDB.example.lua) calls
--- LOMBCompanion.Providers.RegisterStatic{ id="foreverdb", ..., mobs = { [npcId] = {...} } }
+-- A static data module (see Data/ForeverDB.example.lua) can call
+-- LOMBCompanion.Providers.RegisterStatic{ id=..., ..., mobs = { [npcId] = {...} } }.
+-- The bundled ForeverDB snapshot uses Providers.Register with GetMob instead.
 ---------------------------------------------------------------------------
 function P.RegisterStatic(def)
   assert(type(def.mobs) == "table", "static provider needs mobs")

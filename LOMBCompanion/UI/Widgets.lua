@@ -141,6 +141,30 @@ function W.SearchBox(parent, w, placeholder, onChange)
   return box
 end
 
+-- Read-only text the player can select and copy (Ctrl+C), e.g. a web link.
+-- Addons can't open a browser, so links are shown as copyable text.
+function W.CopyBox(parent, w, text)
+  local box = W.SearchBox(parent, w, "", nil)
+  box.copyText = text or ""
+  box.hint:Hide()
+  box:SetText(box.copyText)
+  box:SetCursorPosition(0)
+  box:SetScript("OnTextChanged", function(self, user)
+    if user and self:GetText() ~= self.copyText then self:SetText(self.copyText); self:HighlightText() end
+  end)
+  box:SetScript("OnEditFocusGained", function(self)
+    self:SetBackdropBorderColor(rgba("accent"))
+    self:HighlightText()
+  end)
+  box:SetScript("OnMouseUp", function(self) self:HighlightText() end)
+  function box:SetCopyText(t) self.copyText = t or ""; self:SetText(self.copyText); self:SetCursorPosition(0) end
+  W.Tooltip(box, function(tt)
+    tt:SetText(box.copyText, 1, 1, 1)
+    tt:AddLine("Click, then Ctrl+C to copy.", 0.8, 0.78, 0.85)
+  end)
+  return box
+end
+
 -- Source tag: tiny coloured pill saying where a fact came from.
 function W.SourceTag(parent)
   local f = CreateFrame("Frame", nil, parent)

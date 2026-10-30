@@ -80,8 +80,13 @@ H.test("the example ForeverDB module loads against the real interface", function
   H.ok(m.sections.boss and m.sections.notableLoot and m.sections.skinning and m.sections.quests)
 end)
 
-H.test("example module is NOT in the TOC", function()
-  for _, f in ipairs(H.tocFiles()) do H.ok(not f:find("ForeverDB"), "ForeverDB file in TOC: " .. f) end
+H.test("example module is NOT in the TOC; the real snapshot is", function()
+  local data = 0
+  for _, f in ipairs(H.tocFiles()) do
+    H.ok(not f:find("example"), "example file in TOC: " .. f)
+    if f:find("^Data/ForeverDB/") then data = data + 1 end
+  end
+  H.eq(data, 6, "Data/ForeverDB/*.lua in the TOC")
 end)
 
 H.done()

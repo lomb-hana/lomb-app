@@ -28,6 +28,18 @@ local function entryLink(item)
 end
 Tab.EntryLink = entryLink
 
+-- The ForeverDB recipe for a crafters entry (item made, or enchant spell), if bundled.
+function Tab.RecipeRef(item)
+  local FDB = ns.FDB
+  if not (FDB and FDB.Available() and item) then return nil end
+  local I = FDB.Index()
+  if item.kind == "i" then
+    local refs = I.madeBy[item.id]
+    return refs and refs[1]
+  end
+  return I.bySpell[item.id]
+end
+
 local function crafterText(list, max)
   local parts = {}
   for i = 1, math.min(max or 3, #list) do
@@ -78,7 +90,10 @@ local function createRow(list, i)
   row:SetScript("OnClick", function(self)
     local item = self.item
     if not item then return end
-    if IsShiftKeyDown() then
+    local ref = Tab.RecipeRef(item)
+    if IsAltKeyDown and IsAltKeyDown() and ref and ns.QuestsTab then
+      ns.QuestsTab.Show("recipes", ref)
+    elseif IsShiftKeyDown() then
       local link = entryLink(item)
       if link and ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
     else
@@ -97,8 +112,19 @@ local function createRow(list, i)
       tt:AddDoubleLine(C.ShortName(o), on and "online" or "offline",
         1, 1, 1, on and 0.5 or 0.6, on and 0.88 or 0.57, on and 0.5 or 0.66)
     end
+    local ref = Tab.RecipeRef(item)
+    local r, prof
+    if ref then r, prof = ns.FDB.Recipe(ref) end
+    if r then
+      tt:AddLine(" ")
+      tt:AddLine(("%s  skill %s"):format(prof.n, ns.FDB.SkillText(r.sk)), 1, 1, 1)
+      if r.rg then tt:AddLine("Reagents: " .. ns.FDB.ReagentsText(r), 0.8, 0.78, 0.85, true) end
+      tt:AddLine("Learned from: " .. ns.FDB.WaysText(r), 0.8, 0.78, 0.85, true)
+      tt:AddLine(ns.FDB.CREDIT .. ", " .. ns.FDB.URL, 0.95, 0.78, 0.36)
+    end
     tt:AddLine(" ")
     tt:AddLine("Click: whisper an online crafter   Shift-click: link it", 0.72, 0.45, 1.0)
+    if r then tt:AddLine("Alt-click: open the recipe in Quests & Items", 0.72, 0.45, 1.0) end
   end)
   return row
 end

@@ -64,10 +64,11 @@ local function acquire(page)
   line:Show()
   line:SetScript("OnEnter", nil)
   line:SetScript("OnLeave", nil)
+  line:SetScript("OnMouseUp", nil)
   return line
 end
 
--- opts: text, right, srcs (array), font, size, color, icon, indent, wrap, gap, item, spell
+-- opts: text, right, srcs (array), font, size, color, icon, indent, wrap, gap, item, spell, onClick
 local function addLine(page, opts)
   local line = acquire(page)
   local width = page.width
@@ -134,9 +135,14 @@ local function addLine(page, opts)
     end)
   end
 
+  if opts.onClick then
+    line:SetScript("OnMouseUp", function(self, button) opts.onClick(self, button) end)
+  end
+
   page.y = page.y + h + (opts.gap or 3)
   return line
 end
+MobPage.AddLine = addLine
 
 local function section(page, title)
   page.y = page.y + 8
@@ -148,6 +154,7 @@ local function section(page, title)
   line.div:SetPoint("BOTTOMRIGHT", 0, -1)
   page.y = page.y + 4
 end
+MobPage.Section = section
 
 local function fact(page, label, value, src, alt, tip)
   if value == nil or value == "" then return end
@@ -268,7 +275,11 @@ function MobPage.Render(page, npcId)
     local d = S.boss.data
     section(page, "Boss")
     if type(d) == "table" then
-      if d.notes then addLine(page, { text = d.notes, wrap = true, size = 11, srcs = { S.boss.src } }) end
+      if d.notes then
+        local open = d.dungeon and ns.QuestsTab and function() ns.QuestsTab.Show("dungeons", d.dungeon) end
+        addLine(page, { text = d.notes .. (open and "  |cffb873ff(open)|r" or ""), wrap = true, size = 11,
+          srcs = { S.boss.src }, onClick = open })
+      end
       for _, ph in ipairs(d.phases or {}) do
         addLine(page, { text = "- " .. tostring(ph), wrap = true, size = 11, indent = 6 })
       end
@@ -296,8 +307,10 @@ function MobPage.Render(page, npcId)
   if S.quests and type(S.quests.data) == "table" then
     section(page, "Quests")
     for _, q in ipairs(S.quests.data) do
+      local open = q.id and ns.QuestsTab and function() ns.QuestsTab.Show("quests", q.id) end
       addLine(page, { text = ("%s%s"):format(q.name or ("Quest " .. tostring(q.id)),
-        q.level and ("  |cff9a92a8(" .. q.level .. ")|r") or ""), srcs = { S.quests.src } })
+        q.level and ("  |cff9a92a8(" .. q.level .. ")|r") or ""), srcs = { S.quests.src }, onClick = open,
+        tip = open and { q.name or "Quest", "Click to open it in Quests & Items." } or nil })
     end
   end
 
@@ -310,8 +323,8 @@ function MobPage.Render(page, npcId)
   if #credits > 0 then
     page.y = page.y + 10
     for _, c in ipairs(credits) do
-      addLine(page, { text = c.text, size = 11, color = "gold", srcs = { c.id },
-        tip = { c.text, c.url or "" } })
+      addLine(page, { text = c.text .. (c.url and ("  |cff9a92a8" .. c.url .. "|r") or ""), size = 11, color = "gold",
+        srcs = { c.id }, tip = { c.text, c.url or "" } })
     end
   end
 

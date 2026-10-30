@@ -175,6 +175,7 @@ end)
 
 H.test("item tooltip gets the crafters line (and respects the setting)", function()
   local ns = boot()
+  ns.db.settings.fdbTooltips = false   -- the ForeverDB line has its own test (test_questdb.lua)
   deliver(ns, "Brindlewick-Forever", { t = "D", k = "rc", r = 1793750500, d = { Ta = { i = { 2580 } } } })
   H.advance(2)
   local lines = {}

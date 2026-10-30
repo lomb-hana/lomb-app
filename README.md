@@ -2,11 +2,11 @@
 
 **The guild addon for Land of Make Believe in WoW: Forever.**
 
-LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1 through v0.8 are built** (v0.6 is next, now that ForeverDB.net has approved our use of their API) and get their first in-game test when **WoW: Forever launches on November 4, 2026**.
+LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1 through v0.8 are built**, including v0.6 Quests & Items with data from ForeverDB.net, and get their first in-game test when **WoW: Forever launches on November 4, 2026**.
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1–v0.5, v0.7 and v0.8 are built and pass their offline tests. They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.6 (Quests & Items, using ForeverDB.net data) is in progress now that ForeverDB.net approved our API access, and v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
 
 > ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
 
@@ -58,12 +58,20 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Attendance summary](docs/screenshots/24-attendance-summary.png) | ![Bank ledger](docs/screenshots/25-bank-ledger.png) |
 | **Wishlist tab: needs and offers (v0.8.1)** | **Item tooltips: wishlist lines (v0.8.1)** |
 | ![Wishlist](docs/screenshots/26-wishlist.png) | ![Item tooltips with wishlist lines](docs/screenshots/27-item-tooltip-bank-wishlist.png) |
+| **Quests & Items: quests in this zone near my level (v0.6)** | **Quests & Items: item lookup (v0.6)** |
+| ![Quests & Items, quest page](docs/screenshots/28-quests.png) | ![Quests & Items, item page](docs/screenshots/29-item-lookup.png) |
+| **Quests & Items: a recipe and where to learn it (v0.6)** | **Quests & Items: a dungeon (v0.6)** |
+| ![Quests & Items, recipe page](docs/screenshots/30-recipe.png) | ![Quests & Items, dungeon page](docs/screenshots/31-dungeon.png) |
+| **Credits with ForeverDB.net (v0.6)** | |
+| ![Credits tab with the ForeverDB.net credit](docs/screenshots/32-credits-foreverdb.png) | |
+
+The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness.
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
 ![Crafters on item tooltips](docs/screenshots/11-item-tooltip-crafters.png)
 
-How the bestiary looks with ForeverDB.net data (approved; coming in v0.6):
+Mock-up of the bestiary with ForeverDB.net sections (v0.6 shows quest and boss lines from the bundled snapshot):
 
 ![Bestiary with ForeverDB sections](docs/screenshots/05-bestiary-tab-with-foreverdb.png)
 
@@ -131,10 +139,18 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Each rare is announced at most once every 10 minutes per person, several guildmates spotting the same rare show as one alert, and there are no pop-ups during boss fights or PvP matches.
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
-### v0.6: Quests & Items
-- Quest info (who gives it and which mobs you need), item details and vendor info.
-- Item tooltips show things like "the guild has seen this drop X times" and "this is on a guildmate's wishlist".
-- Uses **ForeverDB.net** data, with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"**.
+### v0.6: Quests & Items (built, awaiting in-game test)
+Released as `v0.6.0`. The addon's own version (in game and in the TOC) is **0.8.2**, because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+- **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
+  - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
+  - **Items:** required level and slot, who sells it (vendor, price, limited stock), what makes it or what recipe it teaches, what it's a reagent in, quests it starts, dungeons that list it as notable loot, and guildmates who can craft it.
+  - **Vendors:** location, faction and what they sell with prices.
+  - **Recipes:** skill colours, reagents, and how to learn it (trainer and cost, vendor, quest, drop or automatic). Your own faction's trainers come first.
+  - **Dungeons:** level range, bosses and ForeverDB's notable loot picks (labelled as picks, not a drop table).
+- **Bestiary links:** a mob's page lists the quests it starts or ends, and a boss shows its dungeon.
+- **Crafters links:** recipe info (skill, reagents, where to learn it) on crafter results, linking into the Recipes view.
+- **Item tooltips:** one optional line from the snapshot (who sells it, what makes it, what it's a reagent for). There's a switch in Settings.
+- **Not included:** quest rewards (ForeverDB.net doesn't have them yet, so the page says to check the quest window in game) and mob loot tables (those stay guild-recorded only).
 
 ### v0.7: Events & Attendance (built, awaiting in-game test)
 - **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
@@ -196,8 +212,9 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.0 (in-game 0.8.2) is built:** the Quests & Items tab (quests, items, vendors, recipes and dungeons for levels 1–30 from a bundled ForeverDB.net snapshot), quest and boss lines in the bestiary, recipe info in Crafters, an optional ForeverDB.net tooltip line, and the ForeverDB.net credit and support line in Credits.
 - **v0.8.1 is built:** the guild Wishlist in its own tab (needs and offers, filters, search, click to whisper) with wishlist lines on item tooltips. The Bank tab (a bank character's items, recent changes and funds) is hidden unless someone ticks "This is a guild bank character". Rare alerts are now silent by default.
-- **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. (v0.6 Quests & Items comes next, using ForeverDB.net data.)
+- **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. 
 - **v0.5.0 is built:** Bestiary filters and sorting, zone completion, sighting counts, catch-up of bestiary records made while you were offline, and rare alerts (pop-up, sound and chat line, with the spot on the map).
 - **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
 - **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
@@ -229,6 +246,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - `bash tests/run.sh` runs the offline tests (needs Lua 5.1).
 - `luacheck .` lints the code.
 - `tools/build.sh` builds `dist/LOMBCompanion-v<version>.zip`.
+- `tools/build_foreverdb.py` rebuilds `LOMBCompanion/Data/ForeverDB/` from the ForeverDB.net API. The key is read only from the `FOREVERDB_API_KEY` environment variable and is never written anywhere; requests go one at a time, at least 2 seconds apart, with backoff, and every response is cached so nothing is fetched twice.
 
 ---
 
@@ -237,7 +255,9 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - **Game data:** World of Warcraft and WoW: Forever game data belong to **Blizzard Entertainment**. LOMB Companion is a fan-made guild addon and is **not affiliated with or endorsed by Blizzard Entertainment**.
 - **ForeverDB.net (approved):** quest, item, vendor, profession and dungeon data comes from the [ForeverDB.net](https://foreverdb.net) developer API, used with ForeverDB.net's approval for this guild addon. How we use it:
   - **Credit everywhere:** every tab, card and tooltip that shows their data says **"Data from ForeverDB.net"** with the link [https://foreverdb.net](https://foreverdb.net), and the Credits tab says so too. (Addons can't open web links in game, so clicking the credit copies the link.)
-  - **Bundled snapshot:** addons can't go online, so we fetch the data with the API occasionally (a few times a week at most, and after game patches), well under ForeverDB.net's limits, and ship it in its own clearly marked data file.
+  - **Bundled snapshot:** addons can't go online, so we fetch the data with the API occasionally (a few times a week at most, and after game patches), well under ForeverDB.net's limits, and ship it in its own clearly marked folder, `LOMBCompanion/Data/ForeverDB/` (about 800 KB). Each file starts with the credit and the snapshot date.
+  - **What's in it:** quests, vendors, professions/recipes and dungeons for levels 1–30, plus only the items those mention (name, quality, required level and slot).
+  - **Classic data:** ForeverDB.net marks what was seen in WoW: Forever and what comes from Classic. Vendors and trainers never seen in Forever are left out. Quests from Classic data are kept but labelled "Classic data, may differ" (a small "c" in lists). Classic dungeon level ranges and bosses are labelled, Classic trainer costs are left out, and Classic drop sources for recipes just say "drop".
   - **The API key never ships:** it's kept off the addon and out of this repo.
   - **Not ours:** the data stays ForeverDB.net's. It isn't covered by this repo's MIT license, isn't resold, and isn't presented as our own. ForeverDB.net's labels (data seen in WoW Forever vs. Classic data) are kept.
   - ForeverDB.net isn't affiliated with Blizzard Entertainment, and neither are we.
