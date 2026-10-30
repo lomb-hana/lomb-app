@@ -210,7 +210,54 @@ function H.installAPI(opts)
   env.DEFAULT_CHAT_FRAME = { lines = {}, AddMessage = function(self, m) self.lines[#self.lines + 1] = m end }
   env.CreateFrame = function(kind, name, parent) return newRegion(kind, parent, name) end
   env.GetTime = function() return H.now end
-  env.time = function() return math.floor(H.epoch) end
+  env.time = function(t) if t then return os.time(t) end return math.floor(H.epoch) end
+  env.GetServerTime = function() return math.floor(H.epoch) end
+  env.C_DateAndTime = { GetCurrentCalendarTime = function()
+    local d = os.date("*t", math.floor(H.epoch) + (H.state.realmShift or 0))
+    return { year = d.year, month = d.month, monthDay = d.day, weekday = d.wday, hour = d.hour, minute = d.min }
+  end }
+  -- calendar: H.calendar = { { at = epoch (realm clock), title=, by=, ct=, len=, status= } }
+  H.calendar = {}
+  local calMonth
+  local function monthOf(off)
+    local y, m = calMonth.year, calMonth.month + off
+    while m < 1 do m = m + 12; y = y - 1 end
+    while m > 12 do m = m - 12; y = y + 1 end
+    return y, m
+  end
+  local function dayEvents(off, day)
+    local y, m = monthOf(off)
+    local out = {}
+    for _, ev in ipairs(H.calendar) do
+      local d = os.date("*t", ev.at)
+      if d.year == y and d.month == m and d.day == day then out[#out + 1] = ev end
+    end
+    return out
+  end
+  local function ct(epoch)
+    local d = os.date("*t", epoch)
+    return { year = d.year, month = d.month, monthDay = d.day, hour = d.hour, minute = d.min }
+  end
+  env.C_Calendar = {
+    OpenCalendar = function() H.state.calendarOpened = (H.state.calendarOpened or 0) + 1 end,
+    SetAbsMonth = function(month, year) calMonth = { month = month, year = year } end,
+    GetMonthInfo = function(off)
+      local y, m = monthOf(off)
+      local days = os.date("*t", os.time({ year = m == 12 and y + 1 or y, month = m == 12 and 1 or m + 1, day = 1, hour = 12 }) - 86400).day
+      return { month = m, year = y, numDays = days, firstWeekday = 1 }
+    end,
+    GetNumDayEvents = function(off, day) return #dayEvents(off, day) end,
+    GetDayEvent = function(off, day, i)
+      local ev = dayEvents(off, day)[i]
+      if not ev then return nil end
+      return { eventID = i, title = ev.title, startTime = ct(ev.at), endTime = ct(ev.at + (ev.len or 0)),
+        calendarType = ev.ct or "GUILD_EVENT", invitedBy = ev.by, inviteStatus = ev.status,
+        dontDisplayEnd = ev.len == nil }
+    end,
+  }
+  env.GetNumGroupMembers = function() return H.state.groupSize or 0 end
+  env.IsInRaid = function() return H.state.raid or false end
+  env.IsInGroup = function() return (H.state.groupSize or 0) > 0 end
   env.date = os.date
   env.debugprofilestop = function() return H.now * 1000 end
   env.geterrorhandler = function() return function(e) H.errors[#H.errors + 1] = e; io.write("[error] ", tostring(e), "\n") end end

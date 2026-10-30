@@ -16,6 +16,9 @@ local DEFAULTS = {
     rareSound = true,
     shareRares = true,       -- tell guildmates when you spot a rare (its name, zone and map spot)
     toastPoint = nil,
+    recordAttendance = true, -- note who's grouped with the organizer during guild calendar events
+    shareAttendance = true,  -- share what we noted (names + snapshot counts per event)
+    officerRanks = 2,        -- the top N guild ranks can fix attendance (GM = rank 1)
     tooltips = true,         -- add LOMB lines to item tooltips ("Crafters in LOMB: ...")
     showCard = true,         -- bestiary card on target
     cardInCombat = true,     -- keep card up in combat (shows only what the game allows)

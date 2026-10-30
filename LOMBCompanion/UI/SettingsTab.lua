@@ -25,11 +25,19 @@ local OPTIONS = {
   { key = "shareRares", label = "Tell guildmates when I spot a rare",
     tip = "Sends the rare's name and level, the zone, and where you are on the map (e.g. 45, 62) when you see it. "
       .. "At most once per rare every 10 minutes. Nothing else about where you are is sent." },
+  { key = "shareAttendance", label = "Share the event attendance I record",
+    tip = "Names of guildmates in the organizer's group during guild events, and how many 5-minute snapshots "
+      .. "they were in. Nothing about where anyone was.",
+    after = function() ns.Shared.MarkDirty("at") end },
   { section = "Tooltips" },
   { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
   { section = "Rare alerts" },
   { key = "rareAlerts", label = "Show an alert when a rare is spotted (by me or a guildmate)" },
   { key = "rareSound", label = "Play a sound with rare alerts" },
+  { section = "Events" },
+  { key = "recordAttendance", label = "Record attendance at guild events",
+    tip = "During a guild calendar event, if you're grouped with the organizer, note who's in the group "
+      .. "every 5 minutes (after combat). Officers (top 2 ranks) can correct it in the Events tab." },
   { section = "Bestiary card" },
   { key = "showCard", label = "Show the card when I target a creature",
     after = function(v) if not v and ns.BestiaryCard then ns.BestiaryCard.Hide(true) end end },

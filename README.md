@@ -50,6 +50,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Profile filled in by inspecting](docs/screenshots/18-profile-inspected.png) | ![Roster hiding alts](docs/screenshots/19-roster-hide-alts.png) |
 | **Bestiary filtered to rares, with sightings and last spot (v0.5)** | **Rare alert from a guildmate (v0.5)** |
 | ![Bestiary rares filter](docs/screenshots/20-bestiary-filters.png) | ![Rare alert toast and chat line](docs/screenshots/21-rare-toast.png) |
+| **Events: attendance being recorded, officer view (v0.7)** | **Events: a past event, member view (v0.7)** |
+| ![Event attendance with officer controls](docs/screenshots/22-events-attendance.png) | ![Past event attendance](docs/screenshots/23-events-past-member.png) |
+| **Attendance summary, last 30 days (v0.7)** | |
+| ![Attendance summary](docs/screenshots/24-attendance-summary.png) | |
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -128,10 +132,13 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 - Item tooltips show things like "the guild has seen this drop X times" and "this is on a guildmate's wishlist".
 - Uses **ForeverDB.net** data **if they approve** (see [Data & credits](#data--credits)).
 
-### v0.7: Events & Attendance
-- Reads guild events from the in-game calendar.
-- Tracks attendance by who was grouped with the organizer during the event.
-- Officers can correct attendance.
+### v0.7: Events & Attendance (built, awaiting in-game test)
+- **Events tab:** guild events and announcements from the in-game calendar, upcoming and past, with the organizer, the time and your sign-up status. The addon never changes the calendar and doesn't read it while you have the calendar window open.
+- **Attendance:** from 15 minutes before an event until it ends, anyone grouped with the organizer takes a snapshot of the group every 5 minutes (after combat, never during it). Anyone seen in the group at least once counts as present, and the percentage shows how much of the event they were there for.
+- **Shared and merged:** recordings from several guildmates are combined, so it works even if the organizer doesn't have the addon or someone disconnects. Only names and snapshot counts are shared.
+- **Officer fixes:** the top two guild ranks (changeable in saved settings) can mark someone present or remove them, and undo it. Everyone sees who made each fix. Fixes from anyone else are ignored.
+- **Attendance summary:** each member's attendance over the last 30 days. Attendance is kept for 90 days.
+- Two switches in Settings: record attendance, and share what I record.
 
 ### v0.8: Bank & Wishlist
 - WoW: Forever doesn't have a guild bank, at least as far as anyone knows. Instead, a **bank-character ledger** shows what the guild's bank character is holding. It's updated whenever someone logs into that character.
@@ -179,6 +186,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.7.0 is built:** the Events tab (guild calendar events), attendance recorded from the organizer's group and merged across guildmates, officer corrections, and a 30-day attendance summary. (v0.6 Quests & Items waits on ForeverDB.net's answer.)
 - **v0.5.0 is built:** Bestiary filters and sorting, zone completion, sighting counts, catch-up of bestiary records made while you were offline, and rare alerts (pop-up, sound and chat line, with the spot on the map).
 - **v0.4.0 is built:** member profiles (gear, item level, XP progress, stats, professions, recent news), alt and main linking with a "Hide alts" roster option, and inspect-based gear for guildmates without the addon.
 - **v0.3.0 is built:** the News tab (level-ups, joins and leaves, rare kills, new recipes, guild and class milestones) and the Leaderboard tab (levels, kills, rares, hours played, firsts; weekly or all time).
@@ -191,7 +199,7 @@ In plain English:
 
 ## Install
 
-1. Download `LOMBCompanion-v0.1.0.zip` from this repo's **Releases** page.
+1. Download the newest `LOMBCompanion-v*.zip` from this repo's **Releases** page.
 2. Unzip it into your WoW: Forever AddOns folder:
    ```
    World of Warcraft/<Forever game folder>/Interface/AddOns/
@@ -228,6 +236,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 - Member data like levels, gear and professions stays inside the game and the guild. It's saved on members' own computers and shared only over the in-game guild addon channel.
 - Nothing is uploaded to any website or server.
 - Rare alerts share where the spotter was standing (zone plus whole-number map spot) at that moment only. Turn it off with "Tell guildmates when I spot a rare".
+- Event attendance shares only which guildmates were in the organizer's group and how many snapshots they were seen in. No locations or anything else. Turn it off with "Share the event attendance I record".
 
 ---
 
