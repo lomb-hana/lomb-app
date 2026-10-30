@@ -36,6 +36,15 @@ local view = { mode = "quests", search = {}, zone = false, level = 1, mine = tru
 Tab.view = view
 Tab.selected = {}
 Tab.history = {}
+Tab.open = {}     -- [storyline id] = true when expanded; this session only
+Tab.count = 0     -- quests matched by the filters (rows in closed storylines too)
+
+-- quest status tags (see Modules/QuestTrack.lua)
+local STATUS = {
+  done = GOOD .. "done|r",
+  ready = "|cffffd36bturn in|r",
+  log = "|cff8fc8ffin log|r",
+}
 
 local function modeInfo(key)
   for i, m in ipairs(Tab.MODES) do if m.key == key then return m, i end end
@@ -60,32 +69,101 @@ end
 ---------------------------------------------------------------------------
 -- List rows
 ---------------------------------------------------------------------------
+local INDENT, ARROW_W = 10, 14
+
 local function createRow(list)
   local row = CreateFrame("Button", nil, list)
   row.hl = W.Fill(row, "rowHover", "HIGHLIGHT")
   row.hl:SetAllPoints()
   row.sel = W.Fill(row, "accentDim", "BACKGROUND")
   row.sel:SetAllPoints()
+  row.head = W.Fill(row, "row", "BACKGROUND")    -- faint band behind storyline headers
+  row.head:SetAllPoints()
   row.chain = W.Fill(row, "accent", "ARTWORK")   -- thin bar down the left of chained quests
   row.chain:SetPoint("TOPLEFT", 1, -3)
   row.chain:SetPoint("BOTTOMLEFT", 1, 3)
   row.chain:SetWidth(2)
   row.chain:SetAlpha(0.55)
+  row.arrow = row:CreateTexture(nil, "ARTWORK")
+  row.arrow:SetSize(12, 12)
+  row.arrow:SetPoint("LEFT", 4, 0)
+  row.arrow:SetVertexColor(unpack(T.colors.accent))
   row.meta = W.Text(row, "narrow", 10, "muted", "RIGHT")
   row.meta:SetPoint("RIGHT", -4, 0)
   row.name = W.Text(row, "body", 11, "text")
   row.name:SetPoint("LEFT", 6, 0)
   row.name:SetPoint("RIGHT", row.meta, "LEFT", -6, 0)
   row.name:SetWordWrap(false)
-  row:SetScript("OnClick", function(self) Tab.Select(self.item.key) end)
+  row:SetScript("OnClick", function(self)
+    if self.item.header then Tab.Toggle(self.item.story) else Tab.Select(self.item.key) end
+  end)
+  row:SetScript("OnEnter", function(self)
+    local tip = self.item and self.item.tip
+    if not tip then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:AddLine(tip[1], 1, 1, 1)
+    for i = 2, #tip do GameTooltip:AddLine(tip[i], 0.75, 0.72, 0.8, true) end
+    GameTooltip:Show()
+  end)
+  row:SetScript("OnLeave", function() GameTooltip:Hide() end)
   return row
 end
 
 local function updateRow(row, item)
   row.name:SetText(item.text)
   row.meta:SetText(item.meta or "")
-  row.chain:SetShown(item.chain == true)
-  row.sel:SetShown(Tab.selected[view.mode] == item.key)
+  row.chain:SetShown(item.chain == true and not item.header)
+  row.head:SetShown(item.header == true)
+  row.sel:SetShown(not item.header and Tab.selected[view.mode] == item.key)
+  local left = 6 + (item.indent or 0) * INDENT
+  if item.header then
+    row.arrow:SetTexture(item.open and T.ARROW_DOWN or T.ARROW_RIGHT)
+    row.arrow:Show()
+    left = left + ARROW_W
+  else
+    row.arrow:Hide()
+  end
+  row.name:ClearAllPoints()
+  row.name:SetPoint("LEFT", left, 0)
+  row.name:SetPoint("RIGHT", row.meta, "LEFT", -6, 0)
+end
+
+-- the story's header line: "14-22 · 3/8 done" (or "· 8 quests" when there's no
+-- way to tell what's done). Counts only the parts the filters let through.
+function Tab.StoryMeta(ids)
+  local FDB, Track = ns.FDB, ns.QuestTrack
+  local range = FDB.LevelRange(ids)
+  local text
+  if Track and Track.Knows() then
+    local done, total = Track.Progress(ids)
+    text = ("%d/%d done"):format(done, total)
+    if total > 0 and done == total then text = GOOD .. text .. "|r" end
+  else
+    text = ("%d quest%s"):format(#ids, #ids == 1 and "" or "s")
+  end
+  return (range ~= "" and range .. " · " or "") .. text
+end
+
+local function questRow(e, indent)
+  local FDB, Track = ns.FDB, ns.QuestTrack
+  local part = FDB.ChainText(e.id)
+  local st = Track and Track.Status(e.id)
+  local tag = st and STATUS[st]
+  return { key = e.id, text = (st == "done" and MUTED .. e.q.n .. "|r" or e.q.n), chain = part ~= nil, indent = indent,
+    meta = (tag and tag .. "  " or "") .. (part and CHAIN .. part .. "|r  " or "") .. (e.q.c and WARN .. "c|r " or "")
+      .. (e.q.l > 0 and e.q.l or "-") }
+end
+
+function Tab.Toggle(storyId)
+  Tab.open[storyId] = not Tab.open[storyId] or nil
+  Tab.Refresh()
+end
+
+-- make sure a quest's row can be seen: open its storyline
+local function reveal(mode, key)
+  if mode ~= "quests" or type(key) ~= "number" then return end
+  local st = ns.FDB.Storyline(key)
+  if st then Tab.open[st.id] = true end
 end
 
 -- Rows for the current mode: { key, text, meta }
@@ -102,11 +180,35 @@ function Tab.Items()
     end
     local list = FDB.QuestList({ search = search, zone = view.zone and playerZone() or nil,
       minLevel = minL, maxLevel = maxL, side = view.mine and FDB.PlayerSide() or nil })
-    for _, e in ipairs(FDB.GroupChains(list)) do
-      local part = FDB.ChainText(e.id)
-      out[#out + 1] = { key = e.id, text = e.q.n, chain = part ~= nil,
-        meta = (part and CHAIN .. part .. "|r  " or "") .. (e.q.c and WARN .. "c|r " or "")
-          .. (e.q.l > 0 and e.q.l or "-") }
+    -- each storyline becomes one header, where its first listed quest sits;
+    -- its parts follow in story order (branches one step in) when it's open
+    local found, done = {}, {}
+    for _, e in ipairs(list) do
+      local st = FDB.Storyline(e.id)
+      if st then found[st] = found[st] or {}; found[st][e.id] = e end
+    end
+    Tab.count = #list
+    for _, e in ipairs(list) do
+      local st = FDB.Storyline(e.id)
+      if not st then
+        out[#out + 1] = questRow(e, 0)
+      elseif not done[st] then
+        done[st] = true
+        local parts, ids = {}, {}
+        for _, o in ipairs(st.order) do
+          local hit = found[st][o.id]
+          if hit then parts[#parts + 1] = { e = hit, depth = o.depth }; ids[#ids + 1] = o.id end
+        end
+        local open = Tab.open[st.id] == true
+        local shown = #ids < st.size and ("%d of its %d quests match the filters."):format(#ids, st.size) or nil
+        out[#out + 1] = { key = "story:" .. st.id, header = true, story = st.id, open = open, chain = true,
+          text = st.name, meta = Tab.StoryMeta(ids),
+          tip = { st.name, ("Storyline, %d quests%s."):format(st.size, st.more and ", and it carries on past level 30" or ""),
+            shown or "Click to " .. (open and "close" or "open") .. " it." } }
+        if open then
+          for _, p in ipairs(parts) do out[#out + 1] = questRow(p.e, 1 + math.min(p.depth, 2)) end
+        end
+      end
     end
   elseif mode == "items" then
     for _, id in ipairs(FDB.ItemSearch(search)) do
@@ -154,6 +256,7 @@ function Tab.Show(mode, key, fromLink)
   view.mode = mode
   if key ~= nil then
     Tab.selected[mode] = key
+    reveal(mode, key)
     -- make sure the row is in the list even if a filter would hide it
     view.search[mode] = ""
     if mode == "quests" or mode == "vendors" then view.zone = false end
@@ -169,6 +272,7 @@ function Tab.Back()
   if h then
     view.mode = h[1]
     Tab.selected[h[1]] = h[2]
+    reveal(h[1], h[2])
     Tab.Refresh()
   end
 end
@@ -250,6 +354,14 @@ local function renderQuest(page, id)
   if q.z then bits[#bits + 1] = q.z end
   add(page, { text = table.concat(bits, "  ·  "), size = 12, color = "muted", gap = 4 })
   if q.ql then add(page, { text = MUTED .. "Quest line|r   " .. q.ql, size = 12 }) end
+  local Track = ns.QuestTrack
+  local st = Track and Track.Status(id)
+  local stText = ({ done = GOOD .. "Done|r", ready = "|cffffd36bReady to turn in|r", log = "|cff8fc8ffIn your quest log|r",
+    none = "Not started" })[st] or MUTED .. "Can't tell yet|r"
+  if st == "done" and Track.Source(id) == "seen" then stText = stText .. MUTED .. "  (you turned it in while the addon was on)|r" end
+  add(page, { text = MUTED .. "You|r   " .. stText, size = 12,
+    tip = { "Your progress", "From the game's quest log and quest history where it answers, plus the turn-ins this addon "
+      .. "has seen on this character. Not tried on the live servers yet." } })
   if q.c then
     add(page, { text = WARN .. "This quest's details come from Classic data (CMaNGOS) and may differ in WoW Forever.|r",
       size = 11, wrap = true })
@@ -616,6 +728,7 @@ UI.RegisterTab({
       if p:IsVisible() and (view.mode == "items" or view.mode == "recipes") then p.list:Refresh() end
     end)
     ns:On("GET_ITEM_INFO_RECEIVED", function() rerender() end)
+    ns:Listen("QUESTS_CHANGED", function() if p:IsVisible() and view.mode == "quests" then Tab.Refresh() end end)
     ns:On("ZONE_CHANGED_NEW_AREA", function() if view.zone then Tab.Refresh() end end)
     return p
   end,
@@ -660,14 +773,16 @@ UI.RegisterTab({
     local items = FDB.Available() and Tab.Items() or {}
     p.list:SetItems(items)
     local noun = ({ quests = "quest", items = "item", vendors = "vendor", recipes = "recipe", dungeons = "dungeon" })[view.mode]
-    local text = ("%d %s%s"):format(#items, noun, #items == 1 and "" or "s")
+    local n = view.mode == "quests" and Tab.count or #items
+    local text = ("%d %s%s"):format(n, noun, n == 1 and "" or "s")
     if view.mode == "vendors" then text = text .. ", seen in WoW Forever" end
     if view.mode == "quests" and (view.zone and playerZone()) then text = text .. " in " .. playerZone() end
     p.count:SetText(text)
     local sel = Tab.selected[view.mode]
-    if sel == nil and items[1] then
-      sel = items[1].key
-      Tab.selected[view.mode] = sel
+    if sel == nil then
+      for _, it in ipairs(items) do
+        if not it.header then sel = it.key; Tab.selected[view.mode] = sel; break end
+      end
     end
     p.back:SetShown(#Tab.history > 0)
     p.snap:SetText(("Snapshot %s. Not covered by this addon's license."):format(tostring(FDB.Snapshot() or "?")))

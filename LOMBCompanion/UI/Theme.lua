@@ -73,6 +73,8 @@ T.classification = {
 
 T.LOGO = "Interface\\AddOns\\LOMBCompanion\\Media\\logo"
 T.WHITE = "Interface\\Buttons\\WHITE8X8"
+T.ARROW_RIGHT = "Interface\\AddOns\\LOMBCompanion\\Media\\arrow-right"   -- our own, see tools/make_arrows.py
+T.ARROW_DOWN = "Interface\\AddOns\\LOMBCompanion\\Media\\arrow-down"
 
 function T.hex(c)
   return ("ff%02x%02x%02x"):format(math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))

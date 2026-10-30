@@ -1,8 +1,22 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, and v0.6.1 is 0.8.3**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3 and v0.6.2 is 0.8.4**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.2 (in-game 0.8.4): storyline drop-downs and quest progress, 2026-10-30
+
+Small pre-release patch, untested in game.
+
+- **Storylines are drop-downs.** Each connected storyline (the whole linked set, branches included, 255 in the bundled data) is one header row in the quest list. The header shows the storyline's name (its first quest), the level range, and either progress ("12-18 · 4/9 done") or the number of quests when the addon can't tell what you've done. There's a violet arrow on the left. Headers start closed. Click to open or close them; the addon remembers this until you log out or reload.
+- **Opened storylines** list their quests in story order with the "Part X of Y" tags from v0.6.1. A branch sits right under the quest it splits off, one step further in.
+- **Filters still apply.** A header only shows if at least one of its quests passes the filters, and its level range and counts only cover those quests. The tooltip says when only some of its quests match. The count above the list still counts quests, including the ones inside closed headers. Opening a quest from a link opens its storyline. Quests outside chains are unchanged.
+- **Quest progress (new, defensive):** quests are tagged "done", "in log" or "turn in" in the list, and the quest page has a "You" line (Done / In your quest log / Ready to turn in / Not started / Can't tell yet).
+  - It reads the game's quest log and completed-quest history through the C_QuestLog functions listed for the 1.60.1 client. Every call is guarded, and the old Classic functions are kept as a fallback.
+  - It also saves every turn-in it sees (`QUEST_TURNED_IN`) on this character. If that event never fires, a quest that leaves the log while it's ready to hand in also counts. That way progress still counts up if the game won't share its history, but then it only covers turn-ins made while 0.8.4 was running.
+  - Nothing is guessed: earlier parts of a chain aren't marked done because a later part is.
+  - `/lomb questcheck` prints what the game is telling the addon (quest log, history, per-quest checks, turn-ins seen). It's for checking on launch day.
+- No ForeverDB.net requests and no new data. The arrows are two tiny textures that ship with the addon (`tools/make_arrows.py`).
 
 ## v0.6.1 (in-game 0.8.3): quest chains, 2026-10-30
 

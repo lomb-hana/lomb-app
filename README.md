@@ -6,7 +6,7 @@ LOMB Companion is a free in-game addon made just for the **Land of Make Believe 
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and the `v0.6.2` storyline and quest progress patch as in-game 0.8.4; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
 
 > ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
 
@@ -64,8 +64,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Quests & Items, recipe page](docs/screenshots/30-recipe.png) | ![Quests & Items, dungeon page](docs/screenshots/31-dungeon.png) |
 | **Credits with ForeverDB.net (v0.6)** | **Quest chains tagged and grouped (v0.6.1)** |
 | ![Credits tab with the ForeverDB.net credit](docs/screenshots/32-credits-foreverdb.png) | ![Quest list with chains grouped and tagged Part 1 of 4 and so on](docs/screenshots/33-quest-chains.png) |
+| **Storyline drop-downs with quest progress (v0.6.2)** | |
+| ![Quest list with closed storyline headers showing level range and progress, and one open storyline with done, turn in and in log tags](docs/screenshots/34-quest-storylines.png) | |
 
-The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness.
+The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data.
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -140,10 +142,12 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**) and the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
+  - **Storyline drop-downs (v0.6.2):** each linked storyline, branches included, is one header row with its name, level range and progress ("12-18 · 4/9 done"). Headers start closed; click to open. Inside, quests are in story order with their "Part X of Y" tags, and a branch sits under the quest it splits off. Filters apply to the parts, and the header counts only those.
+  - **Quest progress (v0.6.2, not tried on live servers yet):** "done", "in log" and "turn in" tags in the list, and a "You" line on the quest page. It reads the game's quest log and completed-quest history where the client allows, and also saves every turn-in it sees on this character, so it still counts up if the game won't share its history. `/lomb questcheck` shows what the game is telling the addon.
   - **Items:** required level and slot, who sells it (vendor, price, limited stock), what makes it or what recipe it teaches, what it's a reagent in, quests it starts, dungeons that list it as notable loot, and guildmates who can craft it.
   - **Vendors:** location, faction and what they sell with prices.
   - **Recipes:** skill colours, reagents, and how to learn it (trainer and cost, vendor, quest, drop or automatic). Your own faction's trainers come first.
@@ -213,6 +217,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.2 (in-game 0.8.4):** storylines are drop-down headers with level range and progress, and quests show done / in log / turn in where the game allows (plus turn-ins the addon sees itself).
 - **v0.6.1 (in-game 0.8.3):** quest chains are tagged "Part k of n" and grouped in the quest list.
 - **v0.6.0 (in-game 0.8.2) is built:** the Quests & Items tab (quests, items, vendors, recipes and dungeons for levels 1–30 from a bundled ForeverDB.net snapshot), quest and boss lines in the bestiary, recipe info in Crafters, an optional ForeverDB.net tooltip line, and the ForeverDB.net credit and support line in Credits.
 - **v0.8.1 is built:** the guild Wishlist in its own tab (needs and offers, filters, search, click to whisper) with wishlist lines on item tooltips. The Bank tab (a bank character's items, recent changes and funds) is hidden unless someone ticks "This is a guild bank character". Rare alerts are now silent by default.
@@ -241,7 +246,7 @@ In plain English:
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
-**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`. You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
 
 ### For developers
 

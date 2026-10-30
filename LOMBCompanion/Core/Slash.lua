@@ -8,6 +8,7 @@ local HELP = {
   "|cffb873ff/lomb sync|r  say hello to the guild now",
   "|cffb873ff/lomb status|r  sync status",
   "|cffb873ff/lomb debug|r  toggle debug messages",
+  "|cffb873ff/lomb questcheck|r  what the game tells the addon about your quests",
 }
 
 local function isTab(id)
@@ -33,6 +34,9 @@ function ns.HandleSlash(msg)
     if ok then ns.Sync.SendHello(); ns.Sync.SendProfile(true); ns.Print("Said hello to the guild.")
     else ns.Print("Can't sync right now: %s.", why) end
   elseif cmd == "status" then ns.Print(ns.Sync.Status())
+  elseif cmd == "questcheck" then
+    ns.QuestTrack.ScanLog(); ns.QuestTrack.ScanDone()
+    ns.Print(ns.QuestTrack.Report())
   elseif cmd == "debug" then
     ns.db.settings.debug = not ns.db.settings.debug
     ns.Print("Debug %s.", ns.db.settings.debug and "on" or "off")

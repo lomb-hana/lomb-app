@@ -172,12 +172,16 @@ H.test("quest page: giver, turn-in, chain links and Classic label", function()
   ns.QuestsTab.view.level = 1
   ns.UI.Refresh("quests")
   for _, row in ipairs(p.list.items) do
-    local q = ns.FDB.Quest(row.key)
-    H.ok(q.l >= 9 and q.l <= 15, "near level 12")
+    if not row.header then
+      local q = ns.FDB.Quest(row.key)
+      H.ok(q.l >= 9 and q.l <= 15, "near level 12")
+    end
   end
   p.f1.scripts.OnClick(p.f1, "LeftButton")
   H.ok(ns.QuestsTab.view.zone)
-  for _, row in ipairs(p.list.items) do H.eq(ns.FDB.Quest(row.key).z, "Elwynn Forest") end
+  for _, row in ipairs(p.list.items) do
+    if not row.header then H.eq(ns.FDB.Quest(row.key).z, "Elwynn Forest") end
+  end
   p.f2.scripts.OnClick(p.f2, "RightButton")
   p.f3.scripts.OnClick(p.f3, "LeftButton")
   noErrors("quest page")
@@ -326,19 +330,27 @@ H.test("quest list: chained quests are tagged and grouped, others unchanged", fu
   local Tab = ns.QuestsTab
   Tab.Show("quests")
   Tab.view.level, Tab.view.zone, Tab.view.mine = 3, false, false   -- levels 1-10, everywhere, both sides
+  Tab.open[ns.FDB.Storyline(783).id] = true
   local rows = Tab.Items()
   local pos = {}
   for i, r in ipairs(rows) do pos[r.key] = i end
-  -- Northshire's chain is together and in order
-  H.eq(pos[7], pos[783] + 1)
-  H.eq(pos[15], pos[783] + 2)
-  H.eq(pos[21], pos[783] + 3)
+  -- Northshire's storyline is together, in order, under its header; branches
+  -- sit right after the quest they split from, one step further in
+  local head = rows[pos[783] - 1]
+  H.ok(head.header and head.open and head.text == "A Threat Within", "header right above part 1")
+  H.ok(pos[783] < pos[7] and pos[7] < pos[15] and pos[15] < pos[21], "main line in order")
+  H.eq(pos[54], pos[21] + 1)
+  H.eq(rows[pos[783]].indent, 1)
+  H.eq(rows[pos[7]].indent, 1)
+  H.eq(rows[pos[54]].indent, 2)
+  H.eq(rows[pos[5261]].indent, 2)
+  H.ok(pos[5261] < pos[7], "the branch off part 1 comes before part 2")
   H.ok(rows[pos[783]].meta:find("Part 1 of", 1, true), "tag in the row")
   H.ok(rows[pos[783]].chain, "chain bar")
   -- quests outside chains keep their level order and have no tag
   local plain, last = 0, 0
   for _, r in ipairs(rows) do
-    if not ns.FDB.Chain(r.key) then
+    if not r.header and not ns.FDB.Chain(r.key) then
       plain = plain + 1
       H.ok(not r.chain and not r.meta:find("Part", 1, true), "untagged")
       local l = ns.FDB.Quest(r.key).l

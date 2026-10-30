@@ -4,7 +4,7 @@
 ## Title: |cffb873ffLOMB|r Companion
 ## Notes: Land of Make Believe guild companion: roster, crafters, events, bank ledger, wishlist, personal stats, quests & items (ForeverDB.net data), and a bestiary the guild fills in together.
 ## Author: lomb-hana
-## Version: 0.8.3
+## Version: 0.8.4
 ## X-License: MIT
 ## X-Website: https://github.com/lomb-hana/lomb-app
 ## IconTexture: Interface\AddOns\LOMBCompanion\Media\logo
@@ -46,6 +46,7 @@ Modules\Events.lua
 Modules\Bank.lua
 Modules\Wishlist.lua
 Modules\QuestDB.lua
+Modules\QuestTrack.lua
 
 # UI
 UI\Theme.lua

@@ -265,9 +265,63 @@ local function longestPath(Q, nodes, left, succ, pred)
   return path
 end
 
+-- A storyline is one whole connected set of linked quests (all its lines).
+-- Its order is the main line, with each other line slotted in where it joins:
+-- after the quest it branches off (`from`), or before the quest it leads into
+-- (`into`), one step further in. A line joined only in the middle goes after
+-- the first quest it touches.
+--   story = { id, name, minL, maxL, size, more, lines, order = { { id, depth } ... } }
+local function finishStory(Q, story, succ, pred)
+  local main = story.lines[1]
+  story.id, story.name = main.ids[1], Q[main.ids[1]].n
+  local placed, after, beforeQ, depthOf = {}, {}, {}, {}
+  for _, v in ipairs(main.ids) do placed[v] = main end
+  depthOf[main] = 0
+  for i = 2, #story.lines do
+    local line = story.lines[i]
+    local anchor, where = nil, "after"
+    if line.from then anchor = line.from
+    elseif line.into then anchor, where = line.into, "before"
+    else
+      for _, v in ipairs(line.ids) do
+        for w in pairs(pred[v] or {}) do if placed[w] then anchor = w; break end end
+        if not anchor then for w in pairs(succ[v] or {}) do if placed[w] then anchor = w; break end end end
+        if anchor then break end
+      end
+    end
+    anchor = anchor and placed[anchor] and anchor or main.ids[#main.ids]
+    depthOf[line] = depthOf[placed[anchor]] + 1
+    local t = where == "before" and beforeQ or after
+    t[anchor] = t[anchor] or {}
+    table.insert(t[anchor], line)
+    for _, v in ipairs(line.ids) do placed[v] = line end
+  end
+  local order = {}
+  local function walk(line)
+    for _, v in ipairs(line.ids) do
+      for _, l in ipairs(beforeQ[v] or {}) do walk(l) end
+      order[#order + 1] = { id = v, depth = depthOf[line] }
+      for _, l in ipairs(after[v] or {}) do walk(l) end
+    end
+  end
+  walk(main)
+  story.order = order
+  local lo, hi
+  for _, e in ipairs(order) do
+    chains.of[e.id].story = story
+    if chains.of[e.id].more then story.more = true end
+    local l = Q[e.id].l
+    if l and l > 0 then
+      lo = (not lo or l < lo) and l or lo
+      hi = (not hi or l > hi) and l or hi
+    end
+  end
+  story.minL, story.maxL = lo, hi
+end
+
 local function buildChains()
   local d = D()
-  chains = { of = {}, lines = {} }
+  chains = { of = {}, lines = {}, stories = {} }
   if not d then return chains end
   local Q = d.quests
   local succ, pred, adj, ext = {}, {}, {}, {}
@@ -305,6 +359,7 @@ local function buildChains()
         for _ in pairs(pred[v] or {}) do np = np + 1 end
         if ns_ > 1 or np > 1 then branches = true end
       end
+      local story = { lines = {}, size = #comp }
       local left, remaining = {}, #comp
       for _, v in ipairs(comp) do left[v] = true end
       while remaining > 0 do
@@ -326,8 +381,10 @@ local function buildChains()
           local c = chains.of[s]
           if c and c.total - c.part + 1 > tail then tail, into = c.total - c.part + 1, s end
         end
-        local line = { ids = path, branch = branches or nil, unclear = unclear or nil, from = from, into = into }
+        local line = { ids = path, branch = branches or nil, unclear = unclear or nil, from = from, into = into,
+          story = story }
         chains.lines[#chains.lines + 1] = line
+        story.lines[#story.lines + 1] = line
         local total = offset + #path + tail
         local more = ext[path[#path]] == "after" or nil
         for k, v in ipairs(path) do
@@ -335,6 +392,8 @@ local function buildChains()
             earlier = (k == 1 and offset == 0 and ext[v] == "before") or nil }
         end
       end
+      finishStory(Q, story, succ, pred)
+      chains.stories[#chains.stories + 1] = story
     end
   end
   return chains
@@ -347,6 +406,29 @@ function FDB.Chain(id)
 end
 
 function FDB.ResetChains() chains = nil end
+
+-- The whole storyline a quest belongs to (see finishStory), or nil.
+function FDB.Storyline(id)
+  local c = FDB.Chain(id)
+  return c and c.story
+end
+
+-- "14-22" (or "14" when it's one level, "" when no part has a level), for a
+-- list of quest ids
+function FDB.LevelRange(ids)
+  local d, lo, hi = D(), nil, nil
+  for _, id in ipairs(ids) do
+    local q = d and d.quests[id]
+    local l = q and q.l
+    if l and l > 0 then
+      lo = (not lo or l < lo) and l or lo
+      hi = (not hi or l > hi) and l or hi
+    end
+  end
+  if not lo then return "" end
+  if lo == hi then return tostring(lo) end
+  return ("%d-%d"):format(lo, hi)
+end
 
 -- "Part 2 of 3" ("of 3+" when the chain goes on past level 30; "Part ?" when it
 -- starts above level 30, which the bundle can't count).

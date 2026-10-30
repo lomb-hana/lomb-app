@@ -45,6 +45,7 @@ local CHAR_DEFAULTS = {
   played = nil,      -- { total = s, level = s, at = epoch }
   lootLog = {},      -- newest first, capped
   firstLogin = nil,
+  questsDone = {},   -- [questID] = epoch, turn-ins this addon saw (fallback for quest tracking)
 }
 
 local function fill(dst, src)
