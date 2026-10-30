@@ -6,7 +6,7 @@ LOMB Companion is a free in-game addon made just for the **Land of Make Believe 
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** planning. No addon code has been released yet. v0.1 is targeted for launch day, Nov 4, 2026.
+> **Status:** v0.1.0 is built and passes its offline tests. It hasn't been run inside WoW: Forever yet, because the game isn't out until Nov 4, 2026. Expect a quick v0.1.1 after launch-day testing.
 
 ---
 
@@ -48,11 +48,11 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 ## Roadmap
 
 ### v0.1: Launch Day (target: Nov 4, 2026)
-- **Main window** with Guild, Me, Bestiary and Credits tabs, in the custom LOMB style.
+- **Main window** with Roster, Me, Bestiary, Settings and Credits tabs, in the custom LOMB style.
 - **Minimap button** and the `/lomb` slash command.
 - **Guild roster:** level, class, rank, zone, online status and last seen for the whole guild. It reads the game's own guild roster, so it covers members who don't have the addon too.
 - **Me tab:** your personal stats, recorded on your own computer: level-up times, deaths and a loot log.
-- **Bestiary card:** target a mob to see its level, type, family and health (when the game lets addons read them), plus how many times the guild has killed it and what it has dropped for guild members.
+- **Bestiary card:** target a mob to see its level, type, family and health (when the game lets addons read them), plus how many times the guild has killed it and what it has dropped for guild members. Pin it to keep it on one mob, or expand it to a full bestiary page.
 - **Basic sync:** members with the addon recognize each other and automatically share level, class, professions, gear and playtime. There's an **off switch** in Settings if you'd rather not share.
 
 ### v0.2: Who Can Craft
@@ -119,7 +119,7 @@ In plain English:
 
 ## Design decisions
 
-- **Guild-only.** It's built for Land of Make Believe. The addon checks the guild name when it connects with other members.
+- **Guild-only.** It's built for Land of Make Believe. It only talks over the in-game guild addon channel, so it only ever exchanges data with members of your own guild.
 - **GitHub only.** Releases go here. There won't be CurseForge or Wago listings.
 - **No Classic loot data.** Bestiary loot tables come **only from what the guild records** in WoW: Forever, so every drop shown is something a LOMB member actually saw.
 - **Not Hardcore.** The guild isn't playing the Hardcore ruleset, so there's no death log or memorial wall.
@@ -131,28 +131,34 @@ In plain English:
 
 ## Status
 
-- **Current stage:** planning and design.
-- **v0.1** is targeted for **November 4, 2026**, WoW: Forever's launch day.
-- Expect a quick follow-up fix (v0.1.1) after launch, because the game's addon rules can change between beta and the live release.
-- Real testing has to happen in game, with at least two guild members running the addon.
+- **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- It has an offline test suite (a fake WoW API runs the whole addon, including the windows) plus a linter. Both pass.
+- **It can't be tested in the real game until WoW: Forever launches on November 4, 2026.** Expect a quick follow-up fix (v0.1.1) after launch, because the game's addon rules can change between beta and the live release.
+- Real testing needs at least two guild members running the addon.
 
 ---
 
 ## Install
 
-> **Placeholder:** there's no release to download yet. These steps will apply once v0.1 is out.
-
-1. Download the latest release zip from this repo's **Releases** page.
+1. Download `LOMBCompanion-v0.1.0.zip` from this repo's **Releases** page.
 2. Unzip it into your WoW: Forever AddOns folder:
    ```
    World of Warcraft/<Forever game folder>/Interface/AddOns/
    ```
-   You should end up with `Interface/AddOns/LOMBCompanion/`.
+   You should end up with `Interface/AddOns/LOMBCompanion/LOMBCompanion.toc`.
 3. Restart the game, or type `/reload` if you're already logged in.
 4. Make sure **LOMB Companion** is ticked in the AddOns list on the character select screen.
-5. Click the minimap button or type `/lomb` to open it.
+5. Click the minimap button or type `/lomb` to open it. `/lomb help` lists every command.
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
+
+**Commands:** `/lomb` (open/close), `/lomb roster | me | bestiary | settings | credits`, `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`. You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+
+### For developers
+
+- `bash tests/run.sh` runs the offline tests (needs Lua 5.1).
+- `luacheck .` lints the code.
+- `tools/build.sh` builds `dist/LOMBCompanion-v<version>.zip`.
 
 ---
 
@@ -160,7 +166,7 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 
 - **Game data:** World of Warcraft and WoW: Forever game data belong to **Blizzard Entertainment**. LOMB Companion is a fan-made guild addon and is **not affiliated with or endorsed by Blizzard Entertainment**.
 - **ForeverDB.net (pending):** we've asked [ForeverDB.net](https://foreverdb.net) whether we can include their quest, item, vendor and profession data in the addon. **We won't use any of their data unless they approve.** If they do, every place it appears will say **"Data from ForeverDB.net"**, with a link to [https://foreverdb.net](https://foreverdb.net).
-- **Guild-recorded data:** bestiary sightings, kills and loot come from Land of Make Believe members playing the game. These are shown as "LOMB saw".
+- **Guild-recorded data:** bestiary sightings, kills and loot come from Land of Make Believe members playing the game. These are tagged **GUILD**. Facts read live from your game client are tagged **GAME**.
 - **Wowhead:** linked to only. Its data isn't copied or collected.
 
 ---
@@ -175,4 +181,4 @@ The exact game folder name will be confirmed when WoW: Forever goes live.
 
 ## License
 
-The plan is to release the addon under the **MIT License**. The license file will be added with the first code release.
+MIT License. See [LICENSE](LICENSE).
