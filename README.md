@@ -2,11 +2,11 @@
 
 **The guild addon for Land of Make Believe in WoW: Forever.**
 
-LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. It's planned to be ready when **WoW: Forever launches on November 4, 2026**.
+LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1: Core is built** and gets its first in-game test when **WoW: Forever launches on November 4, 2026**.
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1.0 is built and passes its offline tests. It hasn't been run inside WoW: Forever yet, because the game isn't out until Nov 4, 2026. Expect a quick v0.1.1 after launch-day testing.
+> **Status:** v0.1: Core is built and passes its offline tests. It's awaiting its in-game test when WoW: Forever launches on Nov 4, 2026, and a quick v0.1.1 may follow that first test.
 
 ---
 
@@ -68,7 +68,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
 
 ## Roadmap
 
-### v0.1: Launch Day (target: Nov 4, 2026)
+### v0.1: Core (built, awaiting in-game test when WoW: Forever launches Nov 4)
 - **Main window** with Roster, Me, Bestiary, Settings and Credits tabs, in the custom LOMB style.
 - **Minimap button** and the `/lomb` slash command.
 - **Guild roster:** level, class, rank, zone, online status and last seen for the whole guild. It reads the game's own guild roster, so it covers members who don't have the addon too.
