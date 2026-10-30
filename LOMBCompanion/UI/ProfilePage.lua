@@ -21,13 +21,9 @@ local function itemLine(parent)
   l.name = W.Text(l, "body", 11, "text")
   l.name:SetPoint("LEFT", 20, 0)
   l.name:SetPoint("RIGHT", l.slot, "LEFT", -4, 0)
-  l:SetScript("OnEnter", function(self)
-    if not self.itemString then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if GameTooltip.SetHyperlink then GameTooltip:SetHyperlink(self.itemString) end
-    GameTooltip:Show()
-  end)
-  l:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  -- gear: the exact item (enchant, "of the ..." suffix) for the tooltip and the chat link;
+  -- click opens the base item's page
+  ns.ItemClick.Bind(l, function(self) return self.itemString end)
   return l
 end
 

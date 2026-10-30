@@ -106,15 +106,26 @@ local function createRow(list)
   row.name:SetPoint("LEFT", 6, 0)
   row.name:SetPoint("RIGHT", row.meta, "LEFT", -6, 0)
   row.name:SetWordWrap(false)
-  row:SetScript("OnClick", function(self)
-    if self.item.header then Tab.Toggle(self.item.story) else Tab.Select(self.item.key) end
+  row:SetScript("OnClick", function(self, button)
+    local it = self.item
+    if not it then return end
+    -- rows that are (or make) an item: shift-click links it, ctrl-click previews it
+    if it.itemID and ns.ItemClick.Modified(it.itemID) then return end
+    if button and button ~= "LeftButton" then return end
+    if it.header then Tab.Toggle(it.story) else Tab.Select(it.key) end
   end)
   row:SetScript("OnEnter", function(self)
-    local tip = self.item and self.item.tip
-    if not tip then return end
+    local it = self.item
+    local tip = it and it.tip
+    if not tip and not (it and it.itemID) then return end
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:AddLine(tip[1], 1, 1, 1)
-    for i = 2, #tip do GameTooltip:AddLine(tip[i], 0.75, 0.72, 0.8, true) end
+    if tip then
+      GameTooltip:AddLine(tip[1], 1, 1, 1)
+      for i = 2, #tip do GameTooltip:AddLine(tip[i], 0.75, 0.72, 0.8, true) end
+    else
+      ns.ItemClick.SetTooltip(GameTooltip, it.itemID)
+    end
+    ns.ItemClick.AddHint(GameTooltip, true)
     GameTooltip:Show()
   end)
   row:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -226,7 +237,7 @@ function Tab.Items()
     end
   elseif mode == "items" then
     for _, id in ipairs(FDB.ItemSearch(search)) do
-      out[#out + 1] = { key = id, text = FDB.ItemText(id) }
+      out[#out + 1] = { key = id, text = FDB.ItemText(id), itemID = id }
     end
   elseif mode == "vendors" then
     local list = FDB.VendorList({ search = search, zone = view.zone and playerZone() or nil,
@@ -240,7 +251,7 @@ function Tab.Items()
     for _, e in ipairs(list) do
       local p = FDB.Profession(e.prof)
       out[#out + 1] = { key = e.prof .. ":" .. e.i, text = (e.r.mk and FDB.ItemText(e.r.mk) or e.r.n),
-        meta = (slug and "" or (p.n:sub(1, 5) .. " ")) .. tostring(e.r.sk[1] or "?") }
+        meta = (slug and "" or (p.n:sub(1, 5) .. " ")) .. tostring(e.r.sk[1] or "?"), itemID = e.r.mk }
     end
   elseif mode == "dungeons" then
     for _, e in ipairs(FDB.DungeonList(search)) do
@@ -431,7 +442,7 @@ end
 
 local function renderItem(page, id)
   local FDB = ns.FDB
-  add(page, { text = FDB.ItemText(id), font = "title", size = 20, icon = itemIcon(id), item = id, gap = 2 })
+  add(page, { text = FDB.ItemText(id), font = "title", size = 20, icon = itemIcon(id), item = id, noOpen = true, gap = 2 })
   local e = ns.FDBData.items[id]
   local bits = {}
   if e and e[4] then bits[#bits + 1] = e[4] end
@@ -488,7 +499,12 @@ local function renderItem(page, id)
     add(page, { text = table.concat(names, ", "), wrap = true, size = 12, srcs = { "guild" } })
   end
   for _, fn in ipairs(Tab.ItemExtras) do ns.SafeCall(fn, page, id) end
-  if page.used <= 2 then
+  if not e then
+    -- not in the ForeverDB.net snapshot (a guild drop, a bank item, gear from a profile...): a small page, no error
+    add(page, { text = "No details for this item: it isn't in the ForeverDB.net data bundled with the addon. "
+      .. "Hover the name for the game's tooltip, or shift-click it to link it in chat.",
+      size = 11, color = "muted", wrap = true })
+  elseif page.used <= 2 then
     add(page, { text = "The bundle has nothing more on this item: no Forever vendor, recipe, quest or dungeon pick.",
       size = 11, color = "muted", wrap = true })
   end

@@ -114,6 +114,13 @@ function Tab.Open(l)
   end
 end
 
+-- The item an answer line opens, if it opens an item page.
+function Tab.ItemOf(it)
+  local l = it and it.line
+  local lk = l and l.link
+  if lk and lk[1] == "items" and tonumber(lk[2]) then return tonumber(lk[2]) end
+end
+
 ---------------------------------------------------------------------------
 -- Rows
 ---------------------------------------------------------------------------
@@ -136,11 +143,20 @@ local function createRow(list)
   row.text:SetWordWrap(false)
   row:SetScript("OnClick", function(self)
     local it = self.item
+    -- item lines: shift-click links the item in chat, ctrl-click previews it
+    local iid = Tab.ItemOf(it)
+    if iid and ns.ItemClick.Modified(iid) then return end
     if it and it.click then Tab.Open(it.line) end
   end)
   W.Tooltip(row, function(tt, self)
     local it = self.item
     if not (it and it.click) then return end
+    local iid = Tab.ItemOf(it)
+    if iid then
+      ns.ItemClick.SetTooltip(tt, iid)
+      ns.ItemClick.AddHint(tt, true)
+      return
+    end
     local l = it.line
     tt:SetText(l.ask and "Ask this" or (l.tab and "Open the tab" or "Open the page"), 1, 1, 1)
     if l.ask then tt:AddLine(l.ask, 0.8, 0.78, 0.85, true) end

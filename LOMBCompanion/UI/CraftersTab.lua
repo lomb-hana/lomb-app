@@ -93,6 +93,9 @@ local function createRow(list, i)
     local ref = Tab.RecipeRef(item)
     if IsAltKeyDown and IsAltKeyDown() and ref and ns.QuestsTab then
       ns.QuestsTab.Show("recipes", ref)
+    elseif item.kind == "i" and ns.ItemClick.Modified(item.id) then
+      -- shift-click: link in chat, ctrl-click: preview (the same as every item row)
+      return
     elseif IsShiftKeyDown() then
       local link = entryLink(item)
       if link and ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
@@ -123,7 +126,7 @@ local function createRow(list, i)
       tt:AddLine(ns.FDB.CREDIT .. ", " .. ns.FDB.URL, 0.95, 0.78, 0.36)
     end
     tt:AddLine(" ")
-    tt:AddLine("Click: whisper an online crafter   Shift-click: link it", 0.72, 0.45, 1.0)
+    tt:AddLine("Click: whisper an online crafter   Shift-click: link in chat", 0.72, 0.45, 1.0)
     if r then tt:AddLine("Alt-click: open the recipe in Quests & Items", 0.72, 0.45, 1.0) end
   end)
   return row

@@ -83,7 +83,12 @@ UI.RegisterTab({
       l:SetWidth(380)
       local r = W.Text(loot, "narrow", 10, "muted", "RIGHT")
       r:SetPoint("TOPRIGHT", -10, -30 - (i - 1) * 17)
-      p.lootLines[i] = { l = l, r = r }
+      -- a mouse target over the line: it's an item row like any other
+      local hit = CreateFrame("Frame", nil, loot)
+      hit:SetPoint("TOPLEFT", 10, -30 - (i - 1) * 17)
+      hit:SetSize(380, 16)
+      ns.ItemClick.Bind(hit, function(self) return self.itemID end)
+      p.lootLines[i] = { l = l, r = r, hit = hit }
     end
     ns:Listen("ME_UPDATED", function(s) if p:IsVisible() then ns.SafeCall(p.Render, p, s) end end)
     ns:Listen("KILL_RECORDED", function() if p:IsVisible() then ns.SafeCall(p.Render, p, Me.stats) end end)
@@ -133,6 +138,7 @@ function UI.RenderMe(p, s)
     local log = ns.char.lootLog
     for i, line in ipairs(p.lootLines) do
       local e = log[i]
+      line.hit.itemID = e and e.i or nil
       if e then
         local mob = ns.db.bestiary[e.n]
         line.l:SetText(("%s%s  |cff999999from %s|r"):format(W.ItemText(e.i), (e.q or 1) > 1 and (" x" .. e.q) or "",

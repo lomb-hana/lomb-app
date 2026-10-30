@@ -318,6 +318,22 @@ H.test("Bank tab: ledger view, search, next bank alt, empty states", function()
   H.eq(p.items.items[1].label, "Copper Ore", "sorted by name")
   H.eq(p.items.items[1].wanted, 1, "wishlist match shown")
   H.ok(p.funds.text:find("Guild bank funds"), "funds line")
+  -- item rows: shift-click links, plain click opens the item page (v0.6.6)
+  p.items:SetSize(400, 300)
+  p.items:Layout()
+  local row = p.items.rows[1]
+  H.eq(row.item.id, COPPER)
+  H.chat = {}
+  _G.IsShiftKeyDown = function() return true end
+  row.scripts.OnClick(row, "LeftButton")
+  _G.IsShiftKeyDown = function() return false end
+  H.ok(H.chat[1] and H.chat[1].link:find("Hitem:" .. COPPER, 1, true), "bank row linked")
+  H.eq(ns.UI.current, "bank", "shift-click stayed put")
+  if ns.FDB.Available() then
+    row.scripts.OnClick(row, "LeftButton")
+    H.eq(ns.UI.current, "quests"); H.eq(ns.QuestsTab.selected.items, COPPER)
+    ns.UI.Open("bank")
+  end
   H.ok(p.logEmpty.text:find("Open the bank"), "asks to open the bank once")
   p.search:SetText("cloth")
   H.eq(#p.items.items, 2)
@@ -375,7 +391,16 @@ H.test("Wishlist tab: filters, add form, shift-click fills the box, whisper pref
   H.ok(Tab.Click(theirs))
   H.ok(H.chat[1] and H.chat[1].open:find("^/w Oakenhollow"), "prefilled whisper")
   H.eq(#H.sent, 0, "nothing sent")
-  H.ok(not Tab.Click(p.wishList.items[2]), "own rows don't whisper")
+  -- own rows don't whisper; a plain click opens the item's page (v0.6.6)
+  H.chat = {}
+  local mine = p.wishList.items[2]
+  H.ok(mine.mine)
+  local opened = Tab.Click(mine)
+  H.eq(#H.chat, 0, "own rows don't whisper")
+  if ns.FDB.Available() then
+    H.ok(opened); H.eq(ns.UI.current, "quests"); H.eq(ns.QuestsTab.selected.items, mine.id)
+  end
+  ns.UI.Open("wishlist")
   -- remove own row
   Tab.RemoveRow(p.wishList.items[2])
   H.eq(#p.wishList.items, 2)

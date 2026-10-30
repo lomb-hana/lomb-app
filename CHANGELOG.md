@@ -1,8 +1,22 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6 and v0.6.5 is 0.8.7**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7 and v0.6.6 is 0.8.8**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.6 (in-game 0.8.8): item rows work the same everywhere, 2026-10-30
+
+Small pre-release patch, untested in game.
+
+- **Click an item to see its page.** Items on the bestiary page (guild loot, notable loot, skinning), the bestiary card's loot lines, Quests & Items (item and recipe lists, vendor, reward, reagent and "made by" lines, guides, herb and ore lists), Ask LOMB answers, the Bank tab (ledger rows and change log), profile gear, the Me tab's loot history and your own Wishlist rows now open the item's page in Quests & Items.
+  - If the bundled ForeverDB.net data doesn't have the item, a small "No details for this item" page says so; hovering still shows the game's tooltip and shift-click still links it. If the data didn't load at all, a plain click does nothing and the tooltip only offers shift-click.
+  - Where a row already had a main action, it keeps it: Crafters rows still open a whisper to an online crafter, and other members' Wishlist rows still prefill a whisper to them (nothing is sent).
+- **Shift-click links the item in chat**, the same as from your bags, on every item row. It goes through the game's own modified-click handling (`HandleModifiedItemClick` when the client has it, otherwise `ChatEdit_InsertLink`, opening the chat box with the link in it if none is open). It only fills the edit box; nothing is ever sent. **Ctrl-click** previews the item in the dressing room where the client supports it.
+  - If the game hasn't cached the item yet, the addon asks for it (`C_Item.RequestLoadItemDataByID`) and links it as soon as it arrives, or after a second builds a link from the item ID with the bundled name and quality.
+  - Profile gear links keep the exact item (enchant and suffix).
+- **Tooltips** on item rows end with "Click: details  Shift-click: link in chat" (Crafters and others' Wishlist rows say what their click does instead).
+- Row clicks no longer swallow shift- and ctrl-clicks (for example, shift-clicking an item in the Quests & Items list links it instead of selecting it).
+- No ForeverDB.net requests and no data changes.
 
 ## v0.6.5 (in-game 0.8.7): local event times, minimap shortcut, saved Ask history, 2026-10-30
 

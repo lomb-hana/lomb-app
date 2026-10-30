@@ -108,6 +108,8 @@ At a glance:
 
 Everything opens from one movable window with tabs, a minimap button, or the `/lomb` command.
 
+**Item rows work the same everywhere (since v0.6.6, in-game 0.8.8):** wherever the addon lists an item (bestiary page and card, Quests & Items, Ask LOMB, Bank, profile gear, Me, Wishlist), hover for the game's tooltip, **click** to open the item's page in Quests & Items, **shift-click** to put its link in your chat box (nothing is sent) and **Ctrl-click** to try it on in the dressing room. Crafters rows and other members' Wishlist rows keep their whisper on a plain click.
+
 ---
 
 ## Roadmap
@@ -152,7 +154,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) and the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -239,6 +241,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.6 (in-game 0.8.8):** item rows behave the same everywhere: click opens the item page, shift-click links it in chat, Ctrl-click previews it, with a hint on every tooltip.
 - **v0.6.5 (in-game 0.8.7):** event times in your local time ("8:00 PM (your time)") in the Events tab and Ask LOMB, right-click on the minimap button opens Ask LOMB, and the Ask LOMB history is kept per character across reloads.
 - **v0.6.4 (in-game 0.8.6):** the Ask LOMB tab, an offline question box over the bundled ForeverDB.net data and the guild's shared data, and `/lomb ask <question>` (only you see the answer).
 - **v0.6.3 (in-game 0.8.5):** Training, Gathering, Zones (with battlegrounds) and Sets views, rogue poisons, disenchant info on item pages and tooltips, a level-up trainer reminder and `/lomb train`.

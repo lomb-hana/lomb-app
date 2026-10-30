@@ -80,15 +80,14 @@ local function createItemRow(list, i)
   row.want = W.Text(row, "narrow", 11, "gold")
   row.want:SetPoint("LEFT", 310, 0)
   row.want:SetPoint("RIGHT", -4, 0)
-  row:SetScript("OnClick", function(self)
-    if self.item and IsShiftKeyDown() then
-      local _, link = C.ItemInfo(self.item.id)
-      if link and ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
-    end
+  -- click: item page, shift-click: link in chat, ctrl-click: preview (the same as every item row)
+  row:SetScript("OnClick", function(self, button)
+    if self.item then ns.ItemClick.Click(self.item.id, button) end
   end)
   W.Tooltip(row, function(tt, self)
     if not self.item then return end
     if tt.SetItemByID then tt:SetItemByID(self.item.id) else tt:SetText(self.item.label, 1, 1, 1) end
+    ns.ItemClick.AddHint(tt, true)
   end)
   return row
 end
@@ -108,10 +107,12 @@ local function createLogRow(list)
   row.when = W.Text(row, "narrow", 10, "muted", "RIGHT")
   row.when:SetPoint("RIGHT", -6, 0)
   row.when:SetWidth(56)
+  ns.ItemClick.Bind(row, function(self) return self.itemID end)
   return row
 end
 
 local function updateLogRow(row, e)
+  row.itemID = e.id
   local name = C.ItemInfo(e.id) and W.ItemText(e.id) or ("item:" .. e.id)
   local sign = e.d > 0 and ("|cff7fe07f+%d|r"):format(e.d) or ("|cffe65959%d|r"):format(e.d)
   row.what:SetText(sign .. "  " .. name)

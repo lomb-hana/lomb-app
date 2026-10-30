@@ -332,7 +332,7 @@ local function gatherItems(search, view)
   if slug == "herbalism" or slug == "mining" then
     for _, e in ipairs(G.Nodes(slug, { search = search, minSkill = lo, maxSkill = hi })) do
       out[#out + 1] = { key = "n:" .. e.i, text = e.n.it and FDB().ItemText(e.n.it) or e.n.n,
-        meta = tostring(e.n.sk) .. (e.n.new and (" " .. GOOD .. "new|r") or "") }
+        meta = tostring(e.n.sk) .. (e.n.new and (" " .. GOOD .. "new|r") or ""), itemID = e.n.it }
       if e.n.it and e.n.n ~= FDB().ItemName(e.n.it) then out[#out].text = e.n.n end
     end
   else

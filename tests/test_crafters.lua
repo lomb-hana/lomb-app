@@ -156,6 +156,7 @@ H.test("crafters tab lists, whispers, links", function()
   row:Click()
   _G.IsShiftKeyDown = function() return false end
   H.ok(H.chat[2] and H.chat[2].link:find("Hitem:"), "item linked")
+  H.eq(#H.chat, 2, "shift-click linked only, no whisper (v0.6.6)")
   -- profession filter cycles
   p.profBtn:Click()
   H.eq(ns.CraftersTab.view.prof, "Ta")

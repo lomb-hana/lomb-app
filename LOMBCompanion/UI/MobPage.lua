@@ -45,6 +45,13 @@ local function ago(t)
 end
 MobPage.Ago = ago
 
+-- Coloured item name: the game's, else the ForeverDB.net bundle's, else "item:ID".
+local function itemText(id)
+  if ns.FDB and ns.FDB.ItemText and ns.FDB.Available and ns.FDB.Available() then return ns.FDB.ItemText(id) end
+  return W.ItemText(id)
+end
+MobPage.ItemText = itemText
+
 ---------------------------------------------------------------------------
 -- Line pool
 ---------------------------------------------------------------------------
@@ -69,6 +76,9 @@ local function acquire(page)
 end
 
 -- opts: text, right, srcs (array), font, size, color, icon, indent, wrap, gap, item, spell, onClick
+--   item lines (opts.item = itemID, or an item string/link) follow ns.ItemClick: click opens the item's
+--   page (or runs opts.onClick if given), shift-click links it in chat, ctrl-click previews it.
+--   opts.noOpen = true: the line is the item's own page header, so plain click does nothing.
 local function addLine(page, opts)
   local line = acquire(page)
   local width = page.width
@@ -114,11 +124,13 @@ local function addLine(page, opts)
   local h = math.max(opts.icon and 18 or 0, opts.wrap and (line.left:GetStringHeight() or 14) or (opts.size or 12) + 4)
   line:SetHeight(h)
 
+  local IC = ns.ItemClick
   if opts.item then
     line:SetScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      if GameTooltip.SetItemByID then GameTooltip:SetItemByID(opts.item) else GameTooltip:SetHyperlink("item:" .. opts.item) end
+      IC.SetTooltip(GameTooltip, opts.item)
       if opts.tip then for _, l in ipairs(opts.tip) do GameTooltip:AddLine(l, 0.8, 0.78, 0.85) end end
+      IC.AddHint(GameTooltip, not opts.noOpen)
       GameTooltip:Show()
     end)
     line:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -135,7 +147,11 @@ local function addLine(page, opts)
     end)
   end
 
-  if opts.onClick then
+  if opts.item then
+    local plain = opts.onClick and function() opts.onClick(line, "LeftButton") end
+    if opts.noOpen and not plain then plain = function() end end
+    line:SetScript("OnMouseUp", function(_, button) IC.Click(opts.item, button, plain) end)
+  elseif opts.onClick then
     line:SetScript("OnMouseUp", function(self, button) opts.onClick(self, button) end)
   end
 
@@ -242,7 +258,7 @@ function MobPage.Render(page, npcId)
         end
       end
       local _, _, _, icon = ns.Compat.ItemInfo(e.itemID)
-      addLine(page, { text = W.ItemText(e.itemID), right = rateText, srcs = srcs,
+      addLine(page, { text = itemText(e.itemID), right = rateText, srcs = srcs,
         icon = icon or 134400, item = e.itemID, tip = tip })
     end
     if merged.credits.guild then
@@ -291,7 +307,7 @@ function MobPage.Render(page, npcId)
     section(page, "Notable loot")
     for _, n in ipairs(S.notableLoot.data) do
       local _, _, _, icon = ns.Compat.ItemInfo(n.itemID)
-      addLine(page, { text = W.ItemText(n.itemID) .. (n.note and ("  |cff9a92a8" .. n.note .. "|r") or ""),
+      addLine(page, { text = itemText(n.itemID) .. (n.note and ("  |cff9a92a8" .. n.note .. "|r") or ""),
         icon = icon or 134400, item = n.itemID, srcs = { S.notableLoot.src } })
     end
   end
@@ -301,7 +317,7 @@ function MobPage.Render(page, npcId)
     if d.skill then addLine(page, { text = "|cff9a92a8Skill needed|r   " .. d.skill, srcs = { S.skinning.src } }) end
     for _, itemID in ipairs(d.items or {}) do
       local _, _, _, icon = ns.Compat.ItemInfo(itemID)
-      addLine(page, { text = W.ItemText(itemID), icon = icon or 134400, item = itemID, srcs = { S.skinning.src } })
+      addLine(page, { text = itemText(itemID), icon = icon or 134400, item = itemID, srcs = { S.skinning.src } })
     end
   end
   if S.quests and type(S.quests.data) == "table" then

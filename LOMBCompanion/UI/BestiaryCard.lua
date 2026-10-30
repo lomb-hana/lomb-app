@@ -108,14 +108,12 @@ local function setLine(l, y, opts)
   l.right:SetText(opts.right or "")
   l.tag:SetSource(opts.src)
   if opts.item then
-    l:SetScript("OnEnter", function(self)
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      if GameTooltip.SetItemByID then GameTooltip:SetItemByID(opts.item) end
-      GameTooltip:Show()
-    end)
-    l:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- same as every item row: click = item page, shift-click = link in chat, ctrl-click = preview
+    l.itemID = opts.item
+    ns.ItemClick.Bind(l, function(self) return self.itemID end)
   else
-    l:SetScript("OnEnter", nil); l:SetScript("OnLeave", nil)
+    l.itemID = nil
+    l:SetScript("OnEnter", nil); l:SetScript("OnLeave", nil); l:SetScript("OnMouseUp", nil)
   end
   l:Show()
 end
@@ -199,7 +197,7 @@ function Card.Render(npcId, snap)
     local src = e.sources.foreverdb and "foreverdb" or e.sources.guild and "guild" or next(e.sources)
     local s = e.sources[src]
     local _, _, _, icon = C.ItemInfo(e.itemID)
-    add({ text = W.ItemText(e.itemID), right = MobPage.pct(s and s.rate), src = src, icon = icon or 134400, item = e.itemID })
+    add({ text = MobPage.ItemText(e.itemID), right = MobPage.pct(s and s.rate), src = src, icon = icon or 134400, item = e.itemID })
     shown = shown + 1
   end
 

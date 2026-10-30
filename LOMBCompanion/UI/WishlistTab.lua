@@ -31,12 +31,11 @@ local HINT = "Click a guildmate's row to start a whisper (you press Enter)  ·  
 local FILTERS = { { "all", "All" }, { "need", "Needs" }, { "give", "Offers" }, { "mine", "Mine" } }
 
 function Tab.Click(row)
-  if not row or row.mine then return false end
-  if IsShiftKeyDown() and row.id then
-    local _, link = C.ItemInfo(row.id)
-    if link and ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
-    return true
-  end
+  if not row then return false end
+  -- shift-click: link in chat, ctrl-click: preview (the same as every item row)
+  if row.id and ns.ItemClick.Modified(row.id) then return true end
+  -- your own entries: click opens the item's page
+  if row.mine then return row.id and ns.ItemClick.Open(row.id) or false end
   if ChatFrame_OpenChat then ChatFrame_OpenChat(WL().WhisperText(row)) end
   return true
 end
@@ -95,7 +94,9 @@ local function createWishRow(list, i)
     tt:AddLine(("%s %s %d"):format(C.ShortName(r.owner), r.kind == "n" and "needs" or "can give away", r.q), 1, 1, 1)
     if r.note then tt:AddLine(r.note, 0.8, 0.78, 0.85, true) end
     if not r.mine then
-      tt:AddLine("Click: whisper them (you press Enter)   Shift-click: link it", 0.72, 0.45, 1.0)
+      tt:AddLine("Click: whisper them (you press Enter)   " .. (r.id and "Shift-click: link in chat" or ""), 0.72, 0.45, 1.0)
+    elseif r.id then
+      ns.ItemClick.AddHint(tt, true)
     end
   end)
   return row
