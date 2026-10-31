@@ -16,7 +16,8 @@ Tab.MODES = {
   { key = "items", label = "Items", search = "Search items" },
   { key = "vendors", label = "Vendors", search = "Search vendors or what they sell" },
   { key = "recipes", label = "Recipes", search = "Search recipes or reagents" },
-  { key = "dungeons", label = "Dungeons", search = "Search dungeons or bosses" },
+  -- Dungeons & loot: rows, page and filters come from UI/LootUI.lua
+  { key = "dungeons", label = "Loot", search = "Search dungeons, raids, bosses or loot", noun = "dungeon" },
 }
 Tab.LEVELS = {
   { key = "near", label = "Near my level" },
@@ -253,10 +254,6 @@ function Tab.Items()
       out[#out + 1] = { key = e.prof .. ":" .. e.i, text = (e.r.mk and FDB.ItemText(e.r.mk) or e.r.n),
         meta = (slug and "" or (p.n:sub(1, 5) .. " ")) .. tostring(e.r.sk[1] or "?"), itemID = e.r.mk }
     end
-  elseif mode == "dungeons" then
-    for _, e in ipairs(FDB.DungeonList(search)) do
-      out[#out + 1] = { key = e.id, text = e.d.n, meta = FDB.DungeonLevelText(e.d) }
-    end
   end
   return out
 end
@@ -481,14 +478,20 @@ local function renderItem(page, id)
     section(page, "Starts a quest")
     for _, qid in ipairs(f.startsQuest) do questLine(page, qid) end
   end
-  if #f.dungeons > 0 then
-    section(page, "Notable dungeon loot")
-    for _, l in ipairs(f.dungeons) do
-      local dg = FDB.Dungeon(l.dungeon)
-      if dg then
-        add(page, { text = dg.n .. ((l.why and l.why ~= "") and ("  " .. MUTED .. l.why .. "|r") or ""), wrap = true,
-          onClick = link("dungeons", l.dungeon) })
-      end
+  local where = ns.Loot and ns.Loot.WhereDrops(id) or {}
+  if #where > 0 then
+    section(page, "Where it drops")
+    for _, w in ipairs(where) do
+      local dg = FDB.Dungeon(w.did)
+      local about = {}
+      if w.boss then about[#about + 1] = w.boss end
+      if w.notable then about[#about + 1] = "notable loot" .. ((w.why and w.why ~= "") and (": " .. w.why) or "") end
+      if w.seen > 0 then about[#about + 1] = "LOMB saw it drop: " .. w.seen end
+      local srcs = {}
+      if w.notable then srcs[#srcs + 1] = "foreverdb" end
+      if w.seen > 0 then srcs[#srcs + 1] = "guild" end
+      add(page, { text = dg.n .. "  " .. MUTED .. table.concat(about, " · ") .. "|r  " .. LINK .. "(loot)|r", wrap = true,
+        srcs = srcs, onClick = link("dungeons", w.key) })
     end
   end
   local crafters = ns.Crafting and ns.Crafting.CraftersOfItem and ns.Crafting.CraftersOfItem(id)
@@ -616,37 +619,6 @@ local function renderRecipe(page, key)
   return true
 end
 
-local function renderDungeon(page, id)
-  local FDB = ns.FDB
-  local dg = FDB.Dungeon(id)
-  if not dg then return false end
-  add(page, { text = dg.n, font = "title", size = 20, gap = 2 })
-  local bits = { dg.k == "raid" and "Raid" or "Dungeon" }
-  if dg.p then bits[#bits + 1] = dg.p .. " players" end
-  bits[#bits + 1] = "Levels " .. FDB.DungeonLevelText(dg)
-  add(page, { text = table.concat(bits, "  ·  "), size = 12, color = "muted", gap = 4 })
-  if dg.new then
-    add(page, { text = GOOD .. "New in WoW Forever.|r", size = 11 })
-  elseif dg.st == "classic" then
-    add(page, { text = WARN .. "Level range and bosses from Classic data, may differ in WoW Forever.|r", size = 11, wrap = true })
-  end
-  if dg.b then
-    section(page, "Bosses")
-    for _, b in ipairs(dg.b) do add(page, { text = b, size = 12 }) end
-  end
-  if dg.lo then
-    section(page, "Notable loot")
-    for _, l in ipairs(dg.lo) do
-      add(page, { text = FDB.ItemText(l[1]) .. ((l[2] and l[2] ~= "") and ("  " .. MUTED .. l[2] .. "|r") or ""),
-        icon = itemIcon(l[1]), item = l[1], wrap = true, onClick = link("items", l[1]) })
-    end
-    add(page, { text = "ForeverDB's picks, not a drop table. Drops the guild records show in the Bestiary.",
-      size = 10, color = "muted", wrap = true })
-  end
-  credit(page)
-  return true
-end
-
 -- helpers for other files that add modes (UI/GuidesUI.lua)
 Tab.H = {
   add = add, section = section, credit = credit, link = link, itemIcon = itemIcon, questLine = questLine,
@@ -655,14 +627,16 @@ Tab.H = {
   MUTED = MUTED, WARN = WARN, GOOD = GOOD, LINK = LINK, CHAIN = CHAIN,
 }
 
-local RENDER = { quests = renderQuest, items = renderItem, vendors = renderVendor, recipes = renderRecipe, dungeons = renderDungeon }
+local RENDER = { quests = renderQuest, items = renderItem, vendors = renderVendor, recipes = renderRecipe }
 
 function Tab.Render(page, mode, key)
   page.mode, page.key = mode, key
   page.used, page.y = 0, 0
   local m = modeInfo(mode)
   local fn = RENDER[mode] or (m and m.render)
+  page.cellsUsed = 0
   local ok = key ~= nil and ns.FDB.Available() and fn and fn(page, key)
+  MobPage.EndGrid(page)
   if not ok then
     for _, l in ipairs(page.lines) do l:Hide() end
     page.empty:SetText(ns.FDB.Available() and (m and m.empty or "Pick something on the left.")

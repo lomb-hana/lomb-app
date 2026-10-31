@@ -13,6 +13,6 @@ The number at the start of each file name is the order the shots were made, so e
 | [`profiles-gear/`](profiles-gear/) (2) | Member profiles with gear, before and after inspecting. |
 | [`events/`](events/) (3) | Guild events with attendance, past events and the attendance summary. |
 | [`bank-wishlist/`](bank-wishlist/) (3) | Bank ledger, Wishlist and the bank/wishlist lines on item tooltips. |
-| [`quests-items/`](quests-items/) (6) | Quests & Items: quest, item, recipe and dungeon pages, quest chains and storylines. |
+| [`quests-items/`](quests-items/) (9) | Quests & Items: quest, item and recipe pages, quest chains and storylines, and the Loot browser (a dungeon, a whole dungeon, a boss and raids). |
 | [`guides/`](guides/) (7) | Training, gathering, disenchanting, gear sets, zones, battlegrounds and rogue poisons. |
-| [`ask-lomb/`](ask-lomb/) (3) | The Ask LOMB question box: quests, vendors and crafting, dungeons, typos and events. |
+| [`ask-lomb/`](ask-lomb/) (4) | The Ask LOMB question box: quests, vendors and crafting, dungeons, typos, events and loot. |

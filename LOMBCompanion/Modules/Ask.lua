@@ -23,6 +23,7 @@ Ask.EXAMPLES = {
   "Where can I find Briarthorn?",
   "Which set is Blackened Defias Armor in?",
   "Deadmines level and bosses",
+  "What drops in Deadmines?",
   "Quests near my level",
   "Quests in my zone",
   "What comes after Red Leather Bandanas?",
@@ -398,9 +399,14 @@ local function dropsAnswer(a, id)
     a:muted("Mob loot here only comes from what guildmates loot with the addon on; ForeverDB.net's drop tables aren't bundled.")
   end
   local f = FDB().ItemFacts(id)
-  for k = 1, math.min(#f.dungeons, 3) do
-    local dg = FDB().Dungeon(f.dungeons[k].dungeon)
-    if dg then a:fdb(); a:link(("  Notable loot in %s (level %s)"):format(dg.n, FDB().DungeonLevelText(dg)), "dungeons", f.dungeons[k].dungeon) end
+  local spots = ns.Loot and ns.Loot.WhereDrops(id) or {}
+  for k = 1, math.min(#spots, 3) do
+    local w = spots[k]
+    local dg = FDB().Dungeon(w.did)
+    if w.notable then a:fdb() end
+    a:link(("  %s %s%s|r"):format(w.notable and "Notable loot in" or "Seen in", dg.n,
+      MUTED .. (w.boss and (", from " .. w.boss) or "") .. (w.seen > 0 and (", LOMB saw it drop: " .. w.seen) or "")),
+      "dungeons", w.key)
   end
   if #f.soldBy > 0 then a:fdb(); a:ask("A vendor sells it too. Who?", "Who sells " .. FDB().ItemName(id) .. "?") end
   local slug, _, n = G().NodeForItem(id)
@@ -470,6 +476,43 @@ local function dungeonAnswer(a, id)
   a:link(("%s  %s(level %s, %s players)|r"):format(dg.n, MUTED, FDB().DungeonLevelText(dg), tostring(dg.p or 5)), "dungeons", id)
   if dg.lv then a:say(("Minimum level to enter: %d"):format(dg.lv)) end
   if dg.b and #dg.b > 0 then a:say("Bosses: " .. table.concat(dg.b, ", ")) end
+  a:ask("What drops there?", "What drops in " .. dg.n .. "?")
+  return true
+end
+
+-- "what drops in Deadmines" / "what does Van Cleef drop": the Loot browser, in words
+local function lootAnswer(a, did, part)
+  local L, dg = ns.Loot, FDB().Dungeon(did)
+  if not (L and dg) then return false end
+  part = part or "all"
+  local res = L.For(did, part)
+  local title = part == "all" and ("Loot in " .. dg.n) or (L.PartName(did, part) .. " (" .. dg.n .. ")")
+  a:link(title .. "  " .. MUTED .. "(open the loot grid)|r", "dungeons", L.Key(did, part))
+  local notable, seen = {}, {}
+  for _, e in ipairs(res.items) do
+    if e.notable then notable[#notable + 1] = e end
+    if e.seen > 0 then seen[#seen + 1] = e end
+  end
+  if #notable > 0 then
+    a:fdb()
+    local t = {}
+    for _, e in ipairs(notable) do t[#t + 1] = FDB().ItemText(e.itemID) end
+    a:say("Notable loot (ForeverDB.net's picks, not a drop table): " .. table.concat(t, ", "))
+  elseif part == "all" then
+    a:muted("ForeverDB.net lists no notable loot here yet.")
+  else
+    a:muted("ForeverDB.net doesn't say which boss drops what.")
+    a:link("  Notable loot for all of " .. dg.n, "dungeons", did)
+  end
+  table.sort(seen, function(x, y) return x.seen > y.seen end)
+  if #seen > 0 then
+    local t = {}
+    for k = 1, math.min(#seen, 5) do t[k] = ("%s (%d)"):format(FDB().ItemText(seen[k].itemID), seen[k].seen) end
+    a:say("LOMB saw drop: " .. table.concat(t, ", ") .. (#seen > 5 and (" and " .. (#seen - 5) .. " more") or ""))
+    a:muted("Guild-recorded: corpses that had it, from guildmates looting with the addon on.")
+  else
+    a:muted("Nobody in the guild has recorded loot " .. (part == "all" and "here" or "from it") .. " yet.")
+  end
   return true
 end
 
@@ -857,6 +900,19 @@ rule({ "^what does (.+) disenchant into$", "^what does (.+) disenchant to$", "^w
     local id = itemFrom(raw, x)
     if not id then return notFound(a, "an item", x) end
     return deAnswer(a, id)
+  end)
+
+rule({ "^what drops in (.+)$", "^what drops at (.+)$", "^what drops from (.+)$", "^what does (.+) drop$", "^what do (.+) drop$",
+  "^loot in (.+)$", "^loot from (.+)$", "^(.+) loot$", "^(.+) loot table$", "^what loot is in (.+)$", "^what loot does (.+) have$",
+  "^what can i get in (.+)$", "^what can i get from (.+)$", "^what drops off (.+)$" },
+  function(a, x)
+    x = x:gsub("^the dungeon ", ""):gsub(" dungeon$", ""):gsub(" raid$", "")
+    local did, dr = best("dungeon", x)
+    if did and dr.score >= 2 then return lootAnswer(a, did, "all") end
+    if not ns.Loot then return false end
+    local bdid, bi = ns.Loot.FindBoss(x)
+    if bdid then return lootAnswer(a, bdid, bi) end
+    return false
   end)
 
 rule({ "^what drops (.+)$", "^who drops (.+)$", "^where does (.+) drop$", "^where do (.+) drop$", "^what mob drops (.+)$",

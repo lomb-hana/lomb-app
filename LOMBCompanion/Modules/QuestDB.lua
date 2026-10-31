@@ -736,6 +736,9 @@ function FDB.MobInfo(npcId, ctx)
     local classic = dg.st == "classic" and ("  " .. FDB.CLASSIC_NOTE) or ""
     out.boss = { notes = ("Boss in %s (levels %s, %d players).%s"):format(dg.n, FDB.DungeonLevelText(dg), dg.p or 5, classic),
       dungeon = did }
+    local bdid, bi
+    if ns.Loot then bdid, bi = ns.Loot.FindBossExact(mobName(npcId, ctx)) end
+    if bdid == did and bi then out.boss.loot = ns.Loot.Key(did, bi) end
     if dg.lo then
       local nl = {}
       for _, l in ipairs(dg.lo) do nl[#nl + 1] = { itemID = l[1], note = l[2] } end

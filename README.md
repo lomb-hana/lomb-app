@@ -6,7 +6,7 @@ LOMB Companion is a free in-game addon made just for the **Land of Make Believe 
 
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and the `v0.6.2` storyline and quest progress patch as in-game 0.8.4; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and later patches up to the `v0.6.7` loot browser as in-game 0.8.9; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
 
 > ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
 
@@ -63,7 +63,7 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | **Quests & Items: quests in this zone near my level (v0.6)** | **Quests & Items: item lookup (v0.6)** |
 | ![Quests & Items, quest page](docs/screenshots/quests-items/28-quests.png) | ![Quests & Items, item page](docs/screenshots/quests-items/29-item-lookup.png) |
 | **Quests & Items: a recipe and where to learn it (v0.6)** | **Quests & Items: a dungeon (v0.6)** |
-| ![Quests & Items, recipe page](docs/screenshots/quests-items/30-recipe.png) | ![Quests & Items, dungeon page](docs/screenshots/quests-items/31-dungeon.png) |
+| ![Quests & Items, recipe page](docs/screenshots/quests-items/30-recipe.png) | ![Loot view for Excavation Site: Wetlands with its ForeverDB.net notable loot and no guild drops yet](docs/screenshots/quests-items/31-dungeon.png) |
 | **Credits with ForeverDB.net (v0.6)** | **Quest chains tagged and grouped (v0.6.1)** |
 | ![Credits tab with the ForeverDB.net credit](docs/screenshots/core/32-credits-foreverdb.png) | ![Quest list with chains grouped and tagged Part 1 of 4 and so on](docs/screenshots/quests-items/33-quest-chains.png) |
 | **Storyline drop-downs with quest progress (v0.6.2)** | |
@@ -78,8 +78,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Rogue poisons page with the Poisons quest, the poisons up to level 30, their reagents and suppliers](docs/screenshots/guides/41-rogue-poisons.png) | ![Ask LOMB tab answering where to turn in a quest, what comes next and which quests are near your level](docs/screenshots/ask-lomb/42-ask-lomb-quests.png) |
 | **Ask LOMB: who sells it, how to make it, what it disenchants into (v0.6.4)** | **Ask LOMB: dungeons, typos, "I don't know" and the next guild event (v0.6.4)** |
 | ![Ask LOMB answering who sells Fine Thread, how to make Heavy Linen Bandage and what Battleforge Boots disenchant into](docs/screenshots/ask-lomb/43-ask-lomb-sells-make.png) | ![Ask LOMB answering a dungeon question, a misspelt quest name, an unknown question and the next guild event](docs/screenshots/ask-lomb/44-ask-lomb-more.png) |
+| ![Loot view for the whole Deadmines: ForeverDB.net notable loot and an icon grid of what LOMB saw drop, with counts, quality borders, wishlist hearts and a hover tooltip](docs/screenshots/quests-items/45-loot-dungeon.png) | ![Loot view for Edwin VanCleef: what LOMB saw this boss drop, with a link to the Bestiary](docs/screenshots/quests-items/46-loot-boss.png) |
+| ![Ask LOMB answering what drops in Deadmines, what Van Cleef drops and where Cruel Barb drops](docs/screenshots/ask-lomb/47-ask-lomb-loot.png) | ![Loot view filtered to raids, showing Onyxia's Lair before raids open on December 9](docs/screenshots/quests-items/48-loot-raid.png) |
 
-The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41. Shots 42-44 are the real answers the Ask LOMB tab gives for a level 18 rogue in Westfall (the guild event is sample data).
+The Quests & Items shots are drawn from the real bundled ForeverDB.net snapshot, rendered through the offline test harness. The quest progress in shot 34 is sample data, and so are the character, skills, known ranks, guild enchanters and owned set pieces in shots 35-41. Shots 42-44 are the real answers the Ask LOMB tab gives for a level 18 rogue in Westfall (the guild event is sample data). In the loot shots 45-47 the notable loot is ForeverDB.net's, but the guild drops, counts and the wishlist heart are sample data, and the item icons are placeholders. Shots 07 and 32 use the Credits tab's real text.
 
 Item tooltips list guildmates who can craft the item (v0.2):
 
@@ -103,7 +105,7 @@ At a glance:
 | **Crafters** | "Who can craft X?" search, and crafter info right on item tooltips. |
 | **News** | A guild feed of level-ups, joins, milestones and first kills, plus fun leaderboards. |
 | **Profiles** | Each member's gear, item level, progress, and alts and mains. |
-| **Quests & Items** | Quest, item and vendor info inside the game. |
+| **Quests & Items** | Quest, item and vendor info inside the game, and a Loot browser for dungeons and raids. |
 | **Events** | Guild calendar events and attendance. |
 | **Wishlist** | A list of what members need or can give away (plus an optional bank-character ledger, hidden unless a guild uses one). |
 | **Raid tools** | Raid helpers and map pins for spawns and rares. |
@@ -156,8 +158,8 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
-- **Quests & Items tab** with five views: Quests, Items, Vendors, Recipes and Dungeons, each with search and a detail page.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**) and the loot browser `v0.6.7` (in-game **0.8.9**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+- **Quests & Items tab** with views for Quests, Items, Vendors, Recipes and Loot (called Dungeons before v0.6.7), plus the guide views, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
   - **Storyline drop-downs (v0.6.2):** each linked storyline, branches included, is one header row with its name, level range and progress ("12-18 · 4/9 done"). Headers start closed; click to open. Inside, quests are in story order with their "Part X of Y" tags, and a branch sits under the quest it splits off. Filters apply to the parts, and the header counts only those.
@@ -165,7 +167,14 @@ Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0
   - **Items:** required level and slot, who sells it (vendor, price, limited stock), what makes it or what recipe it teaches, what it's a reagent in, quests it starts, dungeons that list it as notable loot, and guildmates who can craft it.
   - **Vendors:** location, faction and what they sell with prices.
   - **Recipes:** skill colours, reagents, and how to learn it (trainer and cost, vendor, quest, drop or automatic). Your own faction's trainers come first.
-  - **Dungeons:** level range, bosses and ForeverDB's notable loot picks (labelled as picks, not a drop table).
+  - **Loot (v0.6.7, in-game 0.8.9):** a loot browser in the style of AtlasLoot. Pick a dungeon or raid, then **Whole dungeon**, a boss or **Trash**, and get an icon grid with quality-coloured borders. Filters: dungeons and/or raids, and a minimum quality. Search finds dungeons, bosses and notable item names.
+    - **Notable loot** is ForeverDB.net's list of picks for that dungeon. It's labelled as notable loot: it isn't the full loot table, has no drop rates, and isn't tied to a boss (ForeverDB.net doesn't say which boss drops what).
+    - **What LOMB saw drop** comes from the guild's bestiary: each icon shows how many times guildmates looted it ("LOMB saw it drop: N" in the tooltip) and which mob dropped it. On a boss or Trash, only guild-recorded drops are shown. Items ForeverDB.net doesn't list are still shown, as guild-only finds.
+    - Icons work like every other item row: hover for the tooltip, click opens the item page, shift-click links it in chat, Ctrl-click previews it. The **heart** adds it to your Wishlist needs (click again to remove it).
+    - Item pages show **Where it drops** (notable loot and guild drops) and link to the grid, and bestiary boss pages link to their boss's loot.
+    - Raids show up when ForeverDB.net lists them (Onyxia's Lair so far). Raids open in WoW: Forever on December 9.
+    - Ask LOMB answers "What drops in Deadmines?", "What does Van Cleef drop?" and "Where does Cruel Barb drop?".
+    - No ForeverDB.net requests at runtime, and no Classic loot tables.
 - **Bestiary links:** a mob's page lists the quests it starts or ends, and a boss shows its dungeon.
 - **Crafters links:** recipe info (skill, reagents, where to learn it) on crafter results, linking into the Recipes view.
 - **Item tooltips:** one optional line from the snapshot (who sells it, what makes it, what it's a reagent for). There's a switch in Settings.
@@ -203,7 +212,7 @@ Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0
 - If a real guild bank shows up later, the addon will read that instead.
 
 ### v0.9: Raid-ready (raids open Dec 9)
-- Raid helpers, raid **attendance** (building on v0.7) and **soft reserves** for loot. No DKP or points.
+- Raid helpers, raid **attendance** (building on v0.7) and **soft reserves** for loot, picked from the Loot browser's grids. No DKP or points.
 - **Map pins** for mob spawns and rares.
 
 ### v1.0: Polish
@@ -243,6 +252,7 @@ In plain English:
 ## Status
 
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
+- **v0.6.7 (in-game 0.8.9):** the Loot browser in Quests & Items (dungeon, boss or trash icon grids from ForeverDB.net's notable loot and the guild's recorded drops, with wishlist hearts), "Where it drops" on item pages, loot questions in Ask LOMB, and refreshed Credits screenshots.
 - **v0.6.6 (in-game 0.8.8):** item rows behave the same everywhere: click opens the item page, shift-click links it in chat, Ctrl-click previews it, with a hint on every tooltip.
 - **v0.6.5 (in-game 0.8.7):** event times in your local time ("8:00 PM (your time)") in the Events tab and Ask LOMB, right-click on the minimap button opens Ask LOMB, and the Ask LOMB history is kept per character across reloads.
 - **v0.6.4 (in-game 0.8.6):** the Ask LOMB tab, an offline question box over the bundled ForeverDB.net data and the guild's shared data, and `/lomb ask <question>` (only you see the answer).

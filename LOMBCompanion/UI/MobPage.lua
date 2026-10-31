@@ -172,6 +172,85 @@ local function section(page, title)
 end
 MobPage.Section = section
 
+---------------------------------------------------------------------------
+-- Icon grid (the Loot browser): square item buttons with a quality border, a count,
+-- an optional badge and an optional heart (wishlist) toggle. Clicks follow ns.ItemClick.
+---------------------------------------------------------------------------
+local HEART = "Interface\\AddOns\\LOMBCompanion\\Media\\heart"   -- see tools/make_arrows.py
+MobPage.HEART = HEART
+local WANT_RGB, IDLE_RGB = { 1, 0.42, 0.66 }, { 0.6, 0.57, 0.66 }
+
+local function newCell(page)
+  local c = CreateFrame("Frame", nil, page.child, "BackdropTemplate")
+  W.Skin(c, "panel2", "border")
+  c.icon = c:CreateTexture(nil, "ARTWORK")
+  c.icon:SetPoint("TOPLEFT", 2, -2)
+  c.icon:SetPoint("BOTTOMRIGHT", -2, 2)
+  if c.icon.SetTexCoord then c.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+  c.count = W.Text(c, "narrow", 11, "text", "RIGHT")
+  c.count:SetPoint("BOTTOMRIGHT", -2, 2)
+  c.badge = W.Text(c, "narrow", 9, "gold", "LEFT")
+  c.badge:SetPoint("TOPLEFT", 3, -2)
+  c.heart = CreateFrame("Button", nil, c)
+  c.heart:SetSize(14, 14)
+  c.heart:SetPoint("TOPRIGHT", 3, 3)
+  c.heart.tex = c.heart:CreateTexture(nil, "OVERLAY")
+  c.heart.tex:SetAllPoints()
+  c.heart.tex:SetTexture(HEART)
+  c.heart:SetScript("OnClick", function(self)
+    local cell = self:GetParent()
+    if cell.data and cell.data.onWant then cell.data.onWant(cell.data) end
+  end)
+  W.Tooltip(c.heart, function(tt, self)
+    local d = self:GetParent().data
+    tt:SetText(d and d.wanted and "On your wishlist (need)" or "Want it: add to your wishlist", 1, 1, 1)
+    tt:AddLine(d and d.wanted and "Click to take it off." or "Guildmates see your need list.", 0.8, 0.78, 0.85)
+  end)
+  ns.ItemClick.Bind(c, function(self) return self.data and self.data.item end,
+    function(self) if self.data.onClick then self.data.onClick(self.data) else ns.ItemClick.Open(self.data.item) end end,
+    function(tt, self) for _, l in ipairs(self.data.tip or {}) do tt:AddLine(l, 0.8, 0.78, 0.85, true) end end)
+  page.cells[#page.cells + 1] = c
+  return c
+end
+
+local function hexRGB(hex)
+  hex = hex or "ffffff"
+  return tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255
+end
+
+-- cells: { { item=, icon=, q=, count="3", badge="SR", wanted=bool, onWant=fn(cell), onClick=fn(cell), tip={...} } }
+function MobPage.AddGrid(page, cells, size)
+  size = size or 38
+  local gap = 6
+  local per = math.max(1, math.floor((page.width + gap) / (size + gap)))
+  page.cells = page.cells or {}
+  for k, d in ipairs(cells) do
+    page.cellsUsed = (page.cellsUsed or 0) + 1
+    local c = page.cells[page.cellsUsed] or newCell(page)
+    c.data = d
+    c:SetSize(size, size)
+    c:ClearAllPoints()
+    c:SetPoint("TOPLEFT", page.child, "TOPLEFT", ((k - 1) % per) * (size + gap), -(page.y + math.floor((k - 1) / per) * (size + gap)))
+    c.icon:SetTexture(d.icon or 134400)
+    local hex = ns.FDB and ns.FDB.QUALITY_HEX and ns.FDB.QUALITY_HEX[d.q or 1]
+    local r, g, b = hexRGB(hex)
+    if c.SetBackdropBorderColor then c:SetBackdropBorderColor(r, g, b, d.q and 0.9 or 0.35) end
+    c.count:SetText(d.count or "")
+    c.badge:SetText(d.badge or "")
+    c.heart:SetShown(d.onWant ~= nil)
+    local hc = d.wanted and WANT_RGB or IDLE_RGB
+    c.heart.tex:SetVertexColor(hc[1], hc[2], hc[3])
+    c.heart.tex:SetAlpha(d.wanted and 1 or 0.55)
+    c:Show()
+  end
+  if #cells > 0 then page.y = page.y + math.ceil(#cells / per) * (size + gap) + 2 end
+end
+
+-- Hide grid cells left over from the last render (call after a render).
+function MobPage.EndGrid(page)
+  for i = (page.cellsUsed or 0) + 1, #(page.cells or {}) do page.cells[i]:Hide(); page.cells[i].data = nil end
+end
+
 local function fact(page, label, value, src, alt, tip)
   if value == nil or value == "" then return end
   local srcs = { src }
@@ -295,6 +374,10 @@ function MobPage.Render(page, npcId)
         local open = d.dungeon and ns.QuestsTab and function() ns.QuestsTab.Show("dungeons", d.dungeon) end
         addLine(page, { text = d.notes .. (open and "  |cffb873ff(open)|r" or ""), wrap = true, size = 11,
           srcs = { S.boss.src }, onClick = open })
+      end
+      if d.loot and ns.QuestsTab then
+        addLine(page, { text = "|cffb873ffLoot from this boss|r  |cff9a92a8(what LOMB saw drop, in Quests & Items > Loot)|r",
+          wrap = true, size = 11, onClick = function() ns.QuestsTab.Show("dungeons", d.loot) end })
       end
       for _, ph in ipairs(d.phases or {}) do
         addLine(page, { text = "- " .. tostring(ph), wrap = true, size = 11, indent = 6 })

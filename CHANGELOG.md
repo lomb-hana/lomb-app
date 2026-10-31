@@ -1,8 +1,26 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7 and v0.6.6 is 0.8.8**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8 and v0.6.7 is 0.8.9**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.7 (in-game 0.8.9): loot browser, 2026-10-30
+
+Pre-release, untested in game.
+
+- **Loot browser** in Quests & Items. The Dungeons view is now called **Loot** (no new tab). Pick a dungeon or raid in the list, then **Whole dungeon**, one of its bosses or **Trash** (they open under the selected dungeon), and the page shows an icon grid with quality-coloured borders.
+  - **Notable loot:** ForeverDB.net's picks for the dungeon, labelled as such: "not the full loot table, no drop rates, and not tied to a boss". ForeverDB.net doesn't say which boss drops what, so boss and Trash pages say so and link back to the whole dungeon.
+  - **What LOMB saw drop:** items guildmates have looted from that dungeon's mobs (or that boss, or its trash), from the shared bestiary, with a count on each icon and "LOMB saw it drop: N" and the mob in the tooltip. Items ForeverDB.net doesn't list still show, as guild-only finds. When nobody has recorded anything yet, the page says so.
+  - Filters: Dungeons & raids / Dungeons / Raids, and Any / Uncommon+ / Rare+ / Epic+. Search matches dungeons, bosses and notable item names.
+  - Icons follow the item-row rules from v0.6.6: hover for the tooltip, click opens the item page, shift-click links it in chat, Ctrl-click previews. A **heart** on each icon adds the item to your Wishlist needs, or removes it again.
+  - "Data from ForeverDB.net" with https://foreverdb.net and the dungeon's ForeverDB.net page on every loot page.
+- **Raids:** Onyxia's Lair is in the bundled data now (ForeverDB.net lists it with no notable loot yet). Raid pages say raids open in WoW: Forever on December 9. The loot code has hooks for the v0.9 raid tools and soft reserves (extra loot sources and badges), but soft reserves aren't built.
+- **Item pages:** "Notable dungeon loot" is now **Where it drops**, listing dungeons that have it as notable loot and dungeons where the guild saw it drop (with the boss and count), each opening the loot grid.
+- **Bestiary:** a boss's page links to its loot grid.
+- **Ask LOMB** answers loot questions: "What drops in Deadmines?", "What does Van Cleef drop?", "Deadmines loot" and similar ones open the grid and list notable loot and the guild's most seen drops. "Where does <item> drop?" now names the dungeon and boss too. Dungeon answers get a "What drops there?" button.
+- Lookups are built on first use, not at login or in combat.
+- Screenshots: new loot shots (45-48) and a new 31; the Credits shots (07 and 32) were redone from the Credits tab's current text, with the ForeverDB.net credit and support link.
+- No ForeverDB.net requests at runtime and no Classic loot data. Building the raid entry took no new requests either (it came from the local cache).
 
 ## v0.6.6 (in-game 0.8.8): item rows work the same everywhere, 2026-10-30
 

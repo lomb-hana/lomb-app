@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Draw the two little storyline arrows (right = closed, down = open) as 16x16
-32-bit TGAs in LOMBCompanion/Media. White with soft edges; the addon tints them.
+"""Draw the two little storyline arrows (right = closed, down = open) and the Loot
+browser's wishlist heart as 16x16 32-bit TGAs in LOMBCompanion/Media. White with soft
+edges; the addon tints them.
 Run from the repo root: python3 tools/make_arrows.py"""
 import struct
 
@@ -17,6 +18,12 @@ def tri(px, py, pts):
     return not (neg and pos)
 
 
+def heart(px, py):
+    # (x^2 + y^2 - 1)^3 - x^2 y^3 <= 0, scaled into the 16x16 square
+    x, y = (px - 8) / 6.2, (8.6 - py) / 6.2
+    return (x * x + y * y - 1) ** 3 - x * x * y ** 3 <= 0
+
+
 def write(path, pts):
     rows = []
     for y in range(N):
@@ -25,7 +32,8 @@ def write(path, pts):
             hit = 0
             for sy in range(SS):
                 for sx in range(SS):
-                    if tri(x + (sx + .5) / SS, y + (sy + .5) / SS, pts):
+                    p = (x + (sx + .5) / SS, y + (sy + .5) / SS)
+                    if (heart(*p) if pts == "heart" else tri(p[0], p[1], pts)):
                         hit += 1
             a = round(255 * hit / (SS * SS))
             row += bytes((255, 255, 255, a))  # BGRA
@@ -38,3 +46,4 @@ def write(path, pts):
 
 write("LOMBCompanion/Media/arrow-right.tga", [(5, 3), (12, 8), (5, 13)])
 write("LOMBCompanion/Media/arrow-down.tga", [(3, 5), (13, 5), (8, 12)])
+write("LOMBCompanion/Media/heart.tga", "heart")

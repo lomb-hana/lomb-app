@@ -33,6 +33,9 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "LOMBCompan
 MAX_LEVEL = 30
 MAX_SKILL = 225
 MAX_DUNGEON_MIN_LEVEL = 35
+# Raids opening in WoW: Forever on 2026-12-09 (Blizzard's raid overview). Bundled whenever ForeverDB
+# lists them, whatever their level; the others (Classic raids not announced for Forever) stay out.
+RAIDS_OPENING = {"Onyxia's Lair", "The Barrow Deeps", "Barrow Deeps", "Hyjal Summit"}
 SNAPSHOT = os.environ.get("FDB_SNAPSHOT_DATE") or datetime.date.today().isoformat()
 
 HEADER = (
@@ -498,7 +501,8 @@ def main():
     for d in C(("dungeons", {"limit": 100, "offset": 0}))["data"]:
         det = get("dungeons/%d" % d["id"], cache_only=True)["data"]
         lr = det.get("levelRange")
-        if not det.get("newInForever") and (not lr or lr[0] > MAX_DUNGEON_MIN_LEVEL):
+        raid = det.get("kind") == "raid" and det.get("name") in RAIDS_OPENING
+        if not raid and not det.get("newInForever") and (not lr or lr[0] > MAX_DUNGEON_MIN_LEVEL):
             continue
         loot = []
         for n in det.get("notableLoot") or []:
