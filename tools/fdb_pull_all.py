@@ -8,22 +8,11 @@ skill 225 (Expert, the most a level-30 character can train), and all dungeons.
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fdb_fetch import get, count
+from fdb_fetch import get, count, all_pages as pages
 
 MAX_SKILL = 225
 SLUGS = ["alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring",
          "herbalism", "mining", "skinning", "cooking", "first-aid", "fishing"]
-
-
-def pages(path, params):
-    off, out = 0, []
-    while True:
-        p = dict(params, limit=100, offset=off)
-        d = get(path, p)
-        out += d["data"]
-        off += 100
-        if off >= d["meta"].get("total", 0) or not d["meta"].get("next"):
-            return out
 
 
 def main():

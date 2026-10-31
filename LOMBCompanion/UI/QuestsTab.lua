@@ -63,15 +63,8 @@ end
 -- Extra sections for item pages: fn(page, itemID), called before the credit.
 Tab.ItemExtras = {}
 
-local function playerZone()
-  local z = GetRealZoneText and ns.Compat.Call(GetRealZoneText)
-  return (type(z) == "string" and z ~= "") and z or nil
-end
-
-local function playerLevel()
-  local l = UnitLevel and ns.Compat.Call(UnitLevel, "player")
-  return type(l) == "number" and l > 0 and l or nil
-end
+local playerZone = ns.Compat.PlayerZone
+local playerLevel = ns.Compat.PlayerLevel
 
 local function profAt(i)
   local list = ns.FDB.Professions()
@@ -319,10 +312,7 @@ end
 ---------------------------------------------------------------------------
 local add, section = MobPage.AddLine, MobPage.Section
 
-local function itemIcon(itemID)
-  local _, _, _, icon = ns.Compat.ItemInfo(itemID)
-  return icon or 134400
-end
+local itemIcon = ns.Compat.ItemIcon
 
 local function credit(page, extra)
   local FDB = ns.FDB

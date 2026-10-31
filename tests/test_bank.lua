@@ -39,12 +39,7 @@ local function decodeSent(ns)
   end
   return out
 end
-local function deliver(ns, sender, tbl)
-  tbl.v = tbl.v or ns.version
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local function deliver(ns, sender, tbl) tbl.v = tbl.v or ns.version; H.deliver(ns, sender, tbl) end
 local function sentKind(ns, kind)
   for _, d in ipairs(decodeSent(ns)) do if d.t == "D" and d.k == kind then return d end end
 end

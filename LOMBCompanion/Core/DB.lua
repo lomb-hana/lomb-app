@@ -81,11 +81,6 @@ function DB.Load()
   ns.char.firstLogin = ns.char.firstLogin or time()
 end
 
-function DB.NextSeq()
-  ns.db.seq = (ns.db.seq or 0) + 1
-  return ns.db.seq
-end
-
 -- Per-guild bucket, keyed by guild name + realm so alts in other guilds don't mix.
 function DB.Guild()
   local guildName = ns.Compat.Call(GetGuildInfo, "player")

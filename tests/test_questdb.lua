@@ -2,11 +2,9 @@ local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 
 print("Quests & Items (bundled ForeverDB.net snapshot)")
 
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 
-local function tab(ns, id)
-  for _, t in ipairs(ns.UI.tabs) do if t.id == id then return t end end
-end
+local tab = H.tab
 
 -- every text a detail page currently shows, joined
 local function pageText(page)

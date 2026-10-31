@@ -40,11 +40,7 @@ local function lastOf(ns, kind)
   for _, m in ipairs(decodeSent(ns)) do if m.t == "D" and m.k == kind then found = m end end
   return found
 end
-local function deliver(ns, sender, tbl)
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local deliver = H.deliver
 -- a guildmate's addon publishing a dataset
 local rev = 0
 local function remote(ns, sender, kind, d)

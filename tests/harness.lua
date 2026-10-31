@@ -543,6 +543,21 @@ function H.fire(event, ...)
   end
 end
 
+-- A guildmate's addon message arriving: pack, split and fire CHAT_MSG_ADDON per part.
+function H.deliver(ns, sender, tbl)
+  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
+    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
+  end
+end
+
+-- No Lua errors were caught so far (the first one is shown when there are).
+function H.noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+
+-- The main window tab with this id.
+function H.tab(ns, id)
+  for _, t in ipairs(ns.UI.tabs) do if t.id == id then return t end end
+end
+
 -- boot the full addon: load files, ADDON_LOADED, PLAYER_LOGIN, PLAYER_ENTERING_WORLD
 function H.boot(opts)
   H.frames, H.onUpdateFrames, H.timers = {}, {}, {}

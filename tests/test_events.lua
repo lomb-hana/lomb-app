@@ -32,12 +32,7 @@ local function decodeSent(ns)
   end
   return out
 end
-local function deliver(ns, sender, tbl)
-  tbl.v = tbl.v or ns.version
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local function deliver(ns, sender, tbl) tbl.v = tbl.v or ns.version; H.deliver(ns, sender, tbl) end
 local function group(names)
   for i = 1, 4 do H.units["party" .. i] = nil end
   for i, n in ipairs(names) do H.units["party" .. i] = { name = n } end

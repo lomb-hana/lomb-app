@@ -15,7 +15,7 @@ local function boot()
 end
 
 local function closeUI(ns) if ns.UI.frame then ns.UI.frame:Hide() end end
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 local function shift(on) _G.IsShiftKeyDown = function() return on end end
 local function ctrl(on) _G.IsControlKeyDown = function() return on end end
 

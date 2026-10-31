@@ -2,7 +2,7 @@ local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 
 print("Guides: training, gathering, disenchanting, sets, poisons, zones, battlegrounds")
 
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 
 local function pageText(page)
   local out = {}

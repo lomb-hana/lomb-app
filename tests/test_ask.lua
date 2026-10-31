@@ -29,7 +29,7 @@ end
 local function linkTo(ans, mode)
   for _, l in ipairs(ans.lines) do if l.link and l.link[1] == mode then return l.link[2] end end
 end
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 
 H.test("indexes are built on the first question, not at load", function()
   local ns = boot()

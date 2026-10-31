@@ -157,7 +157,6 @@ function W.CopyBox(parent, w, text)
     self:HighlightText()
   end)
   box:SetScript("OnMouseUp", function(self) self:HighlightText() end)
-  function box:SetCopyText(t) self.copyText = t or ""; self:SetText(self.copyText); self:SetCursorPosition(0) end
   W.Tooltip(box, function(tt)
     tt:SetText(box.copyText, 1, 1, 1)
     tt:AddLine("Click, then Ctrl+C to copy.", 0.8, 0.78, 0.85)

@@ -89,3 +89,11 @@ function T.classColorText(classFile, text)
   local r, g, b = ns.Compat.ClassColor(classFile)
   return "|c" .. T.hex({ r, g, b }) .. tostring(text) .. "|r"
 end
+
+-- A character's short name, class-coloured when the roster knows them.
+function T.OwnerText(owner)
+  local row = ns.Roster and ns.Roster.byName[owner]
+  local short = ns.Compat.ShortName(owner)
+  if row and row.class then return T.classColorText(row.class, short) end
+  return short
+end

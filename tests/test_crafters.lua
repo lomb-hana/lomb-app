@@ -32,11 +32,7 @@ local function lastRc(ns)
   for _, m in ipairs(decodeSent(ns)) do if m.t == "D" and m.k == "rc" then found = m end end
   return found
 end
-local function deliver(ns, sender, tbl)
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local deliver = H.deliver
 
 local LW = { line = "Leatherworking", rows = {
   { name = "Leather", kind = "header" },

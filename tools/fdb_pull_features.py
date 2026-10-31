@@ -9,19 +9,9 @@ fetcher (tools/fdb_fetch.py): one request at a time, >= 2 s apart, nothing fetch
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fdb_fetch import get, count  # noqa: E402
+from fdb_fetch import get, count, all_pages  # noqa: E402
 
 MAX_LEVEL = 30
-
-
-def all_pages(path, params=None):
-    off, out = 0, []
-    while True:
-        r = get(path, dict(params or {}, limit=100, offset=off))
-        out += r.get("data") or []
-        if not r or not r.get("data") or (r.get("meta") or {}).get("next") is None:
-            return out
-        off += 100
 
 
 def step1():

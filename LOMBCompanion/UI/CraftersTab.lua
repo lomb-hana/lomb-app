@@ -11,8 +11,7 @@ Tab.view = { search = "", prof = nil, onlineOnly = false }
 
 local function entryIcon(item)
   if item.kind == "i" then
-    local _, _, _, icon = C.ItemInfo(item.id)
-    return icon or 134400
+    return C.ItemIcon(item.id)
   end
   local _, icon = C.SpellName(item.id)
   return icon or 136244

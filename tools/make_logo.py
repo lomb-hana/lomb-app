@@ -36,5 +36,4 @@ out = img.resize((64, 64), Image.LANCZOS)
 here = os.path.dirname(os.path.abspath(__file__))
 media = os.path.join(here, "..", "LOMBCompanion", "Media")
 out.save(os.path.join(media, "logo.tga"))
-out.resize((128, 128), Image.LANCZOS).save(os.path.join(here, "..", "docs", "logo.png")) if os.path.isdir(os.path.join(here, "..", "docs")) else None
 print("wrote", os.path.join(media, "logo.tga"))

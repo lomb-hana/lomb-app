@@ -651,7 +651,6 @@ function G.ZoneStats(name)
   zstats[name] = st
   return st
 end
-G.ResetZoneStats = function() zstats = {} end
 
 function G.ZoneLevelText(st)
   if not st or not st.lo then return nil end

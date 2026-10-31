@@ -5,12 +5,10 @@ print("Loot browser (ForeverDB.net notable loot + guild-recorded drops)")
 local DM = 36            -- Deadmines in the bundled snapshot
 local VANCLEEF = 990036  -- a made-up npc id for the test bestiary
 
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 local function plain(s) return (tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) end
 
-local function tab(ns, id)
-  for _, t in ipairs(ns.UI.tabs) do if t.id == id then return t end end
-end
+local tab = H.tab
 local function pageText(page)
   local out = {}
   for i = 1, page.used do out[#out + 1] = plain(page.lines[i].left.text) end

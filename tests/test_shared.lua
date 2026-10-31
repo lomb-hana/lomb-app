@@ -40,11 +40,7 @@ local function ofType(msgs, t, k)
   return out
 end
 
-local function deliver(ns, sender, tbl)
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local deliver = H.deliver
 
 H.test("publish sends once per change, with a rising revision", function()
   local ns = boot()

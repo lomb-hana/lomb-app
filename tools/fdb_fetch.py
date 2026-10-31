@@ -119,3 +119,17 @@ if __name__ == "__main__":
     params = dict(a.split("=", 1) for a in sys.argv[2:])
     print(json.dumps(get(p, params), indent=1)[:20000])
     print("requests so far:", count(), file=sys.stderr)
+
+
+def all_pages(path, params=None):
+    """Every page of a list endpoint (100 per request), as one list. Stops at the
+    first empty page, when there's no next page, or once `total` is reached."""
+    off, out = 0, []
+    while True:
+        r = get(path, dict(params or {}, limit=100, offset=off))
+        data = (r or {}).get("data") or []
+        out += data
+        meta = (r or {}).get("meta") or {}
+        off += 100
+        if not data or not meta.get("next") or off >= meta.get("total", float("inf")):
+            return out

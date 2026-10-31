@@ -208,6 +208,24 @@ function C.ItemInfo(itemID)
   return name, link, quality, icon
 end
 
+-- Item icon, or the question-mark icon while the item isn't cached yet.
+C.QUESTION_ICON = 134400
+function C.ItemIcon(itemID)
+  local _, _, _, icon = C.ItemInfo(itemID)
+  return icon or C.QUESTION_ICON
+end
+
+-- The player's level and zone, or nil when the client doesn't know yet.
+function C.PlayerLevel()
+  local l = UnitLevel and C.Call(UnitLevel, "player")
+  return type(l) == "number" and l > 0 and l or nil
+end
+
+function C.PlayerZone()
+  local z = GetRealZoneText and C.Call(GetRealZoneText)
+  return (type(z) == "string" and z ~= "") and z or nil
+end
+
 function C.SpellName(spellID)
   if not spellID then return nil end
   if C_Spell and C_Spell.GetSpellInfo then

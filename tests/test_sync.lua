@@ -35,10 +35,7 @@ local function decodeSent(ns)
 end
 
 -- deliver a table as if a guildmate sent it
-local function deliver(ns, sender, tbl)
-  local parts = ns.Chunker.Split(ns.Serializer.Pack(tbl))
-  for _, p in ipairs(parts) do H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender) end
-end
+local deliver = H.deliver
 
 H.test("login sends hello + profile on the guild channel", function()
   local ns = boot()

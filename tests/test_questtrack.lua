@@ -2,7 +2,7 @@ local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 
 print("Quest tracking + storyline drop-downs")
 
-local function noErrors(what) H.eq(#H.errors, 0, what .. ": " .. tostring(H.errors[1])) end
+local noErrors = H.noErrors
 
 local function clearAPI()
   _G.C_QuestLog, _G.GetQuestsCompleted, _G.GetQuestLogTitle, _G.IsQuestFlaggedCompleted = nil, nil, nil, nil
@@ -26,9 +26,7 @@ local function modernAPI(log, completed)
   }
 end
 
-local function tab(ns, id)
-  for _, t in ipairs(ns.UI.tabs) do if t.id == id then return t end end
-end
+local tab = H.tab
 
 local function pageText(page)
   local out = {}

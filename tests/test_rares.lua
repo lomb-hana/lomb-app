@@ -35,12 +35,7 @@ local function ofType(ns, t)
   for _, m in ipairs(decodeSent(ns)) do if m.t == t then out[#out + 1] = m end end
   return out
 end
-local function deliver(ns, sender, tbl)
-  tbl.v = tbl.v or ns.version
-  for _, p in ipairs(ns.Chunker.Split(ns.Serializer.Pack(tbl))) do
-    H.fire("CHAT_MSG_ADDON", "LOMBC", p, "GUILD", sender)
-  end
-end
+local function deliver(ns, sender, tbl) tbl.v = tbl.v or ns.version; H.deliver(ns, sender, tbl) end
 local function chatHas(s)
   for _, l in ipairs(DEFAULT_CHAT_FRAME.lines) do if l:find(s, 1, true) then return true end end
   return false

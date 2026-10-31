@@ -14,18 +14,10 @@ local function B() return ns.Bank end
 local function WL() return ns.Wishlist end
 local function ago(t) return t and ns.News.Ago(t) or "never" end
 
-local function classText(owner)
-  local row = ns.Roster and ns.Roster.byName[owner]
-  local short = C.ShortName(owner)
-  if row and row.class then return T.classColorText(row.class, short) end
-  return short
-end
+local classText = T.OwnerText
 Tab.ClassText = classText
 
-local function itemIcon(id)
-  local _, _, _, icon = C.ItemInfo(id)
-  return icon or 134400
-end
+local itemIcon = C.ItemIcon
 
 ---------------------------------------------------------------------------
 -- bank ledger

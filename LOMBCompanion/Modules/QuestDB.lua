@@ -44,7 +44,7 @@ function FDB.Index()
   idx = {
     npcStarts = {}, npcEnds = {}, itemStarts = {},
     soldBy = {}, madeBy = {}, reagentFor = {}, recipeItemFor = {}, dungeonLoot = {},
-    bySpell = {}, questNext = {}, zones = {}, zoneList = {}, vendorZones = {}, bossDungeon = {},
+    bySpell = {}, questNext = {}, zones = {}, bossDungeon = {},
   }
   if not d then return idx end
   local zc = {}
@@ -57,15 +57,12 @@ function FDB.Index()
     for _, p in ipairs(q.pv or {}) do push(idx.questNext, p, qid) end
     if q.z then zc[q.z] = (zc[q.z] or 0) + 1 end
   end
-  for z, n in pairs(zc) do idx.zoneList[#idx.zoneList + 1] = { name = z, count = n } end
-  table.sort(idx.zoneList, function(a, b) return a.name < b.name end)
   idx.zones = zc
   for vid, v in pairs(d.vendors) do
     local i = v.i or {}
     for k = 1, #i, 4 do
       push(idx.soldBy, i[k], { vendor = vid, price = i[k + 1], stack = i[k + 2], limited = i[k + 3] == 1 })
     end
-    if v.z then idx.vendorZones[v.z] = true end
   end
   for slug, p in pairs(d.professions) do
     for ri, r in ipairs(p.r) do
@@ -164,8 +161,6 @@ end
 -- Quests
 ---------------------------------------------------------------------------
 function FDB.Quest(id) local d = D(); return d and d.quests[id] end
-
-function FDB.Zones() return FDB.Index().zoneList end
 
 -- opts: search, zone, minLevel, maxLevel, side, sort ("level" | "name")
 function FDB.QuestList(opts)
@@ -564,11 +559,6 @@ function FDB.Profession(slug) local d = D(); return d and d.professions[slug] en
 function FDB.Recipe(ref)
   local p = ref and FDB.Profession(ref.prof)
   return p and p.r[ref.i], p
-end
-
-function FDB.RecipeForSpell(spellID)
-  local ref = spellID and FDB.Index().bySpell[spellID]
-  if ref then return FDB.Recipe(ref) end
 end
 
 function FDB.RecipeForItem(itemID)

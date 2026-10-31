@@ -1,8 +1,20 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8 and v0.6.7 is 0.8.9**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9 and v0.6.8 is 0.9.0**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.8 (in-game 0.9.0): code clean-up, 2026-10-30
+
+Pre-release, untested in game. No new features and nothing should look or behave differently.
+
+- Removed code nothing used: an old message counter, a zone-stats reset, the quest-zone list and vendor-zone index (built but never read), a recipe-by-spell lookup and an unused copy-box method.
+- Merged helpers that several files had their own copies of: item icon with the question-mark fallback, the player's level and zone, and class-coloured owner names.
+- Split Ask LOMB's saved history and `/lomb ask` into their own file (`Modules/AskHistory.lua`), so `Ask.lua` only answers questions.
+- Tests share one copy of the message-delivery, no-errors and tab helpers (in the test harness) instead of one per file.
+- Data tools: the three ForeverDB.net pull scripts share one page-by-page fetcher. Nothing was re-fetched (0 requests); every page it reads is already in the local cache.
+- Removed `docs/logo.png`, which nothing linked to (the in-game logo is unchanged).
+- Lookups are still built the first time something asks, not at login or in combat.
 
 ## v0.6.7 (in-game 0.8.9): loot browser, 2026-10-30
 
