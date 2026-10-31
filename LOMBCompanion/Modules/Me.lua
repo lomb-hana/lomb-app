@@ -49,6 +49,27 @@ function Me.ReadProfessions()
   return profs
 end
 
+-- Riding skill (Classic-era names: "Riding", racial "Horse Riding", "Mechanostrider
+-- Piloting", "Undead Horsemanship"...). The highest rank, 0 when not learned, or nil
+-- when the skill lines aren't readable yet (early at login).
+function Me.IsRidingSkill(name)
+  return type(name) == "string" and (name:find("Riding") or name:find("Horsemanship") or name:find("Piloting")) ~= nil
+end
+
+function Me.RidingSkill()
+  local count = (C_SkillInfo and C_SkillInfo.GetNumSkillLines and C.Call(C_SkillInfo.GetNumSkillLines))
+    or C.Call(_G.GetNumSkillLines) or 0
+  if count == 0 then return nil end
+  local best = 0
+  for i = 1, math.min(count, 100) do
+    local name, isHeader, rank = skillLine(i)
+    if not isHeader and Me.IsRidingSkill(name) and type(rank) == "number" and rank > 0 then
+      best = math.max(best, rank)
+    end
+  end
+  return best
+end
+
 function Me.ReadItemLevel()
   local avg, equipped = C.Call(_G.GetAverageItemLevel)
   local il = equipped or avg
@@ -78,6 +99,7 @@ function Me.Refresh()
   s.money = C.Call(GetMoney)
   s.ilvl = Me.ReadItemLevel()
   s.professions = Me.ReadProfessions()
+  s.riding = Me.RidingSkill()
   s.deaths = ns.char.deaths
   s.kills = ns.char.kills
   s.played = ns.char.played

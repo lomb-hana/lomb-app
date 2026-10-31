@@ -128,23 +128,21 @@ UI.RegisterTab({
     header:SetPoint("TOPLEFT", 0, -30)
     header:SetPoint("TOPRIGHT", 0, -30)
     header:SetHeight(20)
-    local x = 4
+    local cols, x = {}, 4
+    local TIPS = { short = "Sort by name.", level = "Sort by level (highest first, click again to flip).",
+      className = "Sort by class.", rankIndex = "Sort by guild rank (Guild Master first).",
+      zone = "Sort by zone. Offline members go last." }
     for _, col in ipairs(T.rosterColumns) do
       if col.label ~= "" then
-        local b = CreateFrame("Button", nil, header)
-        b:SetPoint("LEFT", x, 0)
-        b:SetSize(col.w - 4, 18)
-        local fs = W.Text(b, "narrow", 11, "gold", col.justify or "LEFT")
-        fs:SetAllPoints()
-        fs:SetText(col.label:upper())
-        b:SetScript("OnClick", function()
-          local key = col.key == "short" and "short" or col.key == "class" and "className" or col.key
-          if view.sort == key then view.desc = not view.desc else view.sort, view.desc = key, (key == "level") end
-          UI.Refresh("roster")
-        end)
+        local key = col.key == "short" and "short" or col.key == "class" and "className" or col.key
+        cols[#cols + 1] = { key = key, label = col.label:upper(), x = x, w = col.w - 4, justify = col.justify,
+          desc = key == "level", tip = TIPS[key] or ("Sort by " .. col.label:lower() .. ".") }
       end
       x = x + col.w
     end
+    p.sortHead = W.SortHeader(header, cols, view, function() UI.Refresh("roster") end)
+    p.sortHead:SetPoint("TOPLEFT", 0, -1)
+    p.sortHead:SetPoint("TOPRIGHT", 0, -1)
 
     p.profile = ns.ProfilePage.New(p, function() Tab.CloseProfile() end)
     p.list = W.List(p, T.sizes.row, createRow, updateRow)

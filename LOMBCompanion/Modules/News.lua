@@ -24,13 +24,17 @@ News.KEEP_DAYS = 60
 News.GROUP_WINDOW = 15 * 60  -- same rare (or dungeon) by several of us = one news line
 News.MAX_NAMES = 5           -- names shown in one dungeon line before "and N more"
 News.items = {}              -- the merged feed, newest first
-News.TYPES = { lv = true, rare = true, dg = true, rc = true, ev = true, join = true, left = true }
+News.TYPES = { lv = true, rare = true, dg = true, rc = true, ev = true, join = true, left = true,
+  ep = true, mt = true, wb = true }
 News.FILTERS = {
   { key = nil,    label = "All news" },
   { key = "lv",   label = "Level-ups" },
   { key = "rare", label = "Rare kills" },
   { key = "dg",   label = "Dungeons" },
   { key = "rc",   label = "New recipes" },
+  { key = "ep",   label = "Epic loot" },
+  { key = "mt",   label = "First mounts" },
+  { key = "wb",   label = "Welcome backs" },
   { key = "ev",   label = "Guild events" },
   { key = "gl",   label = "Joins & leaves" },
 }
@@ -46,6 +50,9 @@ local function day(t) return math.floor((t or time()) / 86400) end
 function News.Id(ty, who, a, t)
   if ty == "join" or ty == "left" then return ("%s:%s:%d"):format(ty, who, day(t)) end
   if ty == "rare" then return ("rare:%s:%s:%d"):format(who, tostring(a), day(t)) end
+  if ty == "ep" then return ("ep:%s:%s:%d"):format(who, tostring(a), day(t)) end
+  if ty == "wb" then return ("wb:%s:%d"):format(who, day(t)) end
+  if ty == "mt" then return "mt:" .. who end
   if ty == "dg" then return ("dg:%s:%s:%d"):format(who, tostring(a), t or 0) end
   if ty == "ev" then return "ev:" .. tostring(a) end
   return ("%s:%s:%s"):format(ty, who, tostring(a or ""))
@@ -164,6 +171,54 @@ function News.CheckClear(bossName)
   return true
 end
 
+-- Epic loot: "You receive loot: [item]." (the game's own LOOT_ITEM_SELF lines, so
+-- won rolls count; crafted and quest-reward items don't). Epic quality or better.
+News.EPIC = 4
+local function lootPrefix(fmt)
+  return type(fmt) == "string" and fmt:match("^(.-)%%s") or nil
+end
+function News.OnLootMessage(msg)
+  if type(msg) ~= "string" or C.IsSecret(msg) then return end
+  local mine = false
+  for _, fmt in ipairs({ _G.LOOT_ITEM_SELF_MULTIPLE, _G.LOOT_ITEM_SELF }) do
+    local pre = lootPrefix(fmt)
+    if pre and pre ~= "" and msg:sub(1, #pre) == pre then mine = true; break end
+  end
+  if not mine then return end
+  local link = msg:match("|H(item:[^|]+)|h")
+  local id = link and C.ItemIdFromLink(link)
+  if not id then return end
+  local _, _, quality = C.ItemInfo(id)
+  if quality == nil then
+    -- not cached yet: the link's own colour says it (epic purple / legendary orange)
+    local col = msg:match("|c(%x%x%x%x%x%x%x%x)|Hitem:")
+    col = col and col:lower():sub(3)
+    quality = (col == "a335ee" and 4) or (col == "ff8000" and 5) or nil
+  end
+  if type(quality) == "number" and quality >= News.EPIC and quality <= 5 then
+    local s, today = act(), day()
+    for _, e in ipairs(s.ev) do
+      if e[1] == "ep" and e[2] == id and day(e[4]) == today then return end   -- same item again today
+    end
+    News.AddOwn("ep", id, quality)
+  end
+end
+
+-- First mount: the riding skill goes from none to learned. The first reading on a
+-- character only remembers the skill (no news for riding learned long ago).
+function News.CheckRiding(rank)
+  if type(rank) ~= "number" then return false end   -- skill lines not readable yet
+  local s = act()
+  if s.rd == nil then s.rd = rank; return false end
+  if s.rd == 0 and rank > 0 then
+    s.rd = rank
+    News.AddOwn("mt", rank)
+    return true
+  end
+  if rank > s.rd then s.rd = rank end
+  return false
+end
+
 function News.OnRecipes(_, fresh)
   for _, f in ipairs(fresh or {}) do
     News.AddOwn("rc", f[2], f[1])
@@ -214,11 +269,16 @@ function News.ValidateEvents(d)
     if type(e) == "table" then
       local ty, t = e[1], V.time(e[4])
       local a = V.int(e[2], 0, 1e7)
-      local ok = t and a and (ty == "lv" or ty == "rare" or ty == "rc" or ty == "dg")
+      local ok = t and a and (ty == "lv" or ty == "rare" or ty == "rc" or ty == "dg" or ty == "ep" or ty == "mt")
       if ok and ty == "lv" and a > 100 then ok = false end
+      if ok and ty == "mt" and (a < 1 or a > 375) then ok = false end
+      if ok and ty == "ep" and a < 1 then ok = false end
       if ok then
         local b, x = e[3], nil
-        if ty == "rc" then b = (b == "i" or b == "s") and b or "i" else b = V.str(b, 48) end
+        if ty == "rc" then b = (b == "i" or b == "s") and b or "i"
+        elseif ty == "ep" then b = V.int(b, 4, 5) or 4
+        elseif ty == "mt" then b = nil
+        else b = V.str(b, 48) end
         if ty == "dg" then
           local wings = News.FINAL_BOSSES[a]
           local known = false
@@ -270,6 +330,9 @@ end
 
 ns:Listen("GUILD_JOIN", function(who) News.AddLocal("join", who) end)
 ns:Listen("GUILD_LEAVE", function(who) News.AddLocal("left", who) end)
+ns:Listen("GUILD_WELCOMEBACK", function(who, days, away)
+  News.AddLocal("wb", who, days, nil, nil, away)
+end)
 ns:Listen("GUILD_LEVELUP", function(who, newLevel, _, classFile, away)
   News.AddLocal("lv", who, newLevel, classFile, nil, away)
 end)
@@ -485,6 +548,8 @@ end
 ns:On("PLAYER_LEVEL_UP", function(_, level) News.OnLevel(level) end)
 ns:Listen("KILL_RECORDED", function(npcId) News.OnKill(npcId) end)
 ns:Listen("RECIPES_LEARNED", News.OnRecipes)
+ns:On("CHAT_MSG_LOOT", function(_, msg) News.OnLootMessage(msg) end)
+ns:Listen("ME_UPDATED", function(s) if type(s) == "table" then News.CheckRiding(s.riding) end end)
 ns:Listen("ATTENDANCE_UPDATED", function() News.RebuildSoon() end)
 ns:Listen("EVENTS_UPDATED", function() News.RebuildSoon() end)
 ns:Listen("ROSTER_UPDATED", function() News.RebuildSoon(); ns:Fire("BOARD_UPDATED") end)
@@ -536,6 +601,15 @@ function News.Text(e)
     local name
     if e.b == "s" then name = C.SpellName(e.a) else name = C.ItemInfo(e.a) end
     return ("%s learned to make %s"):format(n, name and ("|cffe6e0f0" .. name .. "|r") or ("#" .. tostring(e.a)))
+  elseif e.ty == "ep" then
+    local name = C.ItemInfo(e.a)
+    local col = e.b == 5 and "ff8000" or "a335ee"
+    return ("%s looted the %s |cff%s%s|r"):format(n, e.b == 5 and "legendary" or "epic", col,
+      name and ("[" .. name .. "]") or ("item #" .. tostring(e.a)))
+  elseif e.ty == "mt" then
+    return ("%s learned to ride: first mount!"):format(n)
+  elseif e.ty == "wb" then
+    return ("%s is back after %d days away. Welcome back!"):format(n, tonumber(e.a) or 14)
   elseif e.ty == "join" then
     return ("%s joined the guild. Say hi!"):format(n)
   elseif e.ty == "left" then

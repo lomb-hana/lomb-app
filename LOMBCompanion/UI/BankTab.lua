@@ -7,7 +7,7 @@ local Tab = {}
 ns.BankTab = Tab
 
 local SIDE_W = 230
-Tab.view = { bank = 1, search = "" }
+Tab.view = { bank = 1, search = "", sort = "label", desc = false }
 local view = Tab.view
 
 local function B() return ns.Bank end
@@ -29,7 +29,7 @@ function Tab.Ledger()
   return all[view.bank], all
 end
 
-function Tab.BankItems(L, search)
+function Tab.BankItems(L, search, sort, desc)
   local out = {}
   search = (search or ""):lower()
   for _, it in ipairs(L and L.items or {}) do
@@ -44,6 +44,7 @@ function Tab.BankItems(L, search)
     if a.label ~= b.label then return a.label < b.label end
     return a.id < b.id
   end)
+  if sort and (sort ~= "label" or desc) then W.SortRows(out, sort, desc, "label") end
   return out
 end
 
@@ -143,11 +144,18 @@ UI.RegisterTab({
     p.search:SetPoint("TOPLEFT", 8, -66)
     p.count = W.Text(main, "narrow", 11, "muted", "RIGHT")
     p.count:SetPoint("TOPRIGHT", -10, -70)
+    p.head = W.SortHeader(main, {
+      { key = "label", label = "Item", x = 26, w = 200, tip = "Sort by item name." },
+      { key = "count", label = "Count", x = 236, w = 64, justify = "RIGHT", desc = true, tip = "Sort by how many the bank holds." },
+      { key = "wanted", label = "Wanted", x = 310, w = 90, desc = true, tip = "Sort by how many guildmates have it on their wishlist." },
+    }, view, function() UI.Refresh("bank") end)
+    p.head:SetPoint("TOPLEFT", 4, -92)
+    p.head:SetPoint("RIGHT", -4, 0)
     p.items = W.List(main, 20, createItemRow, updateItemRow)
-    p.items:SetPoint("TOPLEFT", 4, -94)
+    p.items:SetPoint("TOPLEFT", 4, -112)
     p.items:SetPoint("BOTTOMRIGHT", -4, 4)
     p.empty = W.Text(main, "body", 12, "muted", "CENTER")
-    p.empty:SetPoint("TOP", 0, -120)
+    p.empty:SetPoint("TOP", 0, -136)
     p.empty:SetWidth(330)
     p.empty:SetWordWrap(true)
 
@@ -190,6 +198,7 @@ UI.RegisterTab({
       p.log:SetItems({})
       p.count:SetText("")
       p.search:Hide()
+      p.head:Hide()
       p.logEmpty:SetText("Nothing yet.")
       p.logEmpty:Show()
       p.empty:SetText("No guild bank character.\n\nIf the guild sets one up, log into it and tick \"This is a guild "
@@ -198,13 +207,14 @@ UI.RegisterTab({
       return
     end
     p.search:Show()
+    p.head:Show()
     p.title:SetText(("Guild bank  |cff9991a8·|r  %s"):format(classText(L.owner)))
     local meta = ("Bags counted %s  ·  bank %s"):format(ago(L.bagsAt),
       L.vaultAt and ("counted " .. ago(L.vaultAt)) or "not opened yet")
     if #all > 1 then meta = meta .. ("  ·  bank alt %d of %d"):format(view.bank, #all) end
     p.meta:SetText(meta)
     p.funds:SetText(L.money and ("Guild bank funds: %s"):format(W.FormatMoney(L.money)) or "")
-    local items = Tab.BankItems(L, view.search)
+    local items = Tab.BankItems(L, view.search, view.sort, view.desc)
     p.items:SetItems(items)
     p.count:SetText(("%d items"):format(#L.items))
     if #L.items == 0 then

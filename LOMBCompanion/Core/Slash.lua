@@ -8,6 +8,8 @@ local HELP = {
   "|cffb873ff/lomb train|r  what your class trainer has for you",
   "|cffb873ff/lomb ask <question>|r  ask LOMB (only you see the answer)",
   "|cffb873ff/lomb sync|r  say hello to the guild now",
+  "|cffb873ff/lomb test|r  check that everything works (copyable report)",
+  "|cffb873ff/lomb tour|r  show the welcome tour again",
   "|cffb873ff/lomb status|r  sync status",
   "|cffb873ff/lomb debug|r  toggle debug messages",
   "|cffb873ff/lomb questcheck|r  what the game tells the addon about your quests",
@@ -39,6 +41,8 @@ function ns.HandleSlash(msg)
     if ok then ns.Sync.SendHello(); ns.Sync.SendProfile(true); ns.Print("Said hello to the guild.")
     else ns.Print("Can't sync right now: %s.", why) end
   elseif cmd == "status" then ns.Print(ns.Sync.Status())
+  elseif cmd == "test" then ns.SelfTest.Run()
+  elseif cmd == "tour" then ns.Tour.Start()
   elseif cmd == "questcheck" then
     ns.QuestTrack.ScanLog(); ns.QuestTrack.ScanDone()
     ns.Print(ns.QuestTrack.Report())

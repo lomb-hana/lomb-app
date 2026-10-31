@@ -429,4 +429,116 @@ H.test("news survives a relog; offline level-ups are marked approximate", functi
   H.eq(ns ~= ns2, true)
 end)
 
+H.test("epic loot: epics only, mine only, once a day, uncached links by colour", function()
+  local ns = boot()
+  H.itemNames[12345], H.itemQuality[12345] = "Hand of Testing", 4
+  H.itemNames[222], H.itemQuality[222] = "Blue Bracers", 3
+  local function loot(id, q, fmt)
+    local col = q == 4 and "ffa335ee" or "ff0070dd"
+    H.fire("CHAT_MSG_LOOT", (fmt or "You receive loot: %s."):format("|c" .. col .. "|Hitem:" .. id .. "::|h[x]|h|r"))
+    H.advance(2)
+  end
+  loot(222, 3)
+  H.eq(find(ns, "ep"), nil, "blue items aren't news")
+  loot(12345, 4, "Brindlewick receives loot: %s.")
+  H.eq(find(ns, "ep"), nil, "someone else's loot line isn't ours to post")
+  loot(12345, 4, "You receive item: %s.")
+  H.eq(find(ns, "ep"), nil, "crafted / quest items don't count")
+  loot(12345, 4)
+  local e = find(ns, "ep", ns.playerKey)
+  H.ok(e, "epic looted")
+  H.eq(strip(ns.News.Text(e)), "Testy looted the epic [Hand of Testing]")
+  loot(12345, 4, "You receive loot: %sx2.")
+  local n = 0
+  for _, x in ipairs(ns.News.items) do if x.ty == "ep" then n = n + 1 end end
+  H.eq(n, 1, "the same epic twice in a day is one line")
+  H.itemUncached[777] = true
+  loot(777, 4)
+  local u = 0
+  for _, x in ipairs(ns.News.Filter("ep")) do if x.a == 777 then u = u + 1 end end
+  H.eq(u, 1, "uncached item counted from its purple link")
+  -- shared with the guild and validated on the way in
+  H.advance(130)
+  local nw = lastOf(ns, "nw")
+  H.ok(nw, "news dataset published")
+  remote(ns, "Brindlewick-Forever", "nw", { e = { { "ep", 12345, 9, H.epoch }, { "ep", -3, 4, H.epoch },
+    { "mt", 0, nil, H.epoch }, { "mt", 75, "junk", H.epoch } } })
+  local b = find(ns, "ep", "Brindlewick-Forever")
+  H.ok(b and b.b == 4, "bad quality cleaned to epic")
+  local m = find(ns, "mt", "Brindlewick-Forever")
+  H.ok(m and m.a == 75 and m.b == nil, "mount line kept, junk dropped")
+  local mine = 0
+  for _, x in ipairs(ns.News.items) do if x.who == "Brindlewick-Forever" then mine = mine + 1 end end
+  H.eq(mine, 2, "bad entries dropped")
+end)
+
+H.test("first mount: riding learned is news once; riding learned long ago isn't", function()
+  local ns = boot()
+  ns.char.act.rd = nil
+  H.state.skills = {}
+  ns.Me.Refresh()
+  H.eq(ns.char.act.rd, nil, "skill lines not readable yet: nothing remembered")
+  H.state.skills = { { "Defense", false, 60, 60 } }
+  ns.Me.Refresh()
+  H.eq(ns.char.act.rd, 0, "no riding yet")
+  H.eq(find(ns, "mt"), nil)
+  H.state.skills = { { "Defense", false, 60, 60 }, { "Riding", false, 75, 75 } }
+  H.fire("SKILL_LINES_CHANGED")
+  H.advance(3)
+  local e = find(ns, "mt", ns.playerKey)
+  H.ok(e, "first mount line")
+  H.eq(strip(ns.News.Text(e)), "Testy learned to ride: first mount!")
+  H.state.skills = { { "Riding", false, 150, 150 } }
+  ns.Me.Refresh()
+  H.advance(2)
+  local n = 0
+  for _, x in ipairs(ns.News.Filter("mt")) do if x.who == ns.playerKey then n = n + 1 end end
+  H.eq(n, 1, "training up later isn't another first")
+  -- a character that already rides when it first runs this version
+  local ns2 = H.boot({ skills = { { "Undead Horsemanship", false, 75, 75 } } })
+  ns2.Me.Refresh()
+  H.advance(2)
+  H.eq(find(ns2, "mt"), nil, "already riding: no news")
+  H.eq(ns2.char.act.rd, 75)
+  H.ok(ns2.Me.IsRidingSkill("Mechanostrider Piloting"))
+  H.ok(not ns2.Me.IsRidingSkill("Mining"))
+end)
+
+H.test("welcome back: 14+ days offline, then online", function()
+  local ns = boot()
+  rescan(function(r) r[2].days = 20 end)                       -- Oakenhollow: 20 days offline
+  rescan(function(r) r[3].online = false; r[3].days = 3 end)  -- Brindlewick: 3 days
+  rescan(function(r) r[2].online = true; r[3].online = true end)
+  local e = find(ns, "wb", "Oakenhollow-Forever")
+  H.ok(e, "back after 20 days")
+  H.eq(strip(ns.News.Text(e)), "Oakenhollow is back after 20 days away. Welcome back!")
+  H.eq(e.x, nil, "seen live: exact time")
+  H.eq(find(ns, "wb", "Brindlewick-Forever"), nil, "3 days isn't long enough")
+  H.eq(#ns.News.Filter("wb"), 1)
+  rescan()
+  H.eq(#ns.News.Filter("wb"), 1, "no repeat while they stay online")
+  -- an old offline sighting (more than a week before) isn't trusted
+  rescan(function(r) r[2].online = false; r[2].days = 30 end)
+  H.advance(8 * 86400, 600)
+  rescan(function(r) r[2].online = true end)
+  local n = 0
+  for _, x in ipairs(ns.News.Filter("wb")) do if x.who == "Oakenhollow-Forever" then n = n + 1 end end
+  H.eq(n, 1, "stale sighting: no second line")
+end)
+
+H.test("welcome back across a relog is marked approximate", function()
+  boot()
+  local db, cdb = _G.LOMBCompanionDB, _G.LOMBCompanionCharDB
+  rescan(function(r) r[2].days = 16 end)
+  H.advance(86400, 600)
+  local ns2 = H.boot({ db = db, charDB = cdb })
+  H.roster = copyRoster()
+  H.roster[2].online = true
+  H.fire("GUILD_ROSTER_UPDATE")
+  H.advance(5)
+  local e = find(ns2, "wb", "Oakenhollow-Forever")
+  H.ok(e and e.x, "came back while we were offline: approximate")
+  H.eq(e and e.a, 16, "days counted to our last sighting")
+end)
+
 H.done()

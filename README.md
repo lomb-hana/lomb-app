@@ -4,9 +4,11 @@
 
 LOMB Companion is a free in-game addon made just for the **Land of Make Believe (LOMB)** guild. It keeps the guild's roster, stats, crafters, news and events in one place. It also has a bestiary that fills up as the guild plays. **v0.1 through v0.8 are built**, including v0.6 Quests & Items with data from ForeverDB.net, and get their first in-game test when **WoW: Forever launches on November 4, 2026**.
 
+**New here? Read the [install guide](docs/INSTALL.md).** It takes two minutes, and `/lomb test` tells you if everything works.
+
 It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
 
-> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and later patches up to the `v0.6.9` forgiving Ask LOMB as in-game 0.9.1 and the `v0.6.11` guild activity feed as in-game 0.9.3; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and later patches up to the `v0.6.9` forgiving Ask LOMB as in-game 0.9.1, the `v0.6.11` guild activity feed as in-game 0.9.3 and the `v0.6.12` launch prep (self-test, welcome tour, more news, sortable lists) as in-game 0.9.4; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
 
 > ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
 
@@ -46,6 +48,10 @@ It has its own LOMB look instead of the standard Blizzard-style frames, and it l
 | ![Crafters tab](docs/screenshots/crafting/09-crafters.png) | ![Crafters search and whisper](docs/screenshots/crafting/10-crafters-search-whisper.png) |
 | **News: the guild activity feed (v0.3, v0.6.11)** | **News: dungeon clears only (v0.6.11)** |
 | ![News tab](docs/screenshots/news/12-news.png) | ![News filtered to dungeon and raid clears](docs/screenshots/news/51-news-dungeons.png) |
+| **News: epic loot only (v0.6.12)** | **Welcome tour (v0.6.12)** |
+| ![News filtered to epic loot](docs/screenshots/news/53-news-epic-loot.png) | ![Welcome tour step 2 pointing at the tab list](docs/screenshots/core/54-welcome-tour.png) |
+| **Self-test report (v0.6.12)** | |
+| ![The /lomb test report window with ten PASS lines and a Select all button](docs/screenshots/core/55-self-test.png) | |
 | **Leaderboard: levels (v0.3)** | **Leaderboard: kills this week (v0.3)** |
 | ![Leaderboard levels](docs/screenshots/news/14-leaderboard-levels.png) | ![Leaderboard weekly kills](docs/screenshots/news/15-leaderboard-kills-week.png) |
 | **Member profile with recent news (v0.4)** | **Profile from an inspect, no addon (v0.4)** |
@@ -160,7 +166,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**) the loot browser `v0.6.7` (in-game **0.8.9**), the clean-up `v0.6.8` (in-game **0.9.0**), the forgiving Ask LOMB patch `v0.6.9` (in-game **0.9.1**), `v0.6.10` (in-game **0.9.2**, superseded) and the guild activity feed `v0.6.11` (in-game **0.9.3**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**) the loot browser `v0.6.7` (in-game **0.8.9**), the clean-up `v0.6.8` (in-game **0.9.0**), the forgiving Ask LOMB patch `v0.6.9` (in-game **0.9.1**), `v0.6.10` (in-game **0.9.2**, superseded), the guild activity feed `v0.6.11` (in-game **0.9.3**) and the launch prep release `v0.6.12` (in-game **0.9.4**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with views for Quests, Items, Vendors, Recipes and Loot (called Dungeons before v0.6.7), plus the guide views, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -257,6 +263,7 @@ In plain English:
 - **v0.1.0 is built** (Roster, Me, Bestiary, Settings and Credits tabs, the bestiary card and full bestiary page, minimap button, `/lomb`, and guild sync).
 - **v0.6.8 (in-game 0.9.0):** code clean-up with no behaviour change: unused code removed, shared helpers merged, Ask LOMB's history in its own file, and tidier tests and data tools.
 - **v0.6.11 (in-game 0.9.3):** News is a guild activity feed: level-ups, joins and leaves, rare kills and new recipes as before, plus dungeon and raid clears (one line per group, with a Dungeons filter) and guild events held with their attendance. The profile's "Recent news" panel is back.
+- **v0.6.12 (in-game 0.9.4):** launch prep. `/lomb test` checks that everything works and makes a report you can copy, a four-step welcome tour (reopen it from Settings or with `/lomb tour`), News lines for epic loot, first mounts and welcome backs (14+ days away) with their own filters, and sortable column headers on the Roster, Crafters, Bank, Wishlist and attendance lists. Plus an [install guide](docs/INSTALL.md) and a [launch-day checklist](docs/LAUNCH-CHECKLIST.md).
 - **v0.6.10 (in-game 0.9.2):** superseded by v0.6.11 (see the [changelog](CHANGELOG.md)).
 - **v0.6.9 (in-game 0.9.1):** Ask LOMB is much more forgiving: synonyms, short forms, typos, many ways to say a level, "my zone"/"here", and "Did you mean …?" suggestions. Still offline and not an AI.
 - **v0.6.7 (in-game 0.8.9):** the Loot browser in Quests & Items (dungeon, boss or trash icon grids from ForeverDB.net's notable loot and the guild's recorded drops, with wishlist hearts), "Where it drops" on item pages, loot questions in Ask LOMB, and refreshed Credits screenshots.
@@ -281,6 +288,8 @@ In plain English:
 
 ## Install
 
+📘 **Step-by-step guide with troubleshooting: [docs/INSTALL.md](docs/INSTALL.md).** For launch day testing, see the [launch checklist](docs/LAUNCH-CHECKLIST.md).
+
 1. Download the newest `LOMBCompanion-v*.zip` from this repo's **Releases** page.
 2. Unzip it into your WoW: Forever AddOns folder:
    ```
@@ -289,11 +298,12 @@ In plain English:
    You should end up with `Interface/AddOns/LOMBCompanion/LOMBCompanion.toc`.
 3. Restart the game, or type `/reload` if you're already logged in.
 4. Make sure **LOMB Companion** is ticked in the AddOns list on the character select screen.
-5. Click the minimap button or type `/lomb` to open it (right-click the button for Ask LOMB, Ctrl-click for the bestiary card, Shift-click for settings). `/lomb help` lists every command.
+5. Type `/lomb test` to check that everything works.
+6. Click the minimap button or type `/lomb` to open it (right-click the button for Ask LOMB, Ctrl-click for the bestiary card, Shift-click for settings). `/lomb help` lists every command.
 
 The exact game folder name will be confirmed when WoW: Forever goes live.
 
-**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests), `/lomb train` (what's new at your class trainer), `/lomb ask <question>` (ask LOMB; only you see the answer). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
+**Commands:** `/lomb` (open/close), `/lomb <tab>` (for example `/lomb roster`, `/lomb events` or `/lomb wishlist`; `/lomb help` lists them all), `/lomb card` (show/hide the bestiary card), `/lomb test` (self-test with a copyable report), `/lomb tour` (the welcome tour again), `/lomb status`, `/lomb sync`, `/lomb questcheck` (what the game tells the addon about your quests), `/lomb train` (what's new at your class trainer), `/lomb ask <question>` (ask LOMB; only you see the answer). You can also set key bindings under *Key Bindings > AddOns > LOMB Companion*.
 
 ### For developers
 

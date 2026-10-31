@@ -13,7 +13,11 @@ local ICONS = {
   rc = "Interface\\Icons\\Trade_BlackSmithing",
   join = "Interface\\Icons\\Spell_Holy_PrayerOfFortitude",
   left = "Interface\\Icons\\Spell_Shadow_Teleport",
+  ep = "Interface\\Icons\\INV_Misc_Gem_Amethyst_02",
+  mt = "Interface\\Icons\\Ability_Mount_RidingHorse",
+  wb = "Interface\\Icons\\Spell_Holy_Resurrection",
 }
+Tab.ICONS = ICONS
 
 local function createRow(list, i)
   local row = CreateFrame("Frame", nil, list)
@@ -81,7 +85,8 @@ UI.RegisterTab({
 
     p.foot = W.Text(p, "narrow", 11, "muted")
     p.foot:SetPoint("BOTTOMLEFT", 0, 6)
-    p.foot:SetText("Level-ups and joins come from the guild roster; rares, dungeons and recipes from guildmates with the addon.")
+    p.foot:SetText("Level-ups, joins and welcome backs come from the guild roster; rares, dungeons, recipes, epics and "
+      .. "first mounts from guildmates with the addon.")
 
     ns:Listen("NEWS_UPDATED", function() UI.Refresh("news") end)
     return p
@@ -95,7 +100,7 @@ UI.RegisterTab({
     p.count:SetText(("%d item%s"):format(#items, #items == 1 and "" or "s"))
     if #items == 0 then
       p.empty:SetText(f.key and "Nothing of that kind yet." or
-        "No news yet.\n\nLevel-ups, rare kills, dungeon clears, new recipes and guild events show up here as they happen.")
+        "No news yet.\n\nLevel-ups, rare kills, dungeon clears, new recipes, epic loot, first mounts and guild events show up here as they happen.")
       p.empty:Show()
     else
       p.empty:Hide()

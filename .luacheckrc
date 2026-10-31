@@ -27,7 +27,7 @@ read_globals = {
   -- secrets (12.x / Forever)
   "issecretvalue", "canaccessvalue",
   -- units
-  "GetServerTime", "GetNumGroupMembers", "IsInRaid", "IsInGroup", "C_Calendar", "C_DateAndTime", "CalendarFrame",
+  "GetServerTime", "GetBuildInfo", "GetNumGroupMembers", "IsInRaid", "IsInGroup", "C_Calendar", "C_DateAndTime", "CalendarFrame",
   "UnitExists", "UnitIsPlayer", "UnitGUID", "UnitName", "UnitLevel", "UnitClassification", "UnitCreatureType",
   "UnitCreatureFamily", "UnitFactionGroup", "UnitHealth", "UnitHealthMax", "UnitIsDead", "UnitIsTapDenied", "UnitCanAttack",
   "UnitReaction", "UnitClass", "UnitRace", "UnitXP", "UnitXPMax", "UnitAffectingCombat", "UnitFullName",

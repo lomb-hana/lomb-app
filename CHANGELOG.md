@@ -1,8 +1,24 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2 and v0.6.11 is 0.9.3**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3 and v0.6.12 is 0.9.4**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.12 (in-game 0.9.4): launch prep, 2026-10-30
+
+Pre-release, untested in game. Everything here is about launch day on November 4: checking that the addon works, helping new people find their way, and a few more kinds of news.
+
+- **`/lomb test` self-test.** Checks addon errors this session, the game functions LOMB needs, the guild roster, the addon channel, a sync echo with a guildmate (if one with the addon is online), the calendar clock, skill lines, the bundled data (including that every known last boss is in it), saved variables and whether you're in combat. Each line is PASS, WARN or FAIL. The report opens in a window with a **Select all** button so it can be copied into Discord. Settings has a "Run self-test" button too.
+- **Welcome tour.** Four short steps the first time you open the window: the roster, the tabs, Ask LOMB and Settings. Skip, Back and Next; ESC also closes it, and it won't show again either way. Reopen it any time from Settings ("Show welcome tour") or with `/lomb tour`.
+- **New News lines and filters:**
+  - **Epic loot:** "X looted the epic [item]", from loot chat. Won rolls count; crafted items and quest rewards don't. The same item on the same day only posts once.
+  - **First mount:** "X learned to ride: first mount!", when the riding skill goes from none to learned. Riding learned before installing LOMB doesn't post.
+  - **Welcome back:** "X is back after 23 days away. Welcome back!", when a member comes online after 14 or more days offline. This comes from the guild roster, so it works for members without the addon too.
+  - New filters: Epic loot, First mounts, Welcome backs. Level-up lines are unchanged.
+- **Sortable lists.** Click a column header to sort, click again to reverse; the arrow shows the order, and every header has a tooltip. Roster (name, level, class, rank, zone, last online), Crafters, the Bank ledger, Wishlist and event attendance (name, how often present). News stays newest first and the Leaderboard stays ranked.
+- **Stress tested** with a 200-member guild, a 5000-creature bestiary, 2000 sync records at once, 5000 junk addon messages and 10,000 combat events, all in the offline harness. Everything stayed within budget. One fix: the Settings tab worked out the saved-data size on every refresh (about 100 ms with a big bestiary). It now remembers it for 30 seconds (about 1.5 ms).
+- **New docs:** [install guide](docs/INSTALL.md) (linked at the top of the README) and a [launch-day checklist](docs/LAUNCH-CHECKLIST.md) for the first in-game test.
+- New screenshots: 53 (Epic loot filter), 54 (welcome tour), 55 (self-test report); 06, 12 and 51 refreshed.
 
 ## v0.6.11 (in-game 0.9.3): achievements removed, 2026-10-30
 

@@ -410,6 +410,12 @@ function H.installAPI(opts)
   env.GetLootSourceInfo = function(i) local s = H.loot[i]; if s then return unpack(s.sources) end end
 
   H.itemNames = {}
+  H.itemQuality = {}
+  H.itemUncached = {}
+  env.LOOT_ITEM_SELF = "You receive loot: %s."
+  env.LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %sx%d."
+  env.LOOT_ITEM_PUSHED_SELF = "You receive item: %s."
+  env.GetBuildInfo = function() return "1.60.1", "70658", "Oct 1 2026", 16001 end
   env.C_Item = {
     GetItemInfo = function(id)
       if type(id) == "string" then
@@ -421,7 +427,10 @@ function H.installAPI(opts)
         end
       end
       local name = (H.itemNames and H.itemNames[id]) or ("Item " .. id)
-      return name, "|cffffffff|Hitem:" .. id .. "::|h[" .. name .. "]|h|r", 1, 1, 1, "", "", 1, "", 134400
+      if H.itemUncached and H.itemUncached[id] then return nil end
+      local q = H.itemQuality and H.itemQuality[id] or 1
+      local col = ({ [4] = "ffa335ee", [5] = "ffff8000", [3] = "ff0070dd" })[q] or "ffffffff"
+      return name, "|c" .. col .. "|Hitem:" .. id .. "::|h[" .. name .. "]|h|r", q, 1, 1, "", "", 1, "", 134400
     end,
     GetItemIconByID = function() return 134400 end,
     GetDetailedItemLevelInfo = function() return 20 end,
@@ -495,7 +504,7 @@ function H.installAPI(opts)
     player = "Testy", realm = "Forever", guild = opts.guild == false and nil or (opts.guild or "Land of Make Believe"),
     level = 12, money = 123456, zone = "Elwynn Forest", faction = "Alliance", combat = false, encounter = false,
     instanceType = "none", trial = false, lockdown = false,
-    skills = { { "Professions", true, 0, 0 }, { "Skinning", false, 75, 150 }, { "Leatherworking", false, 60, 150 },
+    skills = opts.skills or { { "Professions", true, 0, 0 }, { "Skinning", false, 75, 150 }, { "Leatherworking", false, 60, 150 },
       { "Secondary Skills", true, 0, 0 }, { "Cooking", false, 40, 75 }, { "Swords", false, 60, 60 } },
   }
 end

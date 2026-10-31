@@ -7,7 +7,7 @@ local Tab = {}
 ns.CraftersTab = Tab
 
 local COL = { name = 270, prof = 110 }
-Tab.view = { search = "", prof = nil, onlineOnly = false }
+Tab.view = { search = "", prof = nil, onlineOnly = false, sort = "name", desc = false }
 
 local function entryIcon(item)
   if item.kind == "i" then
@@ -154,6 +154,24 @@ function Tab.CycleProf()
   UI.Refresh("crafters")
 end
 
+-- Search() returns items A to Z; other orders are applied here.
+function Tab.SortItems(items, view)
+  local key, desc = view.sort or "name", view.desc
+  if key == "name" and not desc then return items end
+  if key == "prof" then
+    W.SortRows(items, function(it) return Crafting.NameOf(it.prof) end, desc, "name")
+  elseif key == "crafters" then
+    W.SortRows(items, function(it)
+      local on = 0
+      for _, c in ipairs(it.crafters or {}) do if Crafting.IsOnline(c) then on = on + 1 end end
+      return on * 1000 + #(it.crafters or {})
+    end, desc, "name")
+  else
+    W.SortRows(items, "name", desc)
+  end
+  return items
+end
+
 UI.RegisterTab({
   id = "crafters", label = "Crafters", order = 30,
   build = function(parent)
@@ -177,17 +195,15 @@ UI.RegisterTab({
     p.count = W.Text(p, "narrow", 11, "muted", "RIGHT")
     p.count:SetPoint("TOPRIGHT", 0, -5)
 
-    -- column headers
-    local head = CreateFrame("Frame", nil, p)
-    head:SetPoint("TOPLEFT", 0, -30)
-    head:SetPoint("TOPRIGHT", 0, -30)
-    head:SetHeight(18)
-    local function h(text, x)
-      local fs = W.Text(head, "narrow", 11, "gold")
-      fs:SetPoint("LEFT", x, 0)
-      fs:SetText(text)
-    end
-    h("Item", 26); h("Profession", COL.name); h("Crafters (online first)", COL.name + COL.prof)
+    -- column headers (click to sort)
+    p.head = W.SortHeader(p, {
+      { key = "name", label = "Item", x = 26, w = COL.name - 30, tip = "Sort by item name (A to Z, click again for Z to A)." },
+      { key = "prof", label = "Profession", x = COL.name, w = COL.prof - 6, tip = "Sort by profession, then item name." },
+      { key = "crafters", label = "Crafters (online first)", x = COL.name + COL.prof, w = 200, desc = true,
+        tip = "Sort by how many crafters are online right now, then how many there are in all." },
+    }, Tab.view, function() UI.Refresh("crafters") end)
+    p.head:SetPoint("TOPLEFT", 0, -30)
+    p.head:SetPoint("TOPRIGHT", 0, -30)
     local div = W.Divider(p)
     div:SetPoint("TOPLEFT", 0, -49)
     div:SetPoint("TOPRIGHT", 0, -49)
@@ -212,6 +228,7 @@ UI.RegisterTab({
   end,
   refresh = function(p)
     local items, missing = Crafting.Search(Tab.view)
+    Tab.SortItems(items, Tab.view)
     p.list:SetItems(items)
     p.profBtn.label:SetText(Tab.view.prof and Crafting.NameOf(Tab.view.prof) or "All professions")
     p.profBtn:SetActive(Tab.view.prof ~= nil)

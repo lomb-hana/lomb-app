@@ -2,14 +2,17 @@
 local ADDON_NAME, ns = ...
 
 ns.name = ADDON_NAME
-ns.version = "0.9.3"
+ns.version = "0.9.4"
 ns.PROTOCOL = 1          -- bump when the sync message format changes
 ns.PREFIX = "LOMBC"      -- addon message prefix (max 16 chars)
 ns.modules = {}
 
 _G.LOMBCompanion = ns    -- handy for /dump and for the future data module
 
+ns.errors = { n = 0 }      -- counted for /lomb test
 local function report(err)
+  ns.errors.n = ns.errors.n + 1
+  ns.errors.last = err
   local handler = geterrorhandler and geterrorhandler()
   if handler then handler(err) else print(err) end
 end

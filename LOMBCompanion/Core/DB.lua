@@ -31,6 +31,7 @@ local DEFAULTS = {
     cardPinned = false,
     windowPoint = nil,
     lastTab = "roster",
+    tourDone = false,        -- the welcome tour was shown (or skipped) once
     minimap = { hide = false, angle = 215 },
     debug = false,
   },

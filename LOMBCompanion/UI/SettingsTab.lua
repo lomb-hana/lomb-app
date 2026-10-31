@@ -19,7 +19,7 @@ local OPTIONS = {
     tip = "Item and spell IDs of what you can make, read when you open a profession window. Off = guildmates won't see you as a crafter.",
     after = function() ns.Shared.MarkDirty("rc") end },
   { key = "shareActivity", label = "Share my news and leaderboard stats",
-    tip = "Level-ups, rare kills, new recipes and dungeon clears for the News tab; kills, rares and hours played " ..
+    tip = "Level-ups, rare kills, new recipes, dungeon clears, epic loot and your first mount for the News tab; kills, rares and hours played " ..
       "for the Leaderboard. Off = you're left out of both (your roster level still shows).",
     after = function() ns.Shared.MarkDirty("st"); ns.Shared.MarkDirty("nw") end },
   { key = "shareRares", label = "Tell guildmates when I spot a rare",
@@ -108,7 +108,7 @@ UI.RegisterTab({
     -- right column: data + actions
     local box = W.Panel(p, "panel", "border")
     box:SetPoint("TOPRIGHT", 0, 0)
-    box:SetSize(200, 250)
+    box:SetSize(200, 300)
     local t = W.SectionTitle(box, "Your data")
     t:SetPoint("TOPLEFT", 10, -8)
     p.stats = W.Text(box, "narrow", 11, "text")
@@ -131,6 +131,13 @@ UI.RegisterTab({
       UI.frame:ClearAllPoints(); UI.frame:SetPoint("CENTER")
     end)
     b1:SetPoint("BOTTOMLEFT", 10, 40)
+    b1.tip = "Put the window, bestiary card and rare alerts back in their default spots."
+    local b3 = W.Button(box, "Show welcome tour", 180, 22, function() ns.Tour.Start() end)
+    b3:SetPoint("BOTTOMLEFT", 10, 124)
+    b3.tip = "The four-step introduction you saw the first time (also /lomb tour)."
+    local b4 = W.Button(box, "Run self-test", 180, 22, function() ns.SelfTest.Run() end)
+    b4:SetPoint("BOTTOMLEFT", 10, 96)
+    b4.tip = "Same as /lomb test: checks the roster, addon channel, calendar and data, then shows a report you can copy."
     local b0 = W.Button(box, "Preview a rare alert", 180, 22, function()
       ns.RareToast.Show({ n = 0, nm = "Mother Fang", lv = 10, cl = "rare", z = "Elwynn Forest", x = 62, y = 79,
         by = ns.playerKey, t = time() })
@@ -147,6 +154,7 @@ UI.RegisterTab({
         end)
     end)
     b2:SetPoint("BOTTOMLEFT", 10, 12)
+    b2.tip = "Deletes the bestiary saved on this computer only. You'll be asked first."
     b2.label:SetTextColor(W.rgba("bad"))
     return p
   end,
@@ -157,7 +165,13 @@ UI.RegisterTab({
       mobs = mobs + 1
       for _ in pairs(m.rec or {}) do recs = recs + 1 end
     end
-    local kb = math.floor(ns.DB.ApproxSize(ns.db) / 1024 + 0.5)
+    -- walking the whole saved data takes ~0.1 s with a big bestiary, so only redo it every 30 s
+    -- (refresh runs on every checkbox click)
+    local now = GetTime()
+    if not p.sizeAt or now - p.sizeAt > 30 then
+      p.sizeKB, p.sizeAt = math.floor(ns.DB.ApproxSize(ns.db) / 1024 + 0.5), now
+    end
+    local kb = p.sizeKB
     p.stats:SetText(("Creatures known: |cffffffff%d|r\nGuild records: |cffffffff%d|r\nSaved size: |cffffffff~%d KB|r\nAccount: |cffffffff%s|r"):format(
       mobs, recs, kb, ns.Compat.IsRestrictedAccount() and "trial (receive-only)" or "full"))
   end,

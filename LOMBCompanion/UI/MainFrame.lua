@@ -165,9 +165,11 @@ function UI.Create()
     ns.Roster.Request()
     UI.Select(UI.current or ns.db.settings.lastTab or "roster")
     UI.UpdateFooter()
+    if ns.Tour then ns.After(0, function() ns.SafeCall(ns.Tour.MaybeStart) end) end
   end)
   f:SetScript("OnHide", function()
     if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE) end
+    if ns.Tour and ns.Tour.IsShown() then ns.Tour.Stop() end   -- ESC mid-tour counts as seen
   end)
   UI.frame = f
   ns.Every(2, function() if f:IsShown() then UI.UpdateFooter() end end)

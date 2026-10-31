@@ -115,6 +115,17 @@ local function updateAttRow(row, item)
 end
 
 -- officer button on a row: mark absent / present, or undo a fix
+-- attendance order: as recorded (present first, most present first) until a header is clicked
+Tab.attView = { sort = nil, desc = false }
+function Tab.SortAtt(rows)
+  local v = Tab.attView
+  if not v.sort then return rows end
+  local copy = {}
+  for i, r in ipairs(rows) do copy[i] = r end
+  if v.sort == "name" then return W.SortRows(copy, function(r) return C.ShortName(r.name or "") end, v.desc) end
+  return W.SortRows(copy, function(r) if r.present == false then return nil end return r.pct end, v.desc, "name")
+end
+
 function Tab.ToggleRow(item)
   if not item or not view.selected then return end
   local mode = item.present and "remove" or "add"
@@ -215,8 +226,15 @@ UI.RegisterTab({
     p.status:SetPoint("TOPLEFT", 12, -96)
     p.status:SetPoint("RIGHT", -12, 0)
     p.status:SetWordWrap(true)
+    p.attHead = W.SortHeader(right, {
+      { key = "name", label = "Name", x = 6, w = 140, tip = "Sort by name (click again for Z to A)." },
+      { key = "pct", label = "Present", x = 150, w = 64, justify = "RIGHT", desc = true,
+        tip = "Sort by how much of the event (or of all events, in the summary) they were there for." },
+    }, Tab.attView, function() UI.Refresh("events") end)
+    p.attHead:SetPoint("TOPLEFT", 8, -126)
+    p.attHead:SetPoint("RIGHT", -4, 0)
     p.att = W.List(right, 20, createAttRow, updateAttRow)
-    p.att:SetPoint("TOPLEFT", 8, -128)
+    p.att:SetPoint("TOPLEFT", 8, -146)
     p.att:SetPoint("BOTTOMRIGHT", -4, 36)
     p.addBox = W.SearchBox(right, 180, "Add a guildmate", function(text) view.add = text end)
     p.addBox:SetPoint("BOTTOMLEFT", 12, 8)
@@ -262,7 +280,8 @@ UI.RegisterTab({
       p.meta:SetText("Present = seen in the organizer's group at least once, plus officer fixes.")
       p.section:SetText("Members")
       p.status:SetText(#rows == 0 and "Nothing recorded yet." or "")
-      p.att:SetItems(rows)
+      p.att:SetItems(Tab.SortAtt(rows))
+      p.attHead:SetShown(#rows > 1)
       p.addBox:Hide(); p.addBtn:Hide(); p.foot:Hide()
       return
     end
@@ -279,6 +298,7 @@ UI.RegisterTab({
       p.section:SetText("Attendance")
       p.status:SetText("Pick an event on the left.")
       p.att:SetItems({})
+      p.attHead:Hide()
       p.addBox:Hide(); p.addBtn:Hide(); p.foot:Hide()
       return
     end
@@ -291,7 +311,8 @@ UI.RegisterTab({
     local a = Ev.Attendance(rec.k)
     p.section:SetText(a.present > 0 and ("Attendance  (%d)"):format(a.present) or "Attendance")
     p.status:SetText(Tab.StatusText(rec, a))
-    p.att:SetItems(a.rows)
+    p.att:SetItems(Tab.SortAtt(a.rows))
+    p.attHead:SetShown(#a.rows > 1)
     local past = rec.start - Ev.EARLY <= time()
     p.addBox:SetShown(officer and past and rec.ct == "GUILD_EVENT")
     p.addBtn:SetShown(officer and past and rec.ct == "GUILD_EVENT")

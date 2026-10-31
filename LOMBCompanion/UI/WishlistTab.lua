@@ -5,7 +5,7 @@ local T, W, UI = ns.Theme, ns.Widgets, ns.UI
 local Tab = {}
 ns.WishTab = Tab
 
-Tab.view = { filter = "all", addKind = "n", wishSearch = "" }
+Tab.view = { filter = "all", addKind = "n", wishSearch = "", sort = "t", desc = true }
 local view = Tab.view
 
 local function WL() return ns.Wishlist end
@@ -107,6 +107,21 @@ local function updateWishRow(row, r)
   row.del:SetShown(r.mine)
 end
 
+-- WL.All returns newest first; other orders are applied here.
+function Tab.Sort(rows, key, desc)
+  if not key or (key == "t" and desc) then return rows end
+  if key == "who" then
+    W.SortRows(rows, function(r) return C.ShortName(r.owner or "") end, desc, "label")
+  elseif key == "label" then
+    W.SortRows(rows, "label", desc)
+  elseif key == "kind" then
+    W.SortRows(rows, function(r) return r.kind == "n" and 0 or 1 end, desc, "label")   -- needs first
+  else
+    W.SortRows(rows, key, desc)
+  end
+  return rows
+end
+
 function Tab.SetFilter(f)
   view.filter = f
   UI.Refresh("wishlist")
@@ -149,8 +164,16 @@ UI.RegisterTab({
     local wl = W.Panel(p, "panel", "border")
     wl:SetPoint("TOPLEFT", 0, -26)
     wl:SetPoint("BOTTOMRIGHT", 0, 64)
+    p.head = W.SortHeader(wl, {
+      { key = "kind", label = "Type", x = 4, w = 40, tip = "Needs first, then things to give away (click again to flip)." },
+      { key = "label", label = "Item", x = 66, w = 190, tip = "Sort by item name." },
+      { key = "who", label = "Who", x = 262, w = 100, tip = "Sort by guildmate. Online guildmates come first within a name." },
+      { key = "t", label = "Added", right = 24, w = 60, justify = "RIGHT", desc = true, tip = "Newest first (click again for oldest first)." },
+    }, view, function() UI.Refresh("wishlist") end)
+    p.head:SetPoint("TOPLEFT", 4, -4)
+    p.head:SetPoint("TOPRIGHT", -4, -4)
     p.wishList = W.List(wl, 22, createWishRow, updateWishRow)
-    p.wishList:SetPoint("TOPLEFT", 4, -4)
+    p.wishList:SetPoint("TOPLEFT", 4, -24)
     p.wishList:SetPoint("BOTTOMRIGHT", -4, 4)
     p.wishEmpty = W.Text(wl, "body", 12, "muted", "CENTER")
     p.wishEmpty:SetPoint("TOP", 0, -70)
@@ -192,7 +215,7 @@ UI.RegisterTab({
   end,
   refresh = function(p)
     for k, b in pairs(p.filters) do b:SetActive(view.filter == k) end
-    local rows = WL().All(view.filter, view.wishSearch)
+    local rows = Tab.Sort(WL().All(view.filter, view.wishSearch), view.sort, view.desc)
     p.wishList:SetItems(rows)
     if #rows == 0 then
       p.wishEmpty:SetText(view.filter == "mine"

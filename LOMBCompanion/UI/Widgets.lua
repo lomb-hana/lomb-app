@@ -372,3 +372,142 @@ function W.ItemText(itemID)
   if c and c.hex then return c.hex .. name .. "|r" end
   return name
 end
+
+---------------------------------------------------------------------------
+-- Sortable column headers.
+--   W.SortHeader(parent, cols, view, onSort)
+--   cols = { { key=, label=, x=, w=, justify=, desc=true (first click sorts high-to-low), tip= } }
+--   view.sort / view.desc hold the current choice; clicking a column sorts by it,
+--   clicking it again flips the direction.
+---------------------------------------------------------------------------
+function W.SortHeader(parent, cols, view, onSort)
+  local head = CreateFrame("Frame", nil, parent)
+  head:SetHeight(18)
+  head.buttons = {}
+  for _, col in ipairs(cols) do
+    local b = CreateFrame("Button", nil, head)
+    if col.right then b:SetPoint("RIGHT", -col.right, 0) else b:SetPoint("LEFT", col.x, 0) end
+    b:SetSize(col.w, 18)
+    b.text = W.Text(b, "narrow", 11, "gold", col.justify or "LEFT")
+    b.text:SetPoint("LEFT", 0, 0)
+    b.text:SetPoint("RIGHT", -12, 0)
+    b.text:SetText(col.label)
+    b.arrow = b:CreateTexture(nil, "ARTWORK")
+    b.arrow:SetTexture(ns.Theme.ARROW_DOWN)
+    b.arrow:SetSize(8, 8)
+    if (col.justify or "LEFT") == "LEFT" then
+      b.arrow:SetPoint("LEFT", b.text, "LEFT", math.min((b.text:GetStringWidth() or 0) + 3, col.w - 10), 0)
+    else
+      b.arrow:SetPoint("RIGHT", b, "RIGHT", -1, 0)
+    end
+    b.arrow:SetVertexColor(rgba("gold"))
+    b.col = col
+    b:SetScript("OnClick", function()
+      if view.sort == col.key then view.desc = not view.desc else view.sort, view.desc = col.key, col.desc and true or false end
+      head:Refresh()
+      if onSort then onSort(col.key, view.desc) end
+    end)
+    W.Tooltip(b, function(tt)
+      tt:SetText(col.tipTitle or col.label, 1, 1, 1)
+      tt:AddLine(col.tip or ("Click to sort by " .. col.label:lower() .. ", click again to flip the order."), 0.8, 0.78, 0.85, true)
+    end)
+    head.buttons[#head.buttons + 1] = b
+  end
+  function head:Refresh()
+    for _, b in ipairs(self.buttons) do
+      local on = view.sort == b.col.key
+      b.arrow:SetShown(on)
+      -- arrow-down.tga points down: high-to-low; flipped for low-to-high
+      if view.desc then b.arrow:SetTexCoord(0, 1, 0, 1) else b.arrow:SetTexCoord(0, 1, 1, 0) end
+      b.text:SetTextColor(rgba(on and "text" or "gold"))
+    end
+  end
+  head:Refresh()
+  return head
+end
+
+-- Sort rows by row[key] (or key(row) when it's a function). Missing values go
+-- last either way; ties keep a stable order by `tie` (a field name).
+function W.SortRows(rows, key, desc, tie)
+  local get = type(key) == "function" and key or function(r) return r[key] end
+  local cache = {}
+  for i, r in ipairs(rows) do
+    local v = get(r)
+    if type(v) == "string" then v = v:lower() end
+    cache[r] = { v = v, i = i, t = tie and tostring(r[tie] or ""):lower() or "" }
+  end
+  table.sort(rows, function(a, b)
+    local x, y = cache[a], cache[b]
+    if x.v ~= y.v then
+      if x.v == nil then return false end
+      if y.v == nil then return true end
+      if type(x.v) ~= type(y.v) then return type(x.v) == "number" end
+      if desc then return x.v > y.v end
+      return x.v < y.v
+    end
+    if x.t ~= y.t then return x.t < y.t end
+    return x.i < y.i
+  end)
+  return rows
+end
+
+---------------------------------------------------------------------------
+-- Copy window: a small box with read-only text the player can select all of and
+-- copy (Ctrl+A is done for them, then Ctrl+C). Used by /lomb test.
+---------------------------------------------------------------------------
+function W.CopyWindow(title, text, hint)
+  local d = W.copyWin
+  if not d then
+    d = W.Panel(UIParent, "bg", "accent", "LOMBCompanionCopy")
+    d:SetSize(520, 360)
+    d:SetPoint("CENTER", 0, 40)
+    d:SetFrameStrata("DIALOG")
+    d:SetToplevel(true)
+    d:EnableMouse(true)
+    W.Movable(d, function() return nil end, function() end)
+    d.title = W.Text(d, "title", 16, "gold")
+    d.title:SetPoint("TOPLEFT", 12, -10)
+    d.title:SetPoint("RIGHT", -40, 0)
+    d.close = W.IconButton(d, "x", "Close (Esc)", function() d:Hide() end, 20)
+    d.close:SetPoint("TOPRIGHT", -8, -8)
+    d.hint = W.Text(d, "narrow", 11, "muted")
+    d.hint:SetPoint("BOTTOMLEFT", 12, 10)
+    d.hint:SetPoint("BOTTOMRIGHT", -110, 10)
+    d.select = W.Button(d, "Select all", 90, 22, function() d.edit:SetFocus(); d.edit:HighlightText() end)
+    d.select:SetPoint("BOTTOMRIGHT", -10, 6)
+    d.select.tip = "Selects the whole report. Then press Ctrl+C to copy it."
+    local box = W.Panel(d, "panel", "border")
+    box:SetPoint("TOPLEFT", 10, -34)
+    box:SetPoint("BOTTOMRIGHT", -10, 34)
+    local scroll = CreateFrame("ScrollFrame", nil, box)
+    scroll:SetPoint("TOPLEFT", 6, -6)
+    scroll:SetPoint("BOTTOMRIGHT", -6, 6)
+    local edit = CreateFrame("EditBox", nil, scroll)
+    edit:SetMultiLine(true)
+    edit:SetAutoFocus(false)
+    edit:SetFont(ns.Theme.fonts.narrow, 12, "")
+    edit:SetTextColor(rgba("text"))
+    edit:SetWidth(484)
+    edit:SetScript("OnEscapePressed", function() d:Hide() end)
+    -- read-only: typing puts the report back
+    edit:SetScript("OnTextChanged", function(self, user) if user then self:SetText(d.text or ""); self:HighlightText() end end)
+    scroll:SetScrollChild(edit)
+    scroll:EnableMouseWheel(true)
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+      local max = math.max(0, (edit:GetHeight() or 0) - (self:GetHeight() or 0))
+      self:SetVerticalScroll(math.min(max, math.max(0, self:GetVerticalScroll() - delta * 36)))
+    end)
+    d.edit, d.scroll = edit, scroll
+    if UISpecialFrames then table.insert(UISpecialFrames, "LOMBCompanionCopy") end
+    W.copyWin = d
+  end
+  d.text = text or ""
+  d.title:SetText(title or "")
+  d.hint:SetText(hint or "Click Select all, then Ctrl+C to copy.")
+  d.edit:SetText(d.text)
+  d.scroll:SetVerticalScroll(0)
+  d:Show()
+  d.edit:SetFocus()
+  d.edit:HighlightText()
+  return d
+end

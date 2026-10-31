@@ -29,6 +29,10 @@ end
 -- `away` = true when the change happened while we were logged off (first scan
 -- of the session), so its time is only "sometime since your last login".
 Roster.scansThisSession = 0
+-- GUILD_WELCOMEBACK(name, daysAway, away): a member came back online after this
+-- many days offline. We only trust an offline sighting from the last week.
+Roster.WELCOME_BACK_DAYS = 14
+Roster.WELCOME_BACK_TRUST = 7 * 86400
 
 function Roster.Scan()
   local g = ns.DB.Guild()
@@ -63,7 +67,21 @@ function Roster.Scan()
         if seeded and type(level) == "number" and type(mem.level) == "number" and level > mem.level then
           changes[#changes + 1] = { "GUILD_LEVELUP", full, level, mem.level, classFile, away }
         end
-        if online then mem.seen = time() end
+        if online then
+          mem.seen = time()
+          -- back after a long time away? (we saw them offline recently enough to know)
+          local off = mem.off
+          if seeded and type(off) == "table" and type(off.L) == "number" and type(off.at) == "number" then
+            local now = time()
+            local gone = (away and off.at or now) - off.L
+            if gone >= Roster.WELCOME_BACK_DAYS * 86400 and now - off.at <= Roster.WELCOME_BACK_TRUST then
+              changes[#changes + 1] = { "GUILD_WELCOMEBACK", full, math.floor(gone / 86400), away }
+            end
+          end
+          mem.off = nil
+        elseif row.lastOnlineHours then
+          mem.off = { L = time() - row.lastOnlineHours * 3600, at = time() }
+        end
         mem.level, mem.class = level, classFile
         g.members[full] = mem
         row.lastSeen = mem.seen
