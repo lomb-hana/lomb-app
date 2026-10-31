@@ -1,16 +1,18 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4 and v0.6.13 is 0.9.5**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5 and v0.6.14 is 0.9.6**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
 
-## Unreleased (branch theme-lomb): storybook look
+## v0.6.14 (in-game 0.9.6): storybook look, 2026-10-30
 
-Not released. Built on the theme-lomb branch for review.
+Pre-release, untested in game. One new, optional look for the Land of Make Believe. Nothing else changes, and the clean look stays the default.
 
 - **Storybook look (optional).** Settings > Look > "Storybook look (Land of Make Believe)" switches the window to a night-sky violet and gold palette, with a parchment title bar, a faint starfield, gold flourishes, a moon divider under the sidebar, a small icon on each sidebar tab, and friendlier lines when a list is empty. The interface reloads to redraw every window. Untick it to go back to the clean look, which is still the default.
 - Lists stay on the dark background in both looks, so class and item-quality colours stay readable.
 - All art (parchment, stars, flourish, divider, 13 tab icons) is drawn by `tools/make_storybook.py` and shipped in `Media/Storybook/`. No Blizzard art is copied. Text uses the game's own fonts, so no font files are shipped.
+- Screenshots: every full-window shot refreshed for 0.9.6 (the version in the title bar, and Settings now shows the Look section), plus a new `docs/screenshots/theme/` folder with six storybook previews. The README has a new Storybook look section.
+- Fixed: the v0.6.12 entry below listed the wrong welcome tour steps.
 
 ## v0.6.13 (in-game 0.9.5): polish pass, 2026-10-30
 
@@ -29,7 +31,7 @@ Pre-release, untested in game. No new features. This release cleans up how the w
 Pre-release, untested in game. Everything here is about launch day on November 4: checking that the addon works, helping new people find their way, and a few more kinds of news.
 
 - **`/lomb test` self-test.** Checks addon errors this session, the game functions LOMB needs, the guild roster, the addon channel, a sync echo with a guildmate (if one with the addon is online), the calendar clock, skill lines, the bundled data (including that every known last boss is in it), saved variables and whether you're in combat. Each line is PASS, WARN or FAIL. The report opens in a window with a **Select all** button so it can be copied into Discord. Settings has a "Run self-test" button too.
-- **Welcome tour.** Four short steps the first time you open the window: the roster, the tabs, Ask LOMB and Settings. Skip, Back and Next; ESC also closes it, and it won't show again either way. Reopen it any time from Settings ("Show welcome tour") or with `/lomb tour`.
+- **Welcome tour.** Four short steps the first time you open the window: a welcome (what LOMB is and that nothing leaves the guild), the tabs down the left, choosing what you share in Settings, and `/lomb test` if something looks wrong. Skip, Back and Next; ESC also closes it, and it won't show again either way. Reopen it any time from Settings ("Show welcome tour") or with `/lomb tour`.
 - **New News lines and filters:**
   - **Epic loot:** "X looted the epic [item]", from loot chat. Won rolls count; crafted items and quest rewards don't. The same item on the same day only posts once.
   - **First mount:** "X learned to ride: first mount!", when the riding skill goes from none to learned. Riding learned before installing LOMB doesn't post.

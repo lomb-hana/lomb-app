@@ -6,9 +6,9 @@ LOMB Companion is a free in-game addon made just for the **Land of Make Believe 
 
 **New here? Read the [install guide](docs/INSTALL.md).** It takes two minutes, and `/lomb test` tells you if everything works.
 
-It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap.
+It has its own LOMB look instead of the standard Blizzard-style frames, and it lives in one window you can open from the minimap. There's also an optional [storybook look](#storybook-look) for the Land of Make Believe.
 
-> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and later patches up to the `v0.6.9` forgiving Ask LOMB as in-game 0.9.1, the `v0.6.11` guild activity feed as in-game 0.9.3 the `v0.6.12` launch prep (self-test, welcome tour, more news, sortable lists) as in-game 0.9.4 and the `v0.6.13` polish pass (resizable window, tooltips everywhere, faster Bestiary) as in-game 0.9.5; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
+> **Status:** v0.1–v0.8 are built and pass their offline tests, including v0.6 Quests & Items (released as `v0.6.0`, in-game version 0.8.2, with the `v0.6.1` quest chain patch as in-game 0.8.3 and later patches up to the `v0.6.9` forgiving Ask LOMB as in-game 0.9.1, the `v0.6.11` guild activity feed as in-game 0.9.3 the `v0.6.12` launch prep (self-test, welcome tour, more news, sortable lists) as in-game 0.9.4 the `v0.6.13` polish pass (resizable window, tooltips everywhere, faster Bestiary) as in-game 0.9.5 and the `v0.6.14` optional storybook look as in-game 0.9.6; see the [changelog](CHANGELOG.md)). They are awaiting their first in-game test when WoW: Forever launches on Nov 4, 2026. v0.9 raid tools wait for the live game.
 
 > ☕ Quest, item and vendor data comes from [ForeverDB.net](https://foreverdb.net). Their help keeps this project alive, so if you can, [support ForeverDB.net](https://buymeacoffee.com/foreverdb).
 
@@ -99,6 +99,22 @@ Mock-up of the bestiary with ForeverDB.net sections (v0.6 shows quest and boss l
 
 ![Bestiary with ForeverDB sections](docs/screenshots/bestiary/05-bestiary-tab-with-foreverdb.png)
 
+### Storybook look
+
+New in v0.6.14 (in-game 0.9.6). Tick **Settings > Look > Storybook look (Land of Make Believe)** to switch the window to a night-sky violet and gold style with a parchment title bar, a faint starfield, gold flourishes, a moon divider, a small icon on each tab and storybook lines when a page is empty. The interface reloads to redraw. Untick it to go back; the clean look above is still the default. Lists stay on a dark background either way, so class and item colours stay easy to read. All the art is made for this addon; no Blizzard art is copied.
+
+These are previews with sample data, like the rest of the screenshots.
+
+![The clean look and the storybook look side by side](docs/screenshots/theme/00-clean-vs-storybook.png)
+
+| Roster | News |
+|---|---|
+| ![Roster in the storybook look](docs/screenshots/theme/01-roster.png) | ![News in the storybook look](docs/screenshots/theme/03-news.png) |
+| **Bestiary** | **Settings > Look** |
+| ![Bestiary in the storybook look](docs/screenshots/theme/02-bestiary.png) | ![Settings with the Storybook look box ticked](docs/screenshots/theme/05-settings-look.png) |
+
+![Storybook empty pages for the Bestiary and News](docs/screenshots/theme/04-empty-states.png)
+
 ---
 
 ## What it does
@@ -168,7 +184,7 @@ Everything opens from one movable window with tabs, a minimap button, or the `/l
   - Three switches in Settings: tell guildmates, show alerts (both on), play a sound (off). "Preview a rare alert" shows what one looks like.
 
 ### v0.6: Quests & Items (built, awaiting in-game test)
-Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**) the loot browser `v0.6.7` (in-game **0.8.9**), the clean-up `v0.6.8` (in-game **0.9.0**), the forgiving Ask LOMB patch `v0.6.9` (in-game **0.9.1**), `v0.6.10` (in-game **0.9.2**, superseded), the guild activity feed `v0.6.11` (in-game **0.9.3**), the launch prep release `v0.6.12` (in-game **0.9.4**) and the polish pass `v0.6.13` (in-game **0.9.5**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
+Released as `v0.6.0` (in-game version **0.8.2**), with the quest chain patch `v0.6.1` (in-game **0.8.3**), the storyline and quest progress patch `v0.6.2` (in-game **0.8.4**), the guides release `v0.6.3` (in-game **0.8.5**), the Ask LOMB question box `v0.6.4` (in-game **0.8.6**) the local-time, minimap and saved-history patch `v0.6.5` (in-game **0.8.7**) and the item-row patch `v0.6.6` (in-game **0.8.8**) the loot browser `v0.6.7` (in-game **0.8.9**), the clean-up `v0.6.8` (in-game **0.9.0**), the forgiving Ask LOMB patch `v0.6.9` (in-game **0.9.1**), `v0.6.10` (in-game **0.9.2**, superseded), the guild activity feed `v0.6.11` (in-game **0.9.3**), the launch prep release `v0.6.12` (in-game **0.9.4**) the polish pass `v0.6.13` (in-game **0.9.5**) and the storybook look `v0.6.14` (in-game **0.9.6**). The addon's own version runs ahead of the tags because v0.7 and v0.8 shipped first. Uses **ForeverDB.net** data with their approval (see [Data & credits](#data--credits)). Every place it appears says **"Data from ForeverDB.net"** with https://foreverdb.net as copyable text.
 - **Quests & Items tab** with views for Quests, Items, Vendors, Recipes and Loot (called Dungeons before v0.6.7), plus the guide views, each with search and a detail page.
   - **Quests** for levels 1–30: level and minimum level, faction, zone, who starts it and where to turn it in (with map spots), and the quest chain (comes after / leads to; click to follow, "<" to go back). Filters: this zone, near my level (±3) or a level band, and my faction.
   - **Quest chains (v0.6.1):** a chained quest is tagged "Part 2 of 4" in the list (with a thin violet bar), and the quests of a chain are listed together in chain order, where the chain's first listed quest would be. Same-name quests stay separate lines. Chains that branch are cut into straight lines; a branch keeps counting from the quest it branches off. "of 4+" means the chain carries on past level 30.
@@ -266,6 +282,7 @@ In plain English:
 - **v0.6.8 (in-game 0.9.0):** code clean-up with no behaviour change: unused code removed, shared helpers merged, Ask LOMB's history in its own file, and tidier tests and data tools.
 - **v0.6.11 (in-game 0.9.3):** News is a guild activity feed: level-ups, joins and leaves, rare kills and new recipes as before, plus dungeon and raid clears (one line per group, with a Dungeons filter) and guild events held with their attendance. The profile's "Recent news" panel is back.
 - **v0.6.12 (in-game 0.9.4):** launch prep. `/lomb test` checks that everything works and makes a report you can copy, a four-step welcome tour (reopen it from Settings or with `/lomb tour`), News lines for epic loot, first mounts and welcome backs (14+ days away) with their own filters, and sortable column headers on the Roster, Crafters, Bank, Wishlist and attendance lists. Plus an [install guide](docs/INSTALL.md) and a [launch-day checklist](docs/LAUNCH-CHECKLIST.md).
+- **v0.6.14 (in-game 0.9.6):** an optional storybook look (Settings > Look): a night-sky violet and gold window with a parchment title bar, stars, gold flourishes, tab icons and storybook lines on empty pages. The clean look stays the default.
 - **v0.6.13 (in-game 0.9.5):** polish pass. A resizable window (drag the corner grip; right-click it for the default size), a tooltip on every control and tab, lists that keep their scroll position, clearer empty states, "…" on long names, and a Bestiary tab that refreshes about 4× faster with a big bestiary.
 - **v0.6.10 (in-game 0.9.2):** superseded by v0.6.11 (see the [changelog](CHANGELOG.md)).
 - **v0.6.9 (in-game 0.9.1):** Ask LOMB is much more forgiving: synonyms, short forms, typos, many ways to say a level, "my zone"/"here", and "Did you mean …?" suggestions. Still offline and not an AI.

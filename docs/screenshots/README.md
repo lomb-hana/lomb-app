@@ -16,3 +16,4 @@ The number at the start of each file name is the order the shots were made, so e
 | [`quests-items/`](quests-items/) (9) | Quests & Items: quest, item and recipe pages, quest chains and storylines, and the Loot browser (a dungeon, a whole dungeon, a boss and raids). |
 | [`guides/`](guides/) (7) | Training, gathering, disenchanting, gear sets, zones, battlegrounds and rogue poisons. |
 | [`ask-lomb/`](ask-lomb/) (4) | The Ask LOMB question box: quests, vendors and crafting, dungeons, typos, events and loot. |
+| [`theme/`](theme/) (6) | The optional storybook look (v0.6.14): clean and storybook side by side, the roster, bestiary and news in the storybook look, the storybook empty pages and the Settings > Look switch. |

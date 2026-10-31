@@ -2,7 +2,7 @@
 local ADDON_NAME, ns = ...
 
 ns.name = ADDON_NAME
-ns.version = "0.9.5"
+ns.version = "0.9.6"
 ns.PROTOCOL = 1          -- bump when the sync message format changes
 ns.PREFIX = "LOMBC"      -- addon message prefix (max 16 chars)
 ns.modules = {}
