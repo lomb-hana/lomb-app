@@ -224,8 +224,8 @@ UI.RegisterTab({
     if #rows == 0 then
       p.wishEmpty:SetText(view.filter == "mine"
         and "You haven't added anything yet. Use the line below: what you need, or what you can give away."
-        or "Nothing on the wishlist yet.\n\nAdd what you need or what you can give away below; guildmates see it "
-          .. "here and on item tooltips.")
+        or ns.Theme.Playful("wishlist.none", "Nothing on the wishlist yet.\n\nAdd what you need or what you can give away below; guildmates see it "
+          .. "here and on item tooltips."))
       p.wishEmpty:Show()
     else
       p.wishEmpty:Hide()

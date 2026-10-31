@@ -99,8 +99,8 @@ UI.RegisterTab({
     p.filterBtn:SetActive(f.key ~= nil)
     p.count:SetText(("%d item%s"):format(#items, #items == 1 and "" or "s"))
     if #items == 0 then
-      p.empty:SetText(f.key and "Nothing of that kind yet." or
-        "No news yet.\n\nLevel-ups, rare kills, dungeon clears, new recipes, epic loot, first mounts and guild events show up here as they happen.")
+      p.empty:SetText(f.key and ns.Theme.Playful("news.filter", "Nothing of that kind yet.") or ns.Theme.Playful("news.none",
+        "No news yet.\n\nLevel-ups, rare kills, dungeon clears, new recipes, epic loot, first mounts and guild events show up here as they happen."))
       p.empty:Show()
     else
       p.empty:Hide()

@@ -4,6 +4,14 @@ Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown 
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
 
+## Unreleased (branch theme-lomb): storybook look
+
+Not released. Built on the theme-lomb branch for review.
+
+- **Storybook look (optional).** Settings > Look > "Storybook look (Land of Make Believe)" switches the window to a night-sky violet and gold palette, with a parchment title bar, a faint starfield, gold flourishes, a moon divider under the sidebar, a small icon on each sidebar tab, and friendlier lines when a list is empty. The interface reloads to redraw every window. Untick it to go back to the clean look, which is still the default.
+- Lists stay on the dark background in both looks, so class and item-quality colours stay readable.
+- All art (parchment, stars, flourish, divider, 13 tab icons) is drawn by `tools/make_storybook.py` and shipped in `Media/Storybook/`. No Blizzard art is copied. Text uses the game's own fonts, so no font files are shipped.
+
 ## v0.6.13 (in-game 0.9.5): polish pass, 2026-10-30
 
 Pre-release, untested in game. No new features. This release cleans up how the window looks and behaves, and makes the Bestiary faster.

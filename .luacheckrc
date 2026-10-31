@@ -13,6 +13,7 @@ globals = {
 }
 
 read_globals = {
+  "ReloadUI",
   -- Lua extras provided by WoW
   "wipe", "Ambiguate", "geterrorhandler", "date", "time", "strsplit", "strtrim", "tinsert", "tremove", "unpack", "bit",
   -- namespaces

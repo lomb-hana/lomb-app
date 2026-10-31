@@ -32,7 +32,8 @@ local DEFAULTS = {
     windowPoint = nil,
     windowSize = nil,        -- { w, h } when resized with the corner grip
     lastTab = "roster",
-    tourDone = false,        -- the welcome tour was shown (or skipped) once
+    tourDone = false,
+    theme = "clean",         -- "clean" or "storybook" (Settings > Look; applied on load)        -- the welcome tour was shown (or skipped) once
     minimap = { hide = false, angle = 215 },
     debug = false,
   },

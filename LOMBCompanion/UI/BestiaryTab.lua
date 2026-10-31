@@ -111,9 +111,9 @@ UI.RegisterTab({
     end
     p.count:SetText(text)
     if #items == 0 then
-      p.empty:SetText(search ~= "" and ("No creatures match \"" .. search .. "\".")
-        or f.key ~= "all" and "Nothing matches this filter yet. Right-click the filter to go back."
-        or "Nothing here yet. Creatures you target, fight or kill show up here, and so do the ones guildmates share.")
+      p.empty:SetText(search ~= "" and ns.Theme.Playful("bestiary.search", "No creatures match \"" .. search .. "\".")
+        or f.key ~= "all" and ns.Theme.Playful("bestiary.filter", "Nothing matches this filter yet. Right-click the filter to go back.")
+        or ns.Theme.Playful("bestiary.none", "Nothing here yet. Creatures you target, fight or kill show up here, and so do the ones guildmates share."))
       p.empty:Show()
     else
       p.empty:Hide()
