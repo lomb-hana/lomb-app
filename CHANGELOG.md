@@ -1,8 +1,18 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5 and v0.6.14 is 0.9.6**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6 and v0.6.15 is 0.9.7**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.15 (in-game 0.9.7): storybook by default, 2026-10-30
+
+Pre-release, untested in game. The storybook look is now the default.
+
+- **Storybook is the default.** New installs open in the storybook look.
+- **Settings > Look is a drop-down.** "Window look" offers **Storybook (default)** and **Clean**, replacing the old checkbox. Picking one reloads the interface (picking the look you already have does nothing), and the choice is remembered.
+- **Upgrading from 0.9.6.** 0.9.6 saved "clean" for everyone who never ticked the box, so anyone who hadn't chosen a look gets the storybook look. From now on, picking Clean in the drop-down is kept across reloads and updates. A saved value the addon doesn't recognize also falls back to storybook.
+- **Screenshots.** Every README screenshot is redrawn in the storybook look for 0.9.7. The Settings shot shows the Look drop-down open. `docs/screenshots/theme/` is down to a storybook-vs-clean comparison and the storybook empty pages.
+- Tests: new checks for the fresh-install default, the 0.9.6 upgrade (untouched → storybook, chosen Clean → kept) and the drop-down (labels, open/close, reload only when the look changes).
 
 ## v0.6.14 (in-game 0.9.6): storybook look, 2026-10-30
 

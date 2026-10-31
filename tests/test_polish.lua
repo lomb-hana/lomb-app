@@ -146,7 +146,7 @@ H.test("the bestiary page keeps its place for the same creature", function()
 end)
 
 H.test("the bestiary list says why it is empty", function()
-  local ns = setup()
+  local ns = H.boot({ db = { settings = { theme = "clean", themeChosen = true } } })   -- the plain lines
   ns.UI.Open("bestiary")
   local p
   for _, t in ipairs(ns.UI.tabs) do if t.id == "bestiary" then p = t.panel end end

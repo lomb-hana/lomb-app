@@ -93,6 +93,66 @@ function W.IconButton(parent, glyph, tip, onClick, size)
   return b
 end
 
+-- Drop-down: a label, then a button showing the current choice; clicking opens a small list.
+-- choices = { { value = ..., text = ... }, ... }; get() -> value, set(value)
+function W.Dropdown(parent, label, choices, get, set, tip, w)
+  local f = CreateFrame("Frame", nil, parent)
+  f:SetSize(400, 22)
+  f.text = W.Text(f, "body", 12, "text")
+  f.text:SetPoint("LEFT", 0, 0)
+  f.text:SetText(label)
+  local function textOf(v)
+    for _, c in ipairs(choices) do if c.value == v then return c.text end end
+    return tostring(v)
+  end
+  local b = W.Button(f, "", w or 170, 20)
+  b:SetPoint("LEFT", f.text, "RIGHT", 10, 0)
+  b.label:ClearAllPoints()
+  b.label:SetPoint("LEFT", 8, 0)
+  b.label:SetJustifyH("LEFT")
+  b.arrow = b:CreateTexture(nil, "ARTWORK")
+  b.arrow:SetSize(10, 10)
+  b.arrow:SetPoint("RIGHT", -6, 0)
+  b.arrow:SetTexture(T.ARROW_DOWN)
+  b.arrow:SetVertexColor(rgba("accent"))
+  b.tip = tip
+  f.button = b
+  local menu = W.Panel(b, "panel2", "accent")
+  menu:SetPoint("TOPLEFT", b, "BOTTOMLEFT", 0, -2)
+  menu:SetSize(w or 170, #choices * 20 + 4)
+  menu:SetFrameStrata("DIALOG")
+  menu:Hide()
+  f.menu, f.items = menu, {}
+  for i, c in ipairs(choices) do
+    local it = W.Button(menu, c.text, (w or 170) - 4, 20, function()
+      menu:Hide()
+      local old = get()
+      set(c.value)
+      f:Refresh()
+      if f.onChange and old ~= c.value then f.onChange(c.value) end
+    end)
+    it:SetPoint("TOPLEFT", 2, -2 - (i - 1) * 20)
+    it.label:ClearAllPoints()
+    it.label:SetPoint("LEFT", 6, 0)
+    it.label:SetJustifyH("LEFT")
+    it.tip = c.tip or tip
+    it.value = c.value
+    f.items[i] = it
+  end
+  b:SetScript("OnClick", function()
+    if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON) end
+    menu:SetShown(not menu:IsShown())
+  end)
+  f:SetScript("OnHide", function() menu:Hide() end)
+  function f:Refresh()
+    local v = get()
+    b.label:SetText(textOf(v))
+    for _, it in ipairs(f.items) do it:SetActive(it.value == v) end
+  end
+  f:Refresh()
+  return f
+end
+
 -- Custom checkbox: square + label. get() -> bool, set(bool)
 function W.Check(parent, label, get, set, tip)
   local b = CreateFrame("Button", nil, parent)

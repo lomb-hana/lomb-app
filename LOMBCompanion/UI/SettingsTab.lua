@@ -67,14 +67,18 @@ local OPTIONS = {
   { key = "cardLocked", label = "Lock card position",
     tip = "Stops the bestiary card from being dragged by accident." },
   { section = "Look" },
-  { key = "storybook", label = "Storybook look (Land of Make Believe)",
-    tip = "Night sky, gold and parchment, with tab icons and storybook empty pages. "
-      .. "Off is the clean look. Switching reloads the interface.",
-    get = function() return S().theme == "storybook" end,
-    set = function(v) S().theme = v and "storybook" or "clean" end,
+  { key = "theme", dropdown = true, label = "Window look",
+    tip = "Storybook (the default): night sky, gold and parchment, with tab icons and storybook empty pages. "
+      .. "Clean: the plain violet look. Switching reloads the interface.",
+    choices = {
+      { value = "storybook", text = "Storybook (default)",
+        tip = "Land of Make Believe: night sky, gold and parchment, tab icons and storybook empty pages." },
+      { value = "clean", text = "Clean", tip = "The plain dark violet look, with no art." },
+    },
+    set = function(v) S().theme = v; S().themeChosen = true end,
     after = function(v)
       if ns.Theme.look == S().theme then return end
-      W.Confirm((v and "Switch to the storybook look?" or "Switch back to the clean look?")
+      W.Confirm((v == "storybook" and "Switch to the storybook look?" or "Switch to the clean look?")
         .. "\nThe interface reloads to redraw every window.", function() if ReloadUI then ReloadUI() end end)
     end },
   { section = "Other" },
@@ -108,6 +112,16 @@ UI.RegisterTab({
       if o.section then
         local t = W.SectionTitle(body, o.section)
         t:SetPoint("TOPLEFT", 0, -y)
+        y = y + 22
+      elseif o.dropdown then
+        local get = o.get or function() return S()[o.key] end
+        local set = o.set or function(v) S()[o.key] = v end
+        local d = W.Dropdown(body, o.label, o.choices, get, set, o.tip)
+        d.onChange = o.after
+        d:SetPoint("TOPLEFT", 8, -y)
+        d.key = o.key
+        p.checks[#p.checks + 1] = d
+        p.checks[o.key] = d
         y = y + 22
       else
         local get = o.get or function() return S()[o.key] end

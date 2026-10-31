@@ -32,8 +32,9 @@ local DEFAULTS = {
     windowPoint = nil,
     windowSize = nil,        -- { w, h } when resized with the corner grip
     lastTab = "roster",
-    tourDone = false,
-    theme = "clean",         -- "clean" or "storybook" (Settings > Look; applied on load)        -- the welcome tour was shown (or skipped) once
+    tourDone = false,        -- the welcome tour was shown (or skipped) once
+    theme = "storybook",     -- "storybook" (default) or "clean" (Settings > Look; applied on load)
+    themeChosen = false,     -- true once the player picks a look in Settings > Look
     minimap = { hide = false, angle = 215 },
     debug = false,
   },
@@ -69,10 +70,19 @@ local function fill(dst, src)
 end
 DB.Fill = fill
 
+-- The look: storybook is the default (0.9.7+). 0.9.6 saved theme = "clean" for everyone who
+-- never touched the switch, so only a look picked in Settings (themeChosen) is kept; anything
+-- else becomes storybook. A ticked 0.9.6 box ("storybook") stays storybook either way.
+function DB.MigrateTheme(s)
+  if s.theme ~= "clean" and s.theme ~= "storybook" then s.theme = "storybook" end
+  if not s.themeChosen then s.theme = "storybook" end
+end
+
 function DB.Migrate(db)
   db.schema = db.schema or 0
   -- schema 0 -> 1: nothing to convert yet (first release)
   db.schema = DB.SCHEMA
+  DB.MigrateTheme(db.settings)
 end
 
 function DB.Load()

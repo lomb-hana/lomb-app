@@ -77,9 +77,9 @@ T.ARROW_RIGHT = "Interface\\AddOns\\LOMBCompanion\\Media\\arrow-right"   -- our 
 T.ARROW_DOWN = "Interface\\AddOns\\LOMBCompanion\\Media\\arrow-down"
 
 -- ---------------------------------------------------------------- looks
--- Two looks: "clean" (the colours above) and "storybook" (Land of Make Believe: a night
--- sky in violet and gold, a parchment title bar, corner flourishes, tab icons and
--- playful empty states). The art is drawn in code by tools/make_storybook.py; the fonts
+-- Two looks: "storybook", the default since 0.9.7 (Land of Make Believe: a night sky in
+-- violet and gold, a parchment title bar, corner flourishes, tab icons and playful empty
+-- states), and "clean" (the colours above, picked in Settings > Look). The art is drawn in code by tools/make_storybook.py; the fonts
 -- are the game's own. A look is picked once when the addon loads (Settings changes it
 -- and reloads the UI), because frames read these colours when they are built.
 local function copy(c) return { c[1], c[2], c[3], c[4] } end
