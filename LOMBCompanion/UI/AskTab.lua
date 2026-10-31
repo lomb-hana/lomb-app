@@ -245,6 +245,7 @@ UI.RegisterTab({
       local c = W.Button(p, "", 178, 18, function(self) Tab.Submit(self.label:GetText()) end)
       c.label:SetFont(ns.Theme.fonts.body, 10, "")
       c:SetPoint("BOTTOMLEFT", 26 + (i - 1) * 184, 32)
+      c.tip = "Ask this example question."
       p.chips[i] = c
     end
     p.more = W.Button(p, "More", 52, 18, function() Tab.chips = Tab.chips + 1; Tab.Refresh() end)
@@ -256,6 +257,7 @@ UI.RegisterTab({
     p.input:SetPoint("BOTTOMLEFT", 0, 2)
     p.input:SetPoint("BOTTOMRIGHT", -66, 2)
     p.input:SetMaxLetters(200)
+    p.input.tip = "Type a question and press Enter. Up and Down bring back earlier questions; Esc clears."
     p.input:SetScript("OnEnterPressed", function(self)
       local text = self:GetText() or ""
       self:SetText("")
@@ -273,6 +275,7 @@ UI.RegisterTab({
       Tab.Submit(text)
     end)
     p.ask:SetPoint("BOTTOMRIGHT", 0, 2)
+    p.ask.tip = "Ask LOMB. Enter in the box does the same."
     return p
   end,
   refresh = function() Tab.Refresh(true) end,

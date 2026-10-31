@@ -14,6 +14,23 @@ function UI.RegisterTab(tab)
   table.sort(UI.tabs, function(a, b) return a.order < b.order end)
 end
 
+-- What each tab is for, shown when you hover its sidebar entry (a tab can set .tip itself).
+UI.TAB_TIPS = {
+  roster = "Everyone in the guild: level, class, zone, notes. Click a name for their profile.",
+  me = "Your character as guildmates see it, and what you share.",
+  crafters = "Who in the guild can craft what. Search a recipe or item.",
+  news = "What happened in the guild lately: level-ups, dungeons, epic loot, rares.",
+  board = "Leaderboards for levels, kills, rares and time played.",
+  bestiary = "Creatures the guild has met: where, level, abilities, loot.",
+  quests = "Quests, items, vendors, recipes, loot and guides from the bundled ForeverDB.net data.",
+  ask = "Ask a question in plain words. Answers come from the addon's own data.",
+  events = "Guild events from the calendar, and who came.",
+  wishlist = "What guildmates need or can give away.",
+  bank = "What the guild bank character has.",
+  settings = "What you share, tooltips, alerts, the card, and your data.",
+  credits = "Who made LOMB Companion and where its data comes from.",
+}
+
 -- One sidebar entry: label, hover tint, accent bar + tint when active, optional badge.
 function UI.NavButton(parent, tab)
   local S = T.sizes
@@ -35,8 +52,17 @@ function UI.NavButton(parent, tab)
   b.label:SetText(tab.label)
   b.badge = W.Text(b, "narrow", 10, "accent", "RIGHT")
   b.badge:SetPoint("RIGHT", -8, 0)
-  b:SetScript("OnEnter", function(self) if not self.active then self.hover:Show() end end)
-  b:SetScript("OnLeave", function(self) self.hover:Hide() end)
+  b.tip = tab.tip or UI.TAB_TIPS[tab.id]
+  b:SetScript("OnEnter", function(self)
+    if not self.active then self.hover:Show() end
+    if self.tip then
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:SetText(tab.label, 1, 1, 1)
+      GameTooltip:AddLine(self.tip, 0.8, 0.78, 0.85, true)
+      GameTooltip:Show()
+    end
+  end)
+  b:SetScript("OnLeave", function(self) self.hover:Hide(); GameTooltip:Hide() end)
   b:SetScript("OnClick", function()
     if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON) end
     UI.Select(tab.id)
@@ -103,6 +129,7 @@ function UI.Create()
   W.Movable(f,
     function() return ns.db.settings.windowPoint end,
     function(p) ns.db.settings.windowPoint = p end)
+  UI.MakeResizable(f)
 
   -- title bar
   local bar = W.Panel(f, "panel", "border")
@@ -156,9 +183,15 @@ function UI.Create()
   footer:SetHeight(S.footer)
   UI.footerText = W.Text(footer, "narrow", 11, "muted")
   UI.footerText:SetPoint("LEFT", 10, 0)
+  UI.grip = UI.ResizeGrip(footer, f)
+  UI.grip:SetPoint("BOTTOMRIGHT", -1, 1)
   UI.footerRight = W.Text(footer, "narrow", 11, "muted", "RIGHT")
-  UI.footerRight:SetPoint("RIGHT", -10, 0)
+  UI.footerRight:SetPoint("RIGHT", UI.grip, "LEFT", -6, 0)
   UI.footerRight:SetText("/lomb")
+  -- a long sync status stops at "/lomb" with an ellipsis instead of running under it
+  UI.footerText:SetPoint("RIGHT", UI.footerRight, "LEFT", -12, 0)
+  UI.footerText:SetJustifyH("LEFT")
+  UI.footerText:SetWordWrap(false)
 
   f:SetScript("OnShow", function()
     if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPEN) end
@@ -174,6 +207,83 @@ function UI.Create()
   UI.frame = f
   ns.Every(2, function() if f:IsShown() then UI.UpdateFooter() end end)
   return f
+end
+
+-- Resizing: never smaller than the original 780x480 (every tab is laid out for at least
+-- that), up to a size that still fits small screens. The size is saved like the position.
+UI.MIN_W, UI.MIN_H, UI.MAX_W, UI.MAX_H = 780, 480, 1280, 860
+
+local function clampSize(w, h)
+  w = math.max(UI.MIN_W, math.min(UI.MAX_W, math.floor((tonumber(w) or UI.MIN_W) + 0.5)))
+  h = math.max(UI.MIN_H, math.min(UI.MAX_H, math.floor((tonumber(h) or UI.MIN_H) + 0.5)))
+  return w, h
+end
+UI.ClampSize = clampSize
+
+function UI.MakeResizable(f)
+  if f.SetResizable then f:SetResizable(true) end
+  if f.SetResizeBounds then
+    f:SetResizeBounds(UI.MIN_W, UI.MIN_H, UI.MAX_W, UI.MAX_H)
+  else
+    if f.SetMinResize then f:SetMinResize(UI.MIN_W, UI.MIN_H) end
+    if f.SetMaxResize then f:SetMaxResize(UI.MAX_W, UI.MAX_H) end
+  end
+  local s = ns.db.settings.windowSize
+  if type(s) == "table" then f:SetSize(clampSize(s[1], s[2])) end
+end
+
+function UI.SaveSize()
+  local f = UI.frame
+  if not f then return end
+  local w, h = clampSize(f:GetWidth(), f:GetHeight())
+  f:SetSize(w, h)
+  local default = w == T.sizes.window.w and h == T.sizes.window.h
+  ns.db.settings.windowSize = (not default) and { w, h } or nil
+  local point, _, relPoint, x, y = f:GetPoint()
+  if point and tonumber(x) and tonumber(y) then
+    ns.db.settings.windowPoint = { point, relPoint, math.floor(x + 0.5), math.floor(y + 0.5) }
+  end
+end
+
+function UI.ResetSize()
+  ns.db.settings.windowSize = nil
+  if UI.frame then UI.frame:SetSize(T.sizes.window.w, T.sizes.window.h) end
+end
+
+-- The corner grip: drag to resize, right-click to go back to the default size.
+function UI.ResizeGrip(parent, f)
+  local g = CreateFrame("Button", nil, parent)
+  g:SetSize(16, 16)
+  g:SetFrameLevel((parent:GetFrameLevel() or 1) + 5)
+  g.lines = {}
+  for i = 1, 3 do                       -- three short diagonal strokes, drawn, no texture file
+    local l = g:CreateTexture(nil, "OVERLAY")
+    l:SetColorTexture(W.rgba("muted"))
+    l:SetSize(2 + i * 3, 1)
+    l:SetPoint("BOTTOMRIGHT", -2, 2 + (i - 1) * 4)
+    g.lines[i] = l
+  end
+  g:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  g:SetScript("OnMouseDown", function(_, button)
+    if button == "LeftButton" and f.StartSizing then f:StartSizing("BOTTOMRIGHT") end
+  end)
+  g:SetScript("OnMouseUp", function()
+    f:StopMovingOrSizing()
+    UI.SaveSize()
+  end)
+  g:SetScript("OnClick", function(_, button) if button == "RightButton" then UI.ResetSize() end end)
+  g:SetScript("OnEnter", function(self)
+    for _, l in ipairs(self.lines) do l:SetColorTexture(W.rgba("accent")) end
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText("Resize", 1, 1, 1)
+    GameTooltip:AddLine("Drag to resize the window. Right-click to go back to the default size.", 0.8, 0.78, 0.85, true)
+    GameTooltip:Show()
+  end)
+  g:SetScript("OnLeave", function(self)
+    for _, l in ipairs(self.lines) do l:SetColorTexture(W.rgba("muted")) end
+    GameTooltip:Hide()
+  end)
+  return g
 end
 
 function UI.UpdateFooter()

@@ -656,15 +656,28 @@ UI.RegisterTab({
     Tab.panel = p
     -- mode buttons across the top
     p.modes = {}
-    local bw = (T.sizes.content.w - 4 * 4) / #Tab.MODES
-    for i, m in ipairs(Tab.MODES) do
-      local b = W.Button(p, m.label, bw, 22, function()
+    for _, m in ipairs(Tab.MODES) do
+      local b = W.Button(p, m.label, 60, 22, function()
         view.mode = m.key
         Tab.Refresh()
       end)
-      b:SetPoint("TOPLEFT", (i - 1) * (bw + 4), 0)
+      b.tip = m.tip or ("Switch to " .. m.label .. ". Each view keeps its own search and filters.")
       p.modes[m.key] = b
     end
+    -- share the row evenly (4px gaps), at the window's width and after a resize
+    function p.LayoutModes(w)
+      w = (w and w > 0) and w or T.sizes.content.w
+      local n = #Tab.MODES
+      local bw = math.floor((w - 4 * (n - 1)) / n)
+      for i, m in ipairs(Tab.MODES) do
+        local b = p.modes[m.key]
+        b:SetWidth(bw)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", (i - 1) * (bw + 4), 0)
+      end
+    end
+    p.LayoutModes()
+    p:SetScript("OnSizeChanged", function(_, w) p.LayoutModes(w) end)
 
     local left = W.Panel(p, "panel", "border")
     left:SetPoint("TOPLEFT", 0, -28)
@@ -725,6 +738,7 @@ UI.RegisterTab({
     p.page = MobPage.New(right, width - 20)
     p.page:SetPoint("TOPLEFT", 12, -10)
     p.page:SetPoint("BOTTOMRIGHT", -26, 8)
+    function p.page:Rerender() if self.mode then Tab.Render(self, self.mode, self.key) end end
 
     -- the credit, always visible under the tab
     p.credit = W.Text(p, "body", 11, "gold")
@@ -788,7 +802,7 @@ UI.RegisterTab({
     end
 
     local items = FDB.Available() and Tab.Items() or {}
-    p.list:SetItems(items)
+    p.list:SetItems(items, W.ViewKey(view, view.search[view.mode]))
     local noun = m.noun or ({ quests = "quest", items = "item", vendors = "vendor", recipes = "recipe", dungeons = "dungeon" })[view.mode]
     local n = view.mode == "quests" and Tab.count or #items
     local text = ("%d %s%s"):format(n, noun, n == 1 and "" or "s")

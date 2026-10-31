@@ -1,8 +1,20 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3 and v0.6.12 is 0.9.4**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4 and v0.6.13 is 0.9.5**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.13 (in-game 0.9.5): polish pass, 2026-10-30
+
+Pre-release, untested in game. No new features. This release cleans up how the window looks and behaves, and makes the Bestiary faster.
+
+- **Resizable window.** Drag the new grip in the bottom-right corner to make the window bigger or smaller (780×480 up to 1280×860). The size is remembered. Right-click the grip, or use "Reset positions" in Settings, to go back to the default size. Lists show more rows when there's room, the mob page reflows to the new width, and the Quests & Items view buttons spread out to fit.
+- **Tooltips everywhere.** Every tab in the sidebar has a one-line explanation. So do every search box, checkbox, filter and sort button, the Settings options, the Leaderboard and Wishlist buttons, the Events view buttons and the Ask LOMB suggestions. A test now walks every tab and fails if any control has no tooltip.
+- **Lists keep their place.** A list stays scrolled where you left it when it refreshes (for example when news comes in or the roster updates), and jumps back to the top only when you change the search, filter or sort. The mob page also keeps its scroll position while it updates during a fight.
+- **Empty states and long text.** The Bestiary says why its list is empty: no match for your search, nothing under this filter, or nothing met yet. Long creature names and a long status line in the footer now end in "…" instead of running into the next column.
+- **Faster Bestiary.** With 5000 creatures recorded, the Bestiary tab refresh went from about 70 ms to about 15 ms, the zone progress line from about 32 ms to about 1.4 ms, and building the list from about 36 ms to about 15 ms (offline harness). The tab refreshes about once a second during combat while it's open, so this matters. The list now counts kills without building every creature's full loot table. Everything else measured fine already, so nothing else was changed.
+- ESC already closes every LOMB window (the tour, the self-test report, the main window and its pop-ups). The bestiary card and the rare toast stay as they are on purpose.
+- New screenshots: 56 (window dragged larger, with tooltips) and 57 (Bestiary search with no matches); 01 refreshed to show the grip.
 
 ## v0.6.12 (in-game 0.9.4): launch prep, 2026-10-30
 

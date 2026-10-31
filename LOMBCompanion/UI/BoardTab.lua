@@ -74,6 +74,9 @@ UI.RegisterTab({
     for _, b in ipairs(News.BOARDS) do
       local btn = W.Button(p, b.label, 80, 22, function() Tab.board = b.key; UI.Refresh("board") end)
       if prev then btn:SetPoint("LEFT", prev, "RIGHT", 6, 0) else btn:SetPoint("TOPLEFT", 0, 0) end
+      btn.tip = ({ level = "Members by level, highest first.", kills = "Creatures killed, counted by members with the addon.",
+        rares = "Rare creatures killed, counted by members with the addon.",
+        played = "Time played, shared by members with the addon." })[b.key]
       p.buttons[b.key], prev = btn, btn
     end
     p.week = W.Button(p, "This week", 84, 22, function() Tab.weekly = true; UI.Refresh("board") end)
@@ -81,6 +84,7 @@ UI.RegisterTab({
     p.all:SetPoint("TOPRIGHT", 0, 0)
     p.week:SetPoint("RIGHT", p.all, "LEFT", -6, 0)
     p.week.tip = "Since the weekly reset (Tuesday)."
+    p.all.tip = "Everything recorded so far."
     local div = W.Divider(p)
     div:SetPoint("TOPLEFT", 0, -30)
     div:SetPoint("TOPRIGHT", 0, -30)
@@ -111,7 +115,7 @@ UI.RegisterTab({
     p.week:SetShown(weekly); p.all:SetShown(weekly)
     p.week:SetActive(Tab.weekly); p.all:SetActive(not Tab.weekly)
     local rows = Tab.Rows()
-    p.list:SetItems(rows)
+    p.list:SetItems(rows, tostring(Tab.board) .. "|" .. tostring(Tab.weekly))
     if #rows == 0 then
       p.empty:SetText("Nothing here yet. Stats appear as guildmates with the addon play.")
       p.empty:Show()

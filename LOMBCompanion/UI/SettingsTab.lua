@@ -30,7 +30,8 @@ local OPTIONS = {
       .. "they were in. Nothing about where anyone was.",
     after = function() ns.Shared.MarkDirty("at") end },
   { section = "Tooltips" },
-  { key = "tooltips", label = "Add guild info to item tooltips (crafters)" },
+  { key = "tooltips", label = "Add guild info to item tooltips (crafters)",
+    tip = "Item tooltips list guildmates who can craft the item." },
   { key = "fdbTooltips", label = "Add ForeverDB.net info to item tooltips (vendors, recipes)",
     tip = "One line from the bundled ForeverDB.net snapshot: who sells it, what makes it, what it's a reagent for." },
   { key = "deTooltips", label = "Show what gear disenchants into (and guild enchanters)",
@@ -40,8 +41,10 @@ local OPTIONS = {
     tip = "A chat line only you see. Costs show once you've opened your class trainer (ForeverDB has no trainer costs). "
       .. "/lomb train opens the list." },
   { section = "Rare alerts" },
-  { key = "rareAlerts", label = "Show an alert when a rare is spotted (by me or a guildmate)" },
-  { key = "rareSound", label = "Play a sound with rare alerts" },
+  { key = "rareAlerts", label = "Show an alert when a rare is spotted (by me or a guildmate)",
+    tip = "A small alert with the rare and who spotted it. Click it to open the rare's page." },
+  { key = "rareSound", label = "Play a sound with rare alerts",
+    tip = "A short sound when a rare alert shows. Off by default." },
   { section = "Events" },
   { key = "recordAttendance", label = "Record attendance at guild events",
     tip = "During a guild calendar event, if you're grouped with the organizer, note who's in the group "
@@ -57,14 +60,18 @@ local OPTIONS = {
     after = function() ns.Shared.MarkDirty("bk") end },
   { section = "Bestiary card" },
   { key = "showCard", label = "Show the card when I target a creature",
+    tip = "A small card with what the guild knows about the creature you target: level, kills, loot.",
     after = function(v) if not v and ns.BestiaryCard then ns.BestiaryCard.Hide(true) end end },
-  { key = "cardInCombat", label = "Keep the card visible in combat" },
-  { key = "cardLocked", label = "Lock card position" },
+  { key = "cardInCombat", label = "Keep the card visible in combat",
+    tip = "Off: the bestiary card hides while you fight and comes back after." },
+  { key = "cardLocked", label = "Lock card position",
+    tip = "Stops the bestiary card from being dragged by accident." },
   { section = "Other" },
   { key = "hideMinimap", label = "Hide minimap button",
     get = function() return S().minimap.hide end,
     set = function(v) S().minimap.hide = v; if ns.Minimap then ns.Minimap.Update() end end },
-  { key = "debug", label = "Debug messages in chat" },
+  { key = "debug", label = "Debug messages in chat",
+    tip = "Extra lines in chat about sync and scanning. Only useful when reporting a problem." },
 }
 
 UI.RegisterTab({
@@ -129,9 +136,10 @@ UI.RegisterTab({
         ns.BestiaryCard.UpdatePin()
       end
       UI.frame:ClearAllPoints(); UI.frame:SetPoint("CENTER")
+      UI.ResetSize()
     end)
     b1:SetPoint("BOTTOMLEFT", 10, 40)
-    b1.tip = "Put the window, bestiary card and rare alerts back in their default spots."
+    b1.tip = "Put the window (and its size), bestiary card and rare alerts back in their default spots."
     local b3 = W.Button(box, "Show welcome tour", 180, 22, function() ns.Tour.Start() end)
     b3:SetPoint("BOTTOMLEFT", 10, 124)
     b3.tip = "The four-step introduction you saw the first time (also /lomb tour)."

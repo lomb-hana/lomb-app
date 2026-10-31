@@ -153,6 +153,8 @@ UI.RegisterTab({
     for _, f in ipairs(FILTERS) do
       local b = W.Button(p, f[2], 70, 20, function() Tab.SetFilter(f[1]) end)
       if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 0, 0) end
+      b.tip = ({ all = "Everything on the guild wishlist.", need = "What guildmates are looking for.",
+        give = "What guildmates can give away.", mine = "Only your own entries." })[f[1]]
       p.filters[f[1]] = b
       prev = b
     end
@@ -187,16 +189,18 @@ UI.RegisterTab({
     p.kindBtn = W.Button(add, "I need", 84, 22, Tab.ToggleKind)
     p.kindBtn:SetPoint("TOPLEFT", 8, -8)
     p.kindBtn.tip = "Click to switch between \"I need\" and \"I can give\"."
-    p.itemBox = W.SearchBox(add, 190, "Item (type or shift-click)")
+    p.itemBox = W.SearchBox(add, 190, "Item (type or shift-click)", nil,
+      "Type the item's name or shift-click it from your bags or a chat link.")
     p.itemBox:SetPoint("LEFT", p.kindBtn, "RIGHT", 6, 0)
-    p.qtyBox = W.SearchBox(add, 44, "Qty")
+    p.qtyBox = W.SearchBox(add, 44, "Qty", nil, "How many (optional, up to 999).")
     p.qtyBox:SetPoint("LEFT", p.itemBox, "RIGHT", 6, 0)
     if p.qtyBox.SetNumeric then p.qtyBox:SetNumeric(true) end
     if p.qtyBox.SetMaxLetters then p.qtyBox:SetMaxLetters(3) end
-    p.noteBox = W.SearchBox(add, 160, "Note (optional)")
+    p.noteBox = W.SearchBox(add, 160, "Note (optional)", nil, "A short note guildmates see, like \"for my alt\".")
     p.noteBox:SetPoint("LEFT", p.qtyBox, "RIGHT", 6, 0)
     if p.noteBox.SetMaxLetters then p.noteBox:SetMaxLetters(WL().TEXT_MAX) end
     p.addBtn = W.Button(add, "Add", 70, 22, Tab.Add)
+    p.addBtn.tip = "Add it to the guild wishlist. Enter in any box does the same."
     p.addBtn:SetPoint("LEFT", p.noteBox, "RIGHT", 6, 0)
     for _, box in ipairs({ p.itemBox, p.qtyBox, p.noteBox }) do
       box:SetScript("OnEnterPressed", function(self) self:ClearFocus(); Tab.Add() end)
@@ -216,7 +220,7 @@ UI.RegisterTab({
   refresh = function(p)
     for k, b in pairs(p.filters) do b:SetActive(view.filter == k) end
     local rows = Tab.Sort(WL().All(view.filter, view.wishSearch), view.sort, view.desc)
-    p.wishList:SetItems(rows)
+    p.wishList:SetItems(rows, W.ViewKey({}, view.filter, view.wishSearch, view.sort, view.desc))
     if #rows == 0 then
       p.wishEmpty:SetText(view.filter == "mine"
         and "You haven't added anything yet. Use the line below: what you need, or what you can give away."

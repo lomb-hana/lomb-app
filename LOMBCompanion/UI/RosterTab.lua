@@ -108,11 +108,13 @@ UI.RegisterTab({
     end)
     search:SetPoint("TOPLEFT", 0, 0)
     local online = W.Check(p, "Online only", function() return view.onlineOnly end,
-      function(v) view.onlineOnly = v; UI.Refresh("roster") end)
+      function(v) view.onlineOnly = v; UI.Refresh("roster") end,
+      "Only show members who are online right now.")
     online:SetWidth(100)
     online:SetPoint("LEFT", search, "RIGHT", 14, 0)
     local addon = W.Check(p, "Has LOMB", function() return view.addonOnly end,
-      function(v) view.addonOnly = v; UI.Refresh("roster") end)
+      function(v) view.addonOnly = v; UI.Refresh("roster") end,
+      "Only show members with LOMB Companion (the moon next to their name).")
     addon:SetWidth(100)
     addon:SetPoint("LEFT", online, "RIGHT", 4, 0)
     local alts = W.Check(p, "Hide alts", function() return view.hideAlts end,
@@ -164,7 +166,7 @@ UI.RegisterTab({
   refresh = function(p)
     if Tab.profileName then return end
     local items = Roster.View(view)
-    p.list:SetItems(items)
+    p.list:SetItems(items, W.ViewKey(view))
     local inGuild = ns.Compat.Call(IsInGuild)
     p.empty:SetShown(#items == 0)
     p.empty:SetText(inGuild and "No one matches." or "You're not in a guild yet.\nJoin Land of Make Believe and your guildmates show up here.")

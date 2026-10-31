@@ -118,7 +118,7 @@ function W.Check(parent, label, get, set, tip)
   return b
 end
 
-function W.SearchBox(parent, w, placeholder, onChange)
+function W.SearchBox(parent, w, placeholder, onChange, tip)
   local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
   W.Skin(box, "panel2", "border")
   box:SetSize(w, 22)
@@ -138,6 +138,13 @@ function W.SearchBox(parent, w, placeholder, onChange)
   box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
   box:SetScript("OnEditFocusGained", function(self) self:SetBackdropBorderColor(rgba("accent")) end)
   box:SetScript("OnEditFocusLost", function(self) self:SetBackdropBorderColor(rgba("border")) end)
+  box.tip = tip
+  if placeholder ~= "" then
+    W.Tooltip(box, function(tt, self)
+      tt:SetText(self.hint:GetText() or placeholder or "Search", 1, 1, 1)
+      tt:AddLine(self.tip or "Type to filter the list as you go. Esc clears it, Enter keeps it.", 0.8, 0.78, 0.85, true)
+    end)
+  end
   return box
 end
 
@@ -224,6 +231,19 @@ end
 --   list = W.List(parent, rowHeight, createRow(list, i), updateRow(row, item, index))
 --   list:SetItems(items)
 ---------------------------------------------------------------------------
+-- A short string naming a view's filters (its plain values only), for list:SetItems's key.
+function W.ViewKey(view, ...)
+  local keys, out = {}, {}
+  for k, v in pairs(view or {}) do
+    local t = type(v)
+    if t == "string" or t == "number" or t == "boolean" then keys[#keys + 1] = tostring(k) end
+  end
+  table.sort(keys)
+  for _, k in ipairs(keys) do out[#out + 1] = k .. "=" .. tostring(view[k]) end
+  for i = 1, select("#", ...) do out[#out + 1] = tostring((select(i, ...))) end
+  return table.concat(out, "|")
+end
+
 function W.List(parent, rowHeight, createRow, updateRow)
   local list = CreateFrame("Frame", nil, parent)
   list.rows, list.items, list.offset, list.rowHeight = {}, {}, 0, rowHeight
@@ -276,10 +296,15 @@ function W.List(parent, rowHeight, createRow, updateRow)
     end
   end
 
-  function list:SetItems(items)
+  -- key: what the list is showing (filter, search ...). A new key starts at the top;
+  -- the same key keeps the scroll position, so a refresh doesn't jump.
+  function list:SetItems(items, key)
     self.items = items or {}
+    if key ~= nil and key ~= self.viewKey then self.offset = 0 end
+    if key ~= nil then self.viewKey = key end
     self:Refresh()
   end
+  function list:ScrollToTop() self.offset = 0; self:Refresh() end
 
   list:EnableMouseWheel(true)
   list:SetScript("OnMouseWheel", function(self, delta)

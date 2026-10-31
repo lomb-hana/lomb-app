@@ -17,11 +17,11 @@ local function createRow(list)
   row.hl:SetAllPoints()
   row.sel = W.Fill(row, "accentDim", "BACKGROUND")
   row.sel:SetAllPoints()
-  row.name = W.Text(row, "body", 11, "text")
-  row.name:SetPoint("LEFT", 6, 0)
-  row.name:SetWidth(LIST_W - 70)
   row.meta = W.Text(row, "narrow", 10, "muted", "RIGHT")
   row.meta:SetPoint("RIGHT", -4, 0)
+  row.name = W.Text(row, "body", 11, "text")
+  row.name:SetPoint("LEFT", 6, 0)
+  row.name:SetPoint("RIGHT", row.meta, "LEFT", -6, 0)   -- long names end in "..." before the level
   row:SetScript("OnClick", function(self) Tab.Select(self.item.npcId) end)
   return row
 end
@@ -73,6 +73,7 @@ UI.RegisterTab({
       UI.Refresh("bestiary")
     end)
     p.sort:SetPoint("LEFT", p.filter, "RIGHT", 4, 0)
+    p.sort.tip = "Sort by name, level, kills or when last seen. Right-click goes back."
     if p.sort.RegisterForClicks then p.sort:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
     p.count = W.Text(left, "narrow", 10, "muted")
     p.count:SetPoint("TOPLEFT", 8, -60)
@@ -80,6 +81,10 @@ UI.RegisterTab({
     p.list = W.List(left, 20, createRow, updateRow)
     p.list:SetPoint("TOPLEFT", 2, -76)
     p.list:SetPoint("BOTTOMRIGHT", -2, 4)
+    p.empty = W.Text(left, "body", 11, "muted", "CENTER")
+    p.empty:SetPoint("TOP", p.list, "TOP", 0, -40)
+    p.empty:SetWidth(LIST_W - 28)
+    p.empty:SetWordWrap(true)
 
     local right = W.Panel(p, "panel", "border")
     right:SetPoint("TOPLEFT", left, "TOPRIGHT", 8, 0)
@@ -98,13 +103,21 @@ UI.RegisterTab({
     p.filter:SetActive(f.key ~= "all")
     p.sort.label:SetText(so.label)
     local items = B.List(search, { filter = f.key, sort = so.key })
-    p.list:SetItems(items)
+    p.list:SetItems(items, W.ViewKey(view, search))
     local text = ("%d creature%s"):format(#items, #items == 1 and "" or "s")
     local zs = B.ZoneStats()
     if zs.zone and zs.known > 0 then
       text = text .. ("  ·  %s: %d of %d killed (%d%%)"):format(zs.zone, zs.killed, zs.known, zs.pct)
     end
     p.count:SetText(text)
+    if #items == 0 then
+      p.empty:SetText(search ~= "" and ("No creatures match \"" .. search .. "\".")
+        or f.key ~= "all" and "Nothing matches this filter yet. Right-click the filter to go back."
+        or "Nothing here yet. Creatures you target, fight or kill show up here, and so do the ones guildmates share.")
+      p.empty:Show()
+    else
+      p.empty:Hide()
+    end
     if not Tab.selected then
       local live = ns.Bestiary.live
       Tab.selected = (live and live.npcId) or (items[1] and items[1].npcId)

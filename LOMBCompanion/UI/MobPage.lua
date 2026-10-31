@@ -268,6 +268,7 @@ function MobPage.Render(page, npcId)
     for _, l in ipairs(page.lines) do l:Hide() end
     page.empty:Show()
     page.child:SetHeight(10)
+    page.lastNpc = nil
     return
   end
   page.empty:Hide()
@@ -429,7 +430,9 @@ function MobPage.Render(page, npcId)
 
   for i = page.used + 1, #page.lines do page.lines[i]:Hide() end
   page.child:SetHeight(page.y + 6)
-  page.scroll:SetVerticalScroll(0)
+  -- a new creature starts at the top; a refresh of the same one keeps your place
+  if page.lastNpc ~= npcId then page.scroll:SetVerticalScroll(0) end
+  page.lastNpc = npcId
 end
 
 function MobPage.New(parent, width)
@@ -452,8 +455,29 @@ function MobPage.New(parent, width)
   page.empty:SetWordWrap(true)
   page.empty:SetText("Pick a creature on the left, or target one in the world.")
   function page:SetMob(npcId) ns.SafeCall(MobPage.Render, self, npcId) end
+  -- what to redraw after the window is resized (QuestsTab swaps in its own)
+  function page:Rerender() if self.npcId then self:SetMob(self.npcId) end end
+  page:SetScript("OnSizeChanged", function(self, w) MobPage.Resize(self, w) end)
   MobPage.pages[#MobPage.pages + 1] = page
   return page
+end
+
+-- The window can be resized: text lines follow the page's new width. The first size the
+-- game reports is the one the page was built for; later sizes move the line width by the
+-- same amount. Redrawing waits a moment so dragging the corner stays smooth.
+function MobPage.Resize(page, w)
+  if not w or w <= 0 then return end
+  if not page.baseW then page.baseW, page.baseWidth = w, page.width; return end
+  local want = math.max(200, math.floor(page.baseWidth + (w - page.baseW)))
+  if math.abs(want - page.width) < 4 then return end
+  page.width = want
+  page.child:SetWidth(want)
+  page.empty:SetWidth(want - 30)
+  page.resizeToken = (page.resizeToken or 0) + 1
+  local mine = page.resizeToken
+  ns.After(0.15, function()
+    if page.resizeToken == mine and page:IsVisible() then ns.SafeCall(page.Rerender, page) end
+  end)
 end
 
 -- Re-render visible pages when their mob changes or item names arrive.

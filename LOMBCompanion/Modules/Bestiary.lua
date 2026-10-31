@@ -398,6 +398,20 @@ local function passes(filter, it, here)
   return true
 end
 
+-- Kills / sightings for list rows: what B.Aggregate counts, without building the loot tables
+-- (the list only shows counts, and this runs for every creature on every refresh).
+local function counts(m, me)
+  local kills, seen, mine = 0, 0, 0
+  for who, r in pairs(m.rec or {}) do
+    local k = r.k or 0
+    kills = kills + k
+    seen = seen + math.max(r.s or 0, k)
+    if who == me then mine = k end
+  end
+  return kills, seen, mine
+end
+B.Counts = counts
+
 -- Sorted list of known mobs for the Bestiary tab (guild-recorded + static data).
 -- opts: { filter = key, sort = key, zone = name for the "zone" filter } (or just a search string)
 function B.List(search, opts)
@@ -405,15 +419,18 @@ function B.List(search, opts)
   local q = search and search:lower() or ""
   local filter, here = opts.filter or "all", opts.zone or zoneName()
   local out, seen = {}, {}
+  local me = ns.playerKey
   for npcId, m in pairs(ns.db.bestiary) do
     seen[npcId] = true
-    local zs = ""
-    for z in pairs(m.z or {}) do zs = zs .. " " .. z end
+    local zs
+    if q ~= "" then                      -- zone names only matter when searching
+      zs = ""
+      for z in pairs(m.z or {}) do zs = zs .. " " .. z end
+    end
     if matches(q, m.nm, zs, m.ct, m.fam) then
-      local agg = B.Aggregate(m)
-      local mine = m.rec and m.rec[ns.playerKey]
+      local kills, sightings, mine = counts(m, me)
       local it = { npcId = npcId, name = m.nm or ("NPC " .. npcId), level = m.lv, levelMax = m.lx,
-        cl = m.cl, kills = agg.kills, seen = agg.seen, mine = mine and mine.k or 0, ls = m.ls, zones = m.z or {},
+        cl = m.cl, kills = kills, seen = sightings, mine = mine, ls = m.ls, zones = m.z or {},
         spotted = m.rs }
       if passes(filter, it, here) then out[#out + 1] = it end
     end
@@ -447,11 +464,27 @@ function B.ZoneStats(zone)
   zone = zone or zoneName()
   local st = { zone = zone, known = 0, killed = 0, mine = 0 }
   if not zone then return st end
-  local list = B.List("", { filter = "zone", zone = zone })
-  for _, it in ipairs(list) do
-    st.known = st.known + 1
-    if (it.kills or 0) > 0 then st.killed = st.killed + 1 end
-    if (it.mine or 0) > 0 then st.mine = st.mine + 1 end
+  -- one counting pass (no rows, no sort): the same creatures B.List(…, { filter = "zone" }) lists
+  local me, seen = ns.playerKey, {}
+  for npcId, m in pairs(ns.db.bestiary) do
+    seen[npcId] = true
+    if m.z and m.z[zone] == true then
+      local kills, _, mine = counts(m, me)
+      st.known = st.known + 1
+      if kills > 0 then st.killed = st.killed + 1 end
+      if mine > 0 then st.mine = st.mine + 1 end
+    end
+  end
+  for npcId, src in pairs(ns.Providers.StaticMobIds()) do
+    if not seen[npcId] then
+      local p = ns.Providers.Get(src)
+      local m = p and p.mobs[npcId]
+      if m and type(m.zones) == "table" then
+        for _, z in ipairs(m.zones) do
+          if z == zone then st.known = st.known + 1; break end
+        end
+      end
+    end
   end
   st.pct = st.known > 0 and math.floor(st.killed / st.known * 100 + 0.5) or 0
   return st

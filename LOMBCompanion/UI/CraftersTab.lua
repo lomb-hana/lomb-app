@@ -189,7 +189,8 @@ UI.RegisterTab({
     p.profBtn.tip = "Click to cycle professions, right-click for all."
     p.profBtn:SetPoint("LEFT", p.search, "RIGHT", 8, 0)
     p.online = W.Check(p, "Online only", function() return Tab.view.onlineOnly end,
-      function(v) Tab.view.onlineOnly = v; UI.Refresh("crafters") end)
+      function(v) Tab.view.onlineOnly = v; UI.Refresh("crafters") end,
+      "Only show crafters who are online right now, so you can whisper them.")
     p.online:SetWidth(110)
     p.online:SetPoint("LEFT", p.profBtn, "RIGHT", 12, 0)
     p.count = W.Text(p, "narrow", 11, "muted", "RIGHT")
@@ -229,7 +230,7 @@ UI.RegisterTab({
   refresh = function(p)
     local items, missing = Crafting.Search(Tab.view)
     Tab.SortItems(items, Tab.view)
-    p.list:SetItems(items)
+    p.list:SetItems(items, W.ViewKey(Tab.view))
     p.profBtn.label:SetText(Tab.view.prof and Crafting.NameOf(Tab.view.prof) or "All professions")
     p.profBtn:SetActive(Tab.view.prof ~= nil)
     p.online:Refresh()

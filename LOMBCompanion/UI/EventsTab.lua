@@ -196,6 +196,8 @@ UI.RegisterTab({
     p.upcoming:SetPoint("TOPLEFT", 6, -6)
     p.past = W.Button(left, "Past", half, 20, function() Tab.SetWhich("past") end)
     p.past:SetPoint("LEFT", p.upcoming, "RIGHT", 4, 0)
+    p.upcoming.tip = "Guild events from the in-game calendar that haven't started yet."
+    p.past.tip = "Events that were held, with the attendance LOMB recorded."
     p.list = W.List(left, 34, createEventRow, updateEventRow)
     p.list:SetPoint("TOPLEFT", 2, -32)
     p.list:SetPoint("BOTTOMRIGHT", -2, 34)
@@ -205,6 +207,7 @@ UI.RegisterTab({
     p.empty:SetWordWrap(true)
     p.summary = W.Button(left, "Attendance summary", LIST_W - 12, 22, Tab.ShowSummary)
     p.summary:SetPoint("BOTTOMLEFT", 6, 6)
+    p.summary.tip = "How often each member was at guild events."
 
     local right = W.Panel(p, "panel", "border")
     right:SetPoint("TOPLEFT", left, "TOPRIGHT", 8, 0)
@@ -262,7 +265,7 @@ UI.RegisterTab({
     p.past:SetActive(view.which == "past")
     p.summary:SetActive(view.mode == "summary")
     local items = Ev.List(view.which)
-    p.list:SetItems(items)
+    p.list:SetItems(items, view.which)
     if #items == 0 then
       p.empty:SetText(view.which == "upcoming"
         and "No upcoming guild events.\n\nEvents come from the in-game calendar: officers add them there."

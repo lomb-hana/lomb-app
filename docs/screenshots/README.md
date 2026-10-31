@@ -6,8 +6,8 @@ The number at the start of each file name is the order the shots were made, so e
 
 | Folder | What's in it |
 |---|---|
-| [`core/`](core/) (9) | The main window: roster (and hiding alts), Me tab, settings, credits (including the ForeverDB.net credit), the minimap button, the welcome tour and the `/lomb test` report. |
-| [`bestiary/`](bestiary/) (6) | Bestiary card, the full mob page, the Bestiary tab (with and without ForeverDB.net sections), rare filters and the rare alert toast. |
+| [`core/`](core/) (10) | The main window: roster (and hiding alts), Me tab, settings, credits (including the ForeverDB.net credit), the minimap button, the welcome tour, the `/lomb test` report and the window dragged larger with tab and resize tooltips. |
+| [`bestiary/`](bestiary/) (7) | Bestiary card, the full mob page, the Bestiary tab (with and without ForeverDB.net sections), rare filters, a search with no matches and the rare alert toast. |
 | [`crafting/`](crafting/) (3) | Who can craft: the Crafters tab, search and whisper, and crafters on item tooltips. |
 | [`news/`](news/) (5) | The guild activity feed, the Dungeons and Epic loot filters and the leaderboards (levels, weekly kills). |
 | [`profiles-gear/`](profiles-gear/) (2) | Member profiles with gear and recent news, before and after inspecting. |

@@ -30,6 +30,7 @@ local DEFAULTS = {
     cardPoint = nil,         -- { point, relPoint, x, y }
     cardPinned = false,
     windowPoint = nil,
+    windowSize = nil,        -- { w, h } when resized with the corner grip
     lastTab = "roster",
     tourDone = false,        -- the welcome tour was shown (or skipped) once
     minimap = { hide = false, angle = 215 },

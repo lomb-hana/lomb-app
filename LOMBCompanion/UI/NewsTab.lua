@@ -94,7 +94,7 @@ UI.RegisterTab({
   refresh = function(p)
     local f = News.FILTERS[Tab.filter]
     local items = News.Filter(f.key)
-    p.list:SetItems(items)
+    p.list:SetItems(items, f.key)
     p.filterBtn.label:SetText(f.label)
     p.filterBtn:SetActive(f.key ~= nil)
     p.count:SetText(("%d item%s"):format(#items, #items == 1 and "" or "s"))
