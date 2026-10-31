@@ -269,7 +269,7 @@ function UI.Storybook(f, bar, title, sub, nav)
   local div = nav:CreateTexture(nil, "ARTWORK")
   div:SetTexture(S.divider)
   div:SetSize(100, 8)
-  div:SetPoint("BOTTOM", 0, 10)
+  div:SetPoint("BOTTOM", 0, 40)   -- above the gold corner flourish
   div:SetVertexColor(gold[1], gold[2], gold[3], 0.8)
   UI.storyDivider = div
 end
