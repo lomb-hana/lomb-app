@@ -38,7 +38,7 @@ H.test("ForeverDB-only sections are hidden unless a provider supplies them", fun
   P.Register({ id = "guild", priority = 10, GetMob = function() return { name = "Hogger", kills = 3 } end })
   local m = P.Merge(448, {})
   for _, s in ipairs(P.SECTIONS) do H.eq(m.sections[s], nil, s) end
-  H.eq(P.Has("foreverdb"), false)
+  H.eq((P.Get("foreverdb") ~= nil), false)
   -- plug in a static module the way a generated Data/ForeverDB.lua would
   P.RegisterStatic({ id = "foreverdb", label = "ForeverDB", priority = 50, credit = "Data from ForeverDB.net",
     url = "https://foreverdb.net", mobs = { [448] = { name = "Hogger", boss = { notes = "x" },
@@ -75,7 +75,7 @@ H.test("the example ForeverDB module loads against the real interface", function
   reset()
   local ns = { Providers = P }
   assert(loadfile(H.addonDir .. "Data/ForeverDB.example.lua"))("LOMBCompanion", ns)
-  H.ok(P.Has("foreverdb"))
+  H.ok((P.Get("foreverdb") ~= nil))
   local m = P.Merge(99999, {})
   H.ok(m.sections.boss and m.sections.notableLoot and m.sections.skinning and m.sections.quests)
 end)

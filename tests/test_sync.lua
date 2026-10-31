@@ -188,6 +188,8 @@ H.test("newer version notice shows once", function()
   H.eq(count, 1)
   H.ok(ns.Sync.IsNewerVersion("0.1.10", "0.1.9"))
   H.ok(not ns.Sync.IsNewerVersion("0.1.0", "0.1.0"))
+  H.ok(ns.Sync.IsNewerVersion("0.10.0", "0.9.9"), "0.10.0 is newer than 0.9.9")
+  H.ok(not ns.Sync.IsNewerVersion("0.9.9", "0.10.0"))
 end)
 
 H.done()

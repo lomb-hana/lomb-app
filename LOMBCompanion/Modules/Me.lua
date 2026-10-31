@@ -173,12 +173,7 @@ ns:On("TIME_PLAYED_MSG", function(_, total, thisLevel)
   ns:Fire("PROFILE_CHANGED")
 end)
 
-ns:On("PLAYER_LEVEL_UP", function(_, level)
-  level = C.Safe(level)
-  if level then
-    local total = Me.PlayedNow()
-    ns.char.levelTimes[level] = total or true
-  end
+ns:On("PLAYER_LEVEL_UP", function()
   Me.RefreshSoon()
   ns.After(2, Me.RequestPlayed)
   ns:Fire("PROFILE_CHANGED")

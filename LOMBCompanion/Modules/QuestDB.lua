@@ -434,31 +434,6 @@ function FDB.ChainText(id)
   return ("Part %d of %d%s"):format(c.part, c.total, c.more and "+" or "")
 end
 
--- Takes a sorted quest list ({ id, q } entries) and pulls each chain line together
--- in chain order, where the line's first listed quest sits. Other quests stay put.
-function FDB.GroupChains(list)
-  local byLine, out, done = {}, {}, {}
-  for _, e in ipairs(list) do
-    local c = FDB.Chain(e.id)
-    if c then
-      byLine[c.line] = byLine[c.line] or {}
-      table.insert(byLine[c.line], e)
-    end
-  end
-  for _, e in ipairs(list) do
-    local c = FDB.Chain(e.id)
-    if not c then
-      out[#out + 1] = e
-    elseif not done[c.line] then
-      done[c.line] = true
-      local group = byLine[c.line]
-      table.sort(group, function(a, b) return FDB.Chain(a.id).part < FDB.Chain(b.id).part end)
-      for _, g in ipairs(group) do out[#out + 1] = g end
-    end
-  end
-  return out
-end
-
 function FDB.QuestsForNpc(npcId)
   local i = FDB.Index()
   return i.npcStarts[npcId], i.npcEnds[npcId]
@@ -561,11 +536,6 @@ function FDB.Recipe(ref)
   return p and p.r[ref.i], p
 end
 
-function FDB.RecipeForItem(itemID)
-  local refs = itemID and FDB.Index().madeBy[itemID]
-  if refs and refs[1] then return FDB.Recipe(refs[1]) end
-end
-
 -- opts: prof (slug or nil for all), search, maxSkill
 function FDB.RecipeList(opts)
   opts = opts or {}
@@ -619,23 +589,6 @@ end
 -- Dungeons
 ---------------------------------------------------------------------------
 function FDB.Dungeon(id) local d = D(); return d and d.dungeons[id] end
-
-function FDB.DungeonList(search)
-  local d, out = D(), {}
-  if not d then return out end
-  local needle = lower(search)
-  for id, dg in pairs(d.dungeons) do
-    local ok = needle == "" or has(dg.n, needle)
-    if not ok then for _, b in ipairs(dg.b or {}) do if has(b, needle) then ok = true; break end end end
-    if ok then out[#out + 1] = { id = id, d = dg } end
-  end
-  table.sort(out, function(a, b)
-    local la, lb = a.d.lr and a.d.lr[1] or a.d.lv or 99, b.d.lr and b.d.lr[1] or b.d.lv or 99
-    if la ~= lb then return la < lb end
-    return a.d.n < b.d.n
-  end)
-  return out
-end
 
 function FDB.DungeonLevelText(dg)
   if dg.lr then

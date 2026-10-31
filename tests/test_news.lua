@@ -67,7 +67,6 @@ H.test("week ids roll over at the Tuesday reset", function()
   local tue = 1793718000
   H.eq(W(tue - 1) + 1, W(tue), "new week starts at reset")
   H.eq(W(tue), W(tue + 6 * 86400 + 23 * 3600), "same week until next Tuesday")
-  H.eq(ns.News.WeekStart(tue + 1000), tue)
 end)
 
 H.test("roster level-ups, joins and leaves become news", function()

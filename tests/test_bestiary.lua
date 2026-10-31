@@ -20,13 +20,14 @@ local function link(id) return ("|cffffffff|Hitem:%d::::::::12:::::|h[Item %d]|h
 H.test("GUID parsing handles Forever's obfuscated parts", function()
   local ns = boot()
   local C = ns.Compat
-  H.eq(C.NpcIdFromGUID("Creature-0-x7Fa-0-12-1234-00ABCDEF01"), 1234)
-  H.eq(C.NpcIdFromGUID("Creature-0-4372-0-1-299-0000123456"), 299)
-  H.eq(C.NpcIdFromGUID("Vehicle-0-aB9z-1-2-777-ZZZ"), 777)
-  H.eq(C.NpcIdFromGUID("Player-4372-0ABCDEF1"), nil)
-  H.eq(C.NpcIdFromGUID("GameObject-0-1-2-3-4567-89"), nil)
-  H.eq(C.NpcIdFromGUID(H.secret("Creature-0-1-2-3-55-6")), nil, "secret GUID is never parsed")
-  H.eq(C.NpcIdFromGUID(nil), nil)
+  local function npcId(g) return select(2, C.ParseGUID(g)) end
+  H.eq(npcId("Creature-0-x7Fa-0-12-1234-00ABCDEF01"), 1234)
+  H.eq(npcId("Creature-0-4372-0-1-299-0000123456"), 299)
+  H.eq(npcId("Vehicle-0-aB9z-1-2-777-ZZZ"), 777)
+  H.eq(npcId("Player-4372-0ABCDEF1"), nil)
+  H.eq(npcId("GameObject-0-1-2-3-4567-89"), nil)
+  H.eq(npcId(H.secret("Creature-0-1-2-3-55-6")), nil, "secret GUID is never parsed")
+  H.eq(npcId(nil), nil)
 end)
 
 H.test("ParseLoot groups items by corpse and skips non-creatures", function()

@@ -75,19 +75,20 @@ H.test("item, vendor, recipe and dungeon lookups agree with each other", functio
   H.ok(back, "soldBy index")
   -- every bundled vendor was seen in Forever (Classic-only vendors are left out)
   H.ok(#FDB.VendorList({}) > 100)
-  -- recipes: a made item finds its recipe; reagents index
+  -- recipes: skill filter and the reagent index
   local list = FDB.RecipeList({ prof = "alchemy", maxSkill = 75 })
   H.ok(#list > 3)
   for _, e in ipairs(list) do H.ok((e.r.sk[1] or 0) <= 75) end
   local r = list[1].r
-  if r.mk then H.eq(FDB.RecipeForItem(r.mk).n, FDB.RecipeForItem(r.mk).n) end
   if r.rg then H.ok(#FDB.ItemFacts(r.rg[1]).reagentFor > 0) end
   for _, e in ipairs(FDB.RecipeList({})) do H.ok((e.r.sk[1] or 0) <= 225, "skill cap") end
-  -- dungeons sorted by level, bosses map back
-  local dl = FDB.DungeonList("")
-  H.ok(#dl >= 5)
-  local first = dl[1].d
-  if first.b then H.ok(FDB.DungeonForBoss(first.b[1]) == dl[1].id) end
+  -- bosses map back to their dungeon
+  local n = 0
+  for id, dg in pairs(ns.FDBData.dungeons) do
+    n = n + 1
+    if dg.b and dg.b[1] then H.eq(FDB.DungeonForBoss(dg.b[1]), id, dg.n) end
+  end
+  H.ok(n >= 5)
 end)
 
 H.test("item tooltip line carries the credit and respects the setting", function()
@@ -188,7 +189,7 @@ end)
 H.test("bestiary links: quest givers show their quests, bosses link their dungeon", function()
   local ns = H.boot()
   local P = ns.Providers
-  H.ok(P.Has("foreverdb"), "provider registered")
+  H.ok(P.Get("foreverdb"), "provider registered")
   local q = ns.FDB.Quest(33)
   ns.db.bestiary[q.st[2]] = { nm = q.st[3] }
   local m = P.Merge(q.st[2], {})
@@ -311,14 +312,6 @@ H.test("quest chains: made-up data covers loops, branches and links past level 3
   H.eq(FDB.ChainText(21), "Part 1 of 2")   -- same level: by name, "Loop A" first
   H.eq(FDB.ChainText(30), "Part ? of ?")
   H.eq(FDB.ChainText(40), nil)
-  -- grouping: each line sits where its first listed quest is, in chain order
-  local list = FDB.GroupChains(FDB.QuestList({}))
-  local order = {}
-  for _, e in ipairs(list) do order[#order + 1] = e.id end
-  H.deepEq(order, { 40, 21, 20, 1, 2, 3, 30, 31, 10, 11, 12, 13 })
-  -- a filter that hides part of a chain keeps the rest grouped and in order
-  local band = FDB.GroupChains(FDB.QuestList({ minLevel = 4, maxLevel = 5 }))
-  H.deepEq({ band[1].id, band[2].id }, { 1, 3 })
   FDB.ResetIndex()
   noErrors("made-up chains")
 end)

@@ -96,22 +96,6 @@ function Loot.InstanceForZone(zone)
   return did or nil
 end
 
--- did, boss index for a boss name: exact, then one name inside the other ("van cleef").
-function Loot.FindBoss(text)
-  local t = squash(text)
-  if #t < 3 then return nil end
-  local d = ns.FDBData
-  local partial
-  for did, dg in pairs(d and d.dungeons or {}) do
-    for i, b in ipairs(dg.b or {}) do
-      local n = squash(b)
-      if n == t then return did, i end
-      if not partial and #t >= 4 and n:find(t, 1, true) then partial = { did, i } end
-    end
-  end
-  if partial then return partial[1], partial[2] end
-end
-
 local function bossIndex(dg, name)
   local n = squash(name)
   for i, b in ipairs(dg.b or {}) do if squash(b) == n then return i end end

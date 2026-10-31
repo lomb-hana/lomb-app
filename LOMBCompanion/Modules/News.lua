@@ -42,7 +42,6 @@ News.FILTERS = {
 -- US weekly reset: Tuesday 15:00 UTC. Week numbers count from Tue 6 Jan 1970.
 local WEEK_ANCHOR, WEEK = 5 * 86400 + 15 * 3600, 7 * 86400
 function News.WeekId(t) return math.floor(((t or time()) - WEEK_ANCHOR) / WEEK) end
-function News.WeekStart(t) return WEEK_ANCHOR + News.WeekId(t) * WEEK end
 
 local function day(t) return math.floor((t or time()) / 86400) end
 

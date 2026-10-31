@@ -1,8 +1,25 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6, v0.6.15 is 0.9.7, v0.6.16 is 0.9.8 and v0.6.17 is 0.9.9**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+**One version number from v0.10.0 on.** The release tag and the version shown in game are now the same (tag `v0.10.0` = in-game 0.10.0). Earlier releases used two numbers, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6. Those tags stay as they are:
+
+| Release tag | In-game version |
+|---|---|
+| v0.1.0 to v0.5.0, v0.7.0, v0.8.0, v0.8.1 | the same number (v0.8.1 is 0.8.1) |
+| v0.6.0 to v0.6.7 | 0.8.2 to 0.8.9 |
+| v0.6.8 to v0.6.17 | 0.9.0 to 0.9.9 |
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.10.0: one version number, tidy-up, 2026-10-31
+
+Pre-release, untested in game. Continues from in-game 0.9.9 (release v0.6.17).
+
+- **One version number:** the tag, the zip, the title bar, the Credits tab and `/lomb test` all say 0.10.0. Guildmates on 0.9.x are told a newer version exists, as before.
+- **Saved data:** three fields nothing read any more are cleared at log-in and no longer written: per-character level times (`levelTimes`), the first log-in date (`firstLogin`) and an unused account counter (`seq`). `/lomb test` warns if any of them is still there.
+- **Code tidy, no behaviour change:** unused helpers removed (a list's scroll-to-top, the GUID-to-NPC-id shortcut, the provider `Has` check, the old skinning-rule and herb-search helpers, fuzzy boss search, the week-start helper, quest-chain grouping replaced by storylines in v0.6.2, recipe-for-item and the dungeon list). Their tests were moved to the functions the addon really uses. The linter config lost its duplicate and unused globals.
+- **Safer builds:** `tools/build.sh` zips only files committed to git and refuses to build when the addon folder has untracked or modified files.
+- **README rewritten:** a short front page with a few screenshots; every screenshot is now in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md). Release notes live here in the changelog.
+- **Smaller screenshots:** every shot was re-rendered for 0.10.0 and saved with 256 colours: 38.5 MB down to 6.7 MB.
 
 ## v0.6.17 (in-game 0.9.9): a self-test line for every feature, and fixes, 2026-10-31
 

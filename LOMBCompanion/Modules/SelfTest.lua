@@ -166,6 +166,11 @@ checks[#checks + 1] = function()
   local kb = math.floor((ns.DB.ApproxSize and ns.DB.ApproxSize(db) or 0) / 1024 + 0.5)
   local detail = ("schema %s (expected %s), about %d KB"):format(tostring(db.schema), tostring(ns.DB.SCHEMA), kb)
   if db.schema ~= ns.DB.SCHEMA then return "warn", "Saved variables", detail end
+  local left = {}
+  for _, k in ipairs(ns.DB.OBSOLETE.db) do if db[k] ~= nil then left[#left + 1] = k end end
+  for _, k in ipairs(ns.DB.OBSOLETE.char) do if ns.char[k] ~= nil then left[#left + 1] = k end end
+  if #left > 0 then return "warn", "Saved variables", detail .. "; old fields not cleared: " .. table.concat(left, ", ") end
+  detail = detail .. "; old fields cleared"
   if kb > 8192 then return "warn", "Saved variables", detail .. "; large files make logging out slow" end
   return "pass", "Saved variables", detail
 end

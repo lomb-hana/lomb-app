@@ -156,10 +156,6 @@ function C.ParseGUID(guid)
   return kind or guid:match("^(%a+)"), nil
 end
 
-function C.NpcIdFromGUID(guid)
-  local _, id = C.ParseGUID(guid)
-  return id
-end
 
 function C.ItemIdFromLink(link)
   if type(link) ~= "string" or C.IsSecret(link) then return nil end

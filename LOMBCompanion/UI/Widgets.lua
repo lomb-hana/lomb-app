@@ -364,7 +364,6 @@ function W.List(parent, rowHeight, createRow, updateRow)
     if key ~= nil then self.viewKey = key end
     self:Refresh()
   end
-  function list:ScrollToTop() self.offset = 0; self:Refresh() end
 
   list:EnableMouseWheel(true)
   list:SetScript("OnMouseWheel", function(self, delta)

@@ -41,17 +41,14 @@ local DEFAULTS = {
   guilds = {},     -- [guildKey] = { members = {}, peers = {} }
   bestiary = {},   -- [npcId] = mob record (see Modules/Bestiary.lua)
   trainerCosts = {}, -- [classFile]["Name|rank"] = copper, noted at your class trainer (ForeverDB has no costs)
-  seq = 0,
 }
 
 local CHAR_DEFAULTS = {
   schema = DB.SCHEMA,
   deaths = 0,
   kills = 0,
-  levelTimes = {},   -- [level] = total /played seconds when reached
   played = nil,      -- { total = s, level = s, at = epoch }
   lootLog = {},      -- newest first, capped
-  firstLogin = nil,
   trained = {},      -- [spellID] = true, ranks a class trainer listed as already learned
   setBank = nil,     -- { i = {[itemID]=true}, t = epoch }: set pieces seen in this character's bank
   questsDone = {},   -- [questID] = epoch, turn-ins this addon saw (fallback for quest tracking)
@@ -91,7 +88,15 @@ function DB.Load()
   ns.db = fill(LOMBCompanionDB, DEFAULTS)
   ns.char = fill(LOMBCompanionCharDB, CHAR_DEFAULTS)
   DB.Migrate(ns.db)
-  ns.char.firstLogin = ns.char.firstLogin or time()
+  DB.ClearObsolete(ns.db, ns.char)
+end
+
+-- Saved fields older versions wrote but nothing reads any more (cleared at log-in):
+-- account seq (never used), per character levelTimes and firstLogin (until 0.9.9).
+DB.OBSOLETE = { db = { "seq" }, char = { "levelTimes", "firstLogin" } }
+function DB.ClearObsolete(db, char)
+  for _, k in ipairs(DB.OBSOLETE.db) do if db then db[k] = nil end end
+  for _, k in ipairs(DB.OBSOLETE.char) do if char then char[k] = nil end end
 end
 
 -- Per-guild bucket, keyed by guild name + realm so alts in other guilds don't mix.

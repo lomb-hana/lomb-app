@@ -15,27 +15,27 @@ globals = {
 read_globals = {
   "ReloadUI",
   -- Lua extras provided by WoW
-  "wipe", "Ambiguate", "geterrorhandler", "date", "time", "strsplit", "strtrim", "tinsert", "tremove", "unpack", "bit",
+  "wipe", "Ambiguate", "geterrorhandler", "date", "time", "strtrim", "unpack",
   -- namespaces
   "C_Timer", "C_ChatInfo", "C_GuildInfo", "C_Map", "C_Item", "C_Spell", "C_SkillInfo", "C_PvP",
-  "C_ClassColor", "C_PlayerInfo", "C_Club", "Enum",
+  "C_ClassColor", "Enum",
   -- frames / UI
   "CreateFrame", "UIParent", "GameTooltip", "Minimap", "UISpecialFrames", "DEFAULT_CHAT_FRAME",
   "Mixin", "BackdropTemplateMixin", "PlaySound", "SOUNDKIT", "ITEM_QUALITY_COLORS", "RAID_CLASS_COLORS",
   "GetCursorPosition", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
   "ChatFrame_OpenChat", "ChatEdit_InsertLink", "hooksecurefunc", "C_Calendar", "C_Container", "C_DateAndTime",
-  "GetInventoryItemLink", "GetInventoryItemID", "GetContainerNumSlots", "GetContainerItemInfo", "GetContainerItemLink",
+  "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemInfo",
   -- secrets (12.x / Forever)
-  "issecretvalue", "canaccessvalue",
+  "issecretvalue",
   -- units
-  "GetServerTime", "GetBuildInfo", "GetNumGroupMembers", "IsInRaid", "IsInGroup", "C_Calendar", "C_DateAndTime", "CalendarFrame",
+  "GetServerTime", "GetBuildInfo", "GetNumGroupMembers", "IsInRaid", "CalendarFrame",
   "UnitExists", "UnitIsPlayer", "UnitGUID", "UnitName", "UnitLevel", "UnitClassification", "UnitCreatureType",
   "UnitCreatureFamily", "UnitFactionGroup", "UnitHealth", "UnitHealthMax", "UnitIsDead", "UnitIsTapDenied", "UnitCanAttack",
   "UnitReaction", "UnitClass", "UnitRace", "UnitXP", "UnitXPMax", "UnitAffectingCombat", "UnitFullName",
   -- player / account
   "GetMoney", "GetRealmName", "GetNormalizedRealmName", "GetTime", "InCombatLockdown", "IsInGuild", "GetGuildInfo",
   "IsInInstance", "IsEncounterInProgress", "IsTrialAccount", "IsVeteranTrialAccount", "GameLimitedMode_IsActive",
-  "RequestTimePlayed", "GetAverageItemLevel", "GetInventoryItemLink", "GetNumSkillLines", "GetSkillLineInfo",
+  "RequestTimePlayed", "GetAverageItemLevel", "GetNumSkillLines", "GetSkillLineInfo",
   "GetRealZoneText", "GetZoneText", "GetItemInfo", "GetSpellInfo",
   -- guild
   "GetNumGuildMembers", "GetGuildRosterInfo", "GetGuildRosterLastOnline", "GuildRoster",

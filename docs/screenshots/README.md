@@ -1,5 +1,7 @@
 # Screenshots
 
+**Browse them all with captions in the [gallery](../SCREENSHOTS.md).** This page lists what each folder holds.
+
 > **Previews only.** Every image here is a mock-up with sample data (the Quests & Items, guides and Ask LOMB shots are drawn from the bundled ForeverDB.net snapshot through the offline test harness). None are in-game captures: WoW: Forever launches November 4, 2026. Data from ForeverDB.net · https://foreverdb.net
 
 Every shot shows the storybook look, which is the default since v0.6.15 (in-game 0.9.7). The Clean look is one choice away in Settings > Look; `theme/` has the two side by side.

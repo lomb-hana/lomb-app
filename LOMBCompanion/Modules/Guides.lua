@@ -214,14 +214,6 @@ function G.DefaultProf()
   return 1
 end
 
--- Classic's skinning rule (ForeverDB quotes it): 1 up to level 10, (level-10)*10 to 20, then level*5.
-function G.SkinSkill(level)
-  if not level then return nil end
-  if level <= 10 then return 1 end
-  if level <= 20 then return (level - 10) * 10 end
-  return level * 5
-end
-
 -- Can you gather it? "yes" / "no", or nil when the skill isn't known.
 function G.CanGather(need, mine)
   if not need or not mine then return nil end
@@ -314,24 +306,6 @@ end
 function G.NodeForItem(itemID)
   local e = itemID and gatherIndex().item[itemID]
   if e then return e.slug, e.i, G.Node(e.slug, e.i) end
-end
-
--- Find a herb or ore node by (part of) its name, or its item's name.
-function G.FindNode(text)
-  local needle = lower(text)
-  if needle == "" then return nil end
-  local best
-  for _, slug in ipairs({ "herbalism", "mining" }) do
-    for i, n in ipairs(G.Gathering(slug) and G.Gathering(slug).nodes or {}) do
-      local nm, item = lower(n.n), n.it and lower(ns.FDB.ItemName(n.it)) or ""
-      if nm == needle or item == needle then return slug, i, n end
-      if not best and (nm:find(needle, 1, true) or (item ~= "" and item:find(needle, 1, true))
-          or needle:find(nm, 1, true) or (item ~= "" and needle:find(item, 1, true))) then
-        best = { slug, i, n }
-      end
-    end
-  end
-  if best then return best[1], best[2], best[3] end
 end
 
 -- Everything gatherable in a zone: { herbs = {{name, skill, spawns}}, ore = {...}, skinning = zone, fishing = zone }

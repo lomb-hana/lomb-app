@@ -58,8 +58,6 @@ function P.Unregister(id)
   end
 end
 
-function P.Has(id) return P.Get(id) ~= nil end
-
 -- Merge all providers for one mob.
 -- Returns {
 --   fields   = { [field] = { v = value, src = providerId }, ... },

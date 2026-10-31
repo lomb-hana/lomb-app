@@ -245,4 +245,27 @@ H.test("missing optional APIs are named with what stays off", function()
   H.eq(counts.fail, 0, "optional APIs only warn")
 end)
 
+H.test("old saved fields (seq, levelTimes, firstLogin) are cleared at log-in and no longer written", function()
+  local db = { schema = 1, seq = 7, settings = {} }
+  local cdb = { schema = 1, levelTimes = { [10] = 3600 }, firstLogin = H.epoch, deaths = 2 }
+  local ns = boot({ db = db, charDB = cdb })
+  H.eq(ns.db.seq, nil, "account seq dropped")
+  H.eq(ns.char.levelTimes, nil, "level times dropped")
+  H.eq(ns.char.firstLogin, nil, "first login dropped")
+  H.eq(ns.char.deaths, 2, "other saved data kept")
+  H.fire("PLAYER_LEVEL_UP", 11)
+  H.advance(5)
+  H.eq(ns.char.levelTimes, nil, "a level-up doesn't bring them back")
+  local text
+  ns.SelfTest.Run({ quiet = true, onDone = function(t) text = t end })
+  local line = lineOf(text, "Saved variables")
+  H.ok(line and line:find("^%[PASS%]") and line:find("old fields cleared", 1, true), line)
+  -- if one sneaks back in, /lomb test says so
+  ns.char.levelTimes = {}
+  ns.SelfTest.Run({ quiet = true, onDone = function(t) text = t end })
+  line = lineOf(text, "Saved variables")
+  H.ok(line:find("^%[WARN%]") and line:find("levelTimes", 1, true), line)
+  H.noErrors("obsolete fields")
+end)
+
 H.done()

@@ -94,7 +94,7 @@ H.test("trainer window: costs noted, 'used' ranks count as known, reminder on le
   noErrors("trainer")
 end)
 
-H.test("gathering: nodes by skill, your own skill, zone lists and the skinning rule", function()
+H.test("gathering: nodes by skill, your own skill, zone lists and skinning facts", function()
   local ns = H.boot()
   local G = ns.Guides
   H.eq(G.PlayerSkill("skinning"), 75)
@@ -103,10 +103,10 @@ H.test("gathering: nodes by skill, your own skill, zone lists and the skinning r
   local herbs = G.Nodes("herbalism", { maxSkill = 75 })
   H.ok(#herbs > 2)
   for _, e in ipairs(herbs) do H.ok(e.n.sk <= 75) end
-  local slug, _, node = G.FindNode("peacebloom")
-  H.eq(slug, "herbalism"); H.eq(node.n, "Peacebloom")
+  local node
+  for _, n in ipairs(G.Gathering("herbalism").nodes) do if n.n == "Peacebloom" then node = n end end
+  H.ok(node, "Peacebloom is a herb")
   H.eq(G.NodeForItem(node.it), "herbalism")
-  H.eq(G.SkinSkill(5), 1); H.eq(G.SkinSkill(15), 50); H.eq(G.SkinSkill(25), 125)
   H.eq(G.CanGather(50, 75), "yes"); H.eq(G.CanGather(100, 75), "no"); H.eq(G.CanGather(100, nil), nil)
   local gz = G.GatherInZone("Elwynn Forest")
   H.ok(gz.herbs and gz.ore and gz.skinning and gz.fishing, "Elwynn has all four")
