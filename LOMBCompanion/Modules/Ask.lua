@@ -689,6 +689,38 @@ local function eventAnswer(a)
   return true
 end
 
+-- "my achievements" (any spelling close to it): what you've earned and what's closest.
+local function achievementAnswer(a)
+  local Ach = ns.Achievements
+  if not Ach then return false end
+  ns.SafeCall(Ach.Scan)
+  local earned = Ach.Earned(ns.playerKey)
+  a:say(("You've earned %d of %d achievements."):format(#earned, Ach.TOTAL))
+  if earned[1] then
+    local list = {}
+    for k = 1, math.min(#earned, 3) do list[#list + 1] = earned[k].def.name end
+    a:muted("Latest: " .. table.concat(list, ", ") .. ".")
+  end
+  local close = {}
+  for _, d in ipairs(Ach.list) do
+    local pr = Ach.progress[d.id]
+    if not Ach.IsEarned(d.id) and pr and type(pr.cur) == "number" and d.need > 1 and pr.cur > 0 then
+      close[#close + 1] = { d = d, f = pr.cur / d.need, cur = pr.cur }
+    end
+  end
+  table.sort(close, function(x, y) if x.f ~= y.f then return x.f > y.f end return x.d.id < y.d.id end)
+  if close[1] then
+    local list = {}
+    for k = 1, math.min(#close, 3) do
+      list[#list + 1] = ("%s (%d/%d)"):format(close[k].d.name, close[k].cur, close[k].d.need)
+    end
+    a:say("Closest: " .. table.concat(list, ", ") .. ".")
+  end
+  a:tab("Open Achievements", "achievements")
+  return true
+end
+Ask.AchievementAnswer = achievementAnswer
+
 ---------------------------------------------------------------------------
 -- Reading the question: which kind of answer, about what
 ---------------------------------------------------------------------------
@@ -1045,6 +1077,7 @@ function Ask.Answer(raw)
     for k = 1, 4 do a:ask("  " .. Ask.EXAMPLES[k], Ask.EXAMPLES[k]) end
     return a
   end
+  if P.Norm(raw):find("ach[ie]+v") and achievementAnswer(a) then return a end
   if not (FDB() and FDB().Available()) then
     a:say("The ForeverDB.net data didn't load, so I can't look things up.")
     if P.Norm(raw):find("event") then eventAnswer(a) end

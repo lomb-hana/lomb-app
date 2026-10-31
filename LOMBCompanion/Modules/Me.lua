@@ -49,6 +49,16 @@ function Me.ReadProfessions()
   return profs
 end
 
+-- Rank of one skill line by name (e.g. "Riding"), or nil if not learned.
+function Me.SkillRank(want)
+  local count = (C_SkillInfo and C_SkillInfo.GetNumSkillLines and C.Call(C_SkillInfo.GetNumSkillLines))
+    or C.Call(_G.GetNumSkillLines) or 0
+  for i = 1, math.min(count, 100) do
+    local name, isHeader, rank = skillLine(i)
+    if name == want and not isHeader then return rank end
+  end
+end
+
 function Me.ReadItemLevel()
   local avg, equipped = C.Call(_G.GetAverageItemLevel)
   local il = equipped or avg

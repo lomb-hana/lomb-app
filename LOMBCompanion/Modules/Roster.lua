@@ -141,7 +141,11 @@ function Roster.View(opts)
     r.mainShort = mrow and mrow.short or (main and C.ShortName(main)) or nil
     if mrow then altCount[main] = (altCount[main] or 0) + 1 end
   end
-  for _, r in ipairs(Roster.members) do r.altCount = altCount[r.name] end
+  local A = ns.Achievements
+  for _, r in ipairs(Roster.members) do
+    r.altCount = altCount[r.name]
+    r.ach = A and A.CountFor(r.name) or nil
+  end
   for _, r in ipairs(Roster.members) do
     local hidden = opts.hideAlts and r.mainShort and Roster.byName[P.MainOf(r.name)] ~= nil
     if not hidden and (not opts.onlineOnly or r.online) and (not opts.addonOnly or r.peer) then

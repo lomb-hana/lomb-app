@@ -1,6 +1,6 @@
 local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 
-print("News, milestones and leaderboards")
+print("News, achievements and leaderboards")
 
 local ROSTER = {
   { name = "Testy-Forever", rank = "Officer", level = 12, className = "Hunter", class = "HUNTER", online = true },
@@ -100,24 +100,22 @@ H.test("first ever roster read is not news; partial rosters never cause leaves",
   _G.GetNumGuildMembers = real
 end)
 
-H.test("milestones: guild first and class firsts", function()
+H.test("old milestone data is harmless: no races, no firsts, level-up lines unchanged", function()
   local ns = boot()
-  -- remote stats with exact milestone times
+  -- an older client still sends exact level times ("lt"); they are ignored
   remote(ns, "Oakenhollow-Forever", "st", { lv = 21, k = 400, r = 2, pt = 30, lt = { [10] = H.epoch - 9000, [20] = H.epoch - 600 } })
   remote(ns, "Brindlewick-Forever", "st", { lv = 20, k = 380, r = 0, pt = 28, lt = { [10] = H.epoch - 8000, [20] = H.epoch - 300 } })
-  remote(ns, "Kettlefoot-Forever", "st", { lv = 20, k = 10, r = 0, pt = 20, cl = "MAGE", lt = { [10] = H.epoch - 7000, [20] = H.epoch - 100 } })
-  H.roster[#H.roster + 1] = { name = "Kettlefoot-Forever", rank = "Member", level = 20, className = "Mage", class = "MAGE", online = true }
-  rescan()
-  local ms = ns.News.Milestones()
-  H.eq(ms[20].first.name, "Oakenhollow-Forever", "guild first to 20")
-  H.eq(ms[20].classes.MAGE.name, "Brindlewick-Forever", "first mage to 20 (earlier than Kettlefoot)")
-  H.eq(ms[30].first, nil, "nobody at 30")
-  local e = find(ns, "ms", "Oakenhollow-Forever")
-  H.ok(e, "milestone in the feed")
-  H.ok(strip(ns.News.Text(e)):find("first in the guild to reach 20"), ns.News.Text(e))
-  local c
-  for _, it in ipairs(ns.News.items) do if it.ty == "ms" and it.who == "Brindlewick-Forever" and tostring(it.a) == "20:MAGE" then c = it end end
-  H.ok(c and strip(ns.News.Text(c)):find("first Mage"), "class first line")
+  rescan(function(r) r[2].level = 21; r[3].level = 20 end)
+  for _, it in ipairs(ns.News.items) do H.ok(it.ty ~= "ms", "no milestone race lines") end
+  H.eq(ns.News.Milestones, nil, "Firsts are gone")
+  H.eq(ns.News.ReachTime, nil)
+  for _, b in ipairs(ns.News.BOARDS) do H.ok(b.key ~= "firsts", "no Firsts board") end
+  for _, f in ipairs(ns.News.FILTERS) do H.ok(f.label ~= "Milestones", "no Milestones filter") end
+  local e = find(ns, "lv", "Brindlewick-Forever")
+  H.eq(strip(ns.News.Text(e)), "Brindlewick reached level 20", "level-up line exactly as before")
+  for _, line in ipairs({ "first in the guild", "first to" }) do
+    for _, it in ipairs(ns.News.items) do H.ok(not strip(ns.News.Text(it)):find(line), line) end
+  end
 end)
 
 H.test("my rare kills and level-ups are shared; normal kills only count", function()
@@ -135,7 +133,7 @@ H.test("my rare kills and level-ups are shared; normal kills only count", functi
   local st = lastOf(ns, "st")
   H.ok(st, "stats published")
   H.eq(st.d.k, 2); H.eq(st.d.r, 1); H.eq(st.d.wk.r, 1)
-  H.eq(st.d.lt[10] ~= nil, true, "already-passed milestone recorded")
+  H.eq(st.d.lt, nil, "no level race times shared any more")
   local nw = lastOf(ns, "nw")
   H.ok(nw, "own news published")
   local kinds = {}
@@ -256,7 +254,6 @@ H.test("news survives a relog; offline level-ups are marked approximate", functi
   H.ok(find(ns2, "lv", "Oakenhollow-Forever"), "kept")
   local b = find(ns2, "lv", "Brindlewick-Forever")
   H.ok(b and b.x, "offline level-up flagged")
-  H.ok(ns2.News.ReachTime("Brindlewick-Forever", 10), "reach time noted")
   H.eq(ns ~= ns2, true)
 end)
 

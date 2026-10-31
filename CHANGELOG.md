@@ -1,8 +1,28 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0 and v0.6.9 is 0.9.1**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1 and v0.6.10 is 0.9.2**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.10 (in-game 0.9.2): personal achievements, 2026-10-30
+
+Pre-release, untested in game. The guild "firsts" are gone. Instead there are personal achievements that anyone can earn at their own pace. Nobody is racing anyone.
+
+- **Removed:** the "first to level 10 … 60" races (guild-wide and per class), the Firsts leaderboard, the Milestones news lines and filter, and all "first to" wording. Level-up lines ("X reached level 20") are unchanged. The Bestiary's "first killed by" note stays.
+- **55 achievements in five groups**, all detected by the addon itself:
+  - **Leveling (17):** level 10, 20, 30, 40, 50 and 60; level 60 on each of the nine classes (any of your characters counts); riding 75 and 150.
+  - **Professions (12):** 300 in each of Alchemy, Blacksmithing, Enchanting, Engineering, Herbalism, Leatherworking, Mining, Skinning, Tailoring, Cooking, First Aid and Fishing.
+  - **Dungeons (16):** defeat every boss of each of the 14 dungeons in the bundled data (Ragefire Chasm, The Hall of Thanes, Ruins of Lordaeron, Deadmines, Wailing Caverns, Shadowfang Keep, Blackfathom Deeps, Stormwind Stockade, Razorfen Kraul, Gnomeregan, Excavation Site: Wetlands, City of Dalaran, Scarlet Monastery and Onyxia's Lair), loot or equip your first epic item, and wear every piece of a gear set.
+  - **Exploration & Bestiary (7):** kill 1, 10 and 25 rares; kill 75% and then every creature the bestiary knows in one zone (zones with 10 or more known); complete 50 and 250 quests.
+  - **Guild life (3):** attend 1, 5 and 20 guild events.
+- **Achievements tab:** yours, grouped with a count per group. Earned ones show the date, unearned ones show a progress bar (or "not learned" for a profession you don't have). Filter by group.
+- **Profiles:** an Achievements section at the top with the count, badges and the latest three with dates, and a "See all" button.
+- **Roster:** an achievements count column (and a tooltip line) for guildmates with the addon.
+- **News:** a line when someone earns an achievement (except plain level ones, which already have a level-up line), with an Achievements filter.
+- **Leaderboard:** an Achievements board (count per member) replaces Firsts.
+- **Ask LOMB:** "my achievements" tells you how many you have, the latest ones and the closest ones.
+- **Sharing:** achievements are shared with guildmates under "Share my news, achievements and leaderboard stats". Off = guildmates don't see yours and you're left off the board.
+- **Existing data:** achievements are filled in from what the addon already knows (levels, professions, bestiary kills, quests, attendance, loot) without News spam. Dates that aren't known exactly are marked "~". Old milestone data is ignored and does no harm.
 
 ## v0.6.9 (in-game 0.9.1): forgiving Ask LOMB, 2026-10-30
 
@@ -182,7 +202,7 @@ Pre-release, untested in game.
 
 - Member profiles, alt and main linking, inspect-based gear.
 
-## v0.3.0: News & Milestones
+## v0.3.0: News & Milestones (renamed News & Leaderboards; milestones replaced by achievements in v0.6.10)
 
 - Guild news feed, milestones and leaderboards.
 

@@ -1,4 +1,4 @@
--- LOMB Companion: guild news feed, milestones ("first to 20") and fun leaderboards.
+-- LOMB Companion: guild news feed and fun leaderboards.
 --
 -- Where news comes from:
 --   * the guild roster, which every client can read: joins, leaves and level-ups
@@ -6,27 +6,28 @@
 --     roster, so the same events get the same ids.
 --   * each member's own addon (shared dataset "nw"): exact level-up times, rare
 --     kills and newly learned recipes.
---   * milestones are worked out from the above, never sent.
--- Leaderboards use shared dataset "st": level, kills, rares, whole hours played,
--- the time each milestone level was reached, and this week's kills/rares.
+--   * achievements (shared dataset "ah", see Achievements.lua): "X reached 300
+--     Tailoring". Personal ones, earned at your own pace: there are no races.
+-- Leaderboards use shared dataset "st": level, kills, rares, whole hours played
+-- and this week's kills/rares, plus the achievement count from "ah".
 -- These are self-reported and just for fun. No gold, no deaths, no locations.
 local _, ns = ...
 local C = ns.Compat
 local News = ns:NewModule("News")
 local V = ns.Shared.V
 
-News.MILESTONES = { 10, 20, 30, 40, 50, 60 }
+News.LEVEL_MARKS = { 10, 20, 30, 40, 50, 60 }   -- own level times, kept to date achievements
 News.MAX_OWN = 30            -- own events shared
 News.MAX_LOCAL = 300         -- roster events kept
 News.KEEP_DAYS = 60
 News.GROUP_WINDOW = 15 * 60  -- same rare killed by several of us = one news line
 News.items = {}              -- the merged feed, newest first
-News.TYPES = { lv = true, rare = true, rc = true, join = true, left = true, ms = true }
+News.TYPES = { lv = true, rare = true, rc = true, join = true, left = true, ach = true }
 News.FILTERS = {
   { key = nil,    label = "All news" },
   { key = "lv",   label = "Level-ups" },
-  { key = "ms",   label = "Milestones" },
   { key = "rare", label = "Rare kills" },
+  { key = "ach",  label = "Achievements" },
   { key = "rc",   label = "New recipes" },
   { key = "gl",   label = "Joins & leaves" },
 }
@@ -54,7 +55,7 @@ local function act()
     a = {}
     ns.char.act = a
   end
-  a.lt = a.lt or {}       -- [milestone level] = epoch reached
+  a.lt = a.lt or {}       -- [level 10/20/../60] = epoch reached (dates achievements; never shared)
   a.r = a.r or 0          -- rares killed
   a.ev = a.ev or {}       -- own events, newest first: { ty, a, b, t }
   a.wk = a.wk or { w = News.WeekId(), k = 0, r = 0 }
@@ -78,7 +79,7 @@ function News.OnLevel(level)
   level = C.Safe(level)
   if type(level) ~= "number" then return end
   local s = act()
-  for _, L in ipairs(News.MILESTONES) do
+  for _, L in ipairs(News.LEVEL_MARKS) do
     if level >= L and not s.lt[L] then s.lt[L] = time() end
   end
   News.AddOwn("lv", level)
@@ -111,12 +112,9 @@ function News.BuildStats()
   if not sharing() then return nil end
   local s = act()
   local total = ns.Me.PlayedNow()
-  local lt = {}
-  for L, t in pairs(s.lt) do lt[L] = t end
   return {
     lv = C.Call(UnitLevel, "player"), k = ns.char.kills or 0, r = s.r,
     pt = (total and ns.db.settings.shareProfile ~= false) and math.floor(total / 3600) or nil,
-    lt = next(lt) and lt or nil,
     wk = { w = s.wk.w, k = s.wk.k, r = s.wk.r },
   }
 end
@@ -127,10 +125,7 @@ function News.ValidateStats(d)
     lv = V.int(d.lv, 1, 100), k = V.int(d.k, 0, 1e8) or 0, r = V.int(d.r, 0, 1e6) or 0,
     pt = V.int(d.pt, 0, 1e6),
   }
-  if type(d.lt) == "table" then
-    out.lt = {}
-    for _, L in ipairs(News.MILESTONES) do out.lt[L] = V.time(d.lt[L]) end
-  end
+  -- d.lt (milestone times from 0.9.1 and older) is ignored: there are no races any more
   if type(d.wk) == "table" and V.int(d.wk.w, 0, 1e5) then
     out.wk = { w = d.wk.w, k = V.int(d.wk.k, 0, 1e7) or 0, r = V.int(d.wk.r, 0, 1e6) or 0 }
   end
@@ -195,28 +190,12 @@ function News.PruneLocal()
   end
 end
 
--- When a level crossed a milestone and we only know it from the roster.
-local function noteReach(who, newLevel, oldLevel, away)
-  local g = guild()
-  if not g then return end
-  g.reach = g.reach or {}
-  local r = g.reach[who] or {}
-  for _, L in ipairs(News.MILESTONES) do
-    if newLevel >= L and oldLevel < L and not r[L] then r[L] = { time(), away and true or nil } end
-  end
-  g.reach[who] = r
-end
-
 ns:Listen("GUILD_JOIN", function(who) News.AddLocal("join", who) end)
 ns:Listen("GUILD_LEAVE", function(who) News.AddLocal("left", who) end)
-ns:Listen("GUILD_LEVELUP", function(who, newLevel, oldLevel, classFile, away)
-  noteReach(who, newLevel, oldLevel, away)
+ns:Listen("GUILD_LEVELUP", function(who, newLevel, _, classFile, away)
   News.AddLocal("lv", who, newLevel, classFile, nil, away)
 end)
 
----------------------------------------------------------------------------
--- Milestones
----------------------------------------------------------------------------
 local function classOf(name)
   local row = ns.Roster.byName[name]
   if row and row.class then return row.class end
@@ -227,40 +206,6 @@ local function classOf(name)
   return st and st.cl
 end
 News.ClassOf = classOf
-
--- time `name` reached level L: exact (their addon) or seen (roster), plus "approx"
-function News.ReachTime(name, L)
-  local st = ns.Shared.Get("st", name)
-  if st and st.lt and st.lt[L] then return st.lt[L], false end
-  local g = guild()
-  local r = g and g.reach and g.reach[name] and g.reach[name][L]
-  if r then return r[1], true end
-  return nil
-end
-
--- { [L] = { first = {name, t, approx}, classes = { [classFile] = {name, t, approx} } } }
-function News.Milestones()
-  local out = {}
-  local names = {}
-  local g = guild()
-  for name in ns.Shared.Each("st") do names[name] = true end
-  if g and g.reach then for name in pairs(g.reach) do names[name] = true end end
-  for _, L in ipairs(News.MILESTONES) do
-    local m = { classes = {} }
-    for name in pairs(names) do
-      local t, approx = News.ReachTime(name, L)
-      if t then
-        local e = { name = name, t = t, approx = approx }
-        local function better(cur) return not cur or t < cur.t or (t == cur.t and name < cur.name) end
-        if better(m.first) then m.first = e end
-        local cl = classOf(name)
-        if cl and better(m.classes[cl]) then m.classes[cl] = e end
-      end
-    end
-    out[L] = m
-  end
-  return out
-end
 
 ---------------------------------------------------------------------------
 -- The merged feed
@@ -289,11 +234,10 @@ function News.Rebuild()
   if g and g.news then
     for _, e in pairs(g.news) do add(e.ty, e.w, e.a, e.b, e.t, e.x) end
   end
-  for L, m in pairs(News.Milestones()) do
-    if m.first then add("ms", m.first.name, L, nil, m.first.t, m.first.approx) end
-    for cl, e in pairs(m.classes) do
-      if not (m.first and m.first.name == e.name) then add("ms", e.name, L .. ":" .. cl, cl, e.t, e.approx) end
-    end
+  -- achievements (theirs and ours), recent ones only
+  local A, cutoff = ns.Achievements, time() - News.KEEP_DAYS * 86400
+  for _, e in ipairs(A and A.NewsItems() or {}) do
+    if e.t >= cutoff then add("ach", e.who, e.id, nil, e.t) end
   end
   table.sort(items, function(x, y)
     if x.t ~= y.t then return x.t > y.t end
@@ -359,7 +303,7 @@ News.BOARDS = {
   { key = "kills",  label = "Kills",    weekly = true },
   { key = "rares",  label = "Rares",    weekly = true },
   { key = "played", label = "Played",   weekly = false },
-  { key = "firsts", label = "Firsts",   weekly = false },
+  { key = "ach",    label = "Achievements", weekly = false },
 }
 
 -- rows: { name, class, value, text } best first
@@ -377,10 +321,17 @@ function News.Board(key, weekly)
     for name, st in ns.Shared.Each("st") do
       if not seen[name] and st.lv then rows[#rows + 1] = { name = name, class = classOf(name), value = st.lv } end
     end
-    -- equal levels: whoever got to the last milestone first
-    for _, row in ipairs(rows) do
-      local L = math.floor(row.value / 10) * 10
-      row.tie = (L >= 10 and News.ReachTime(row.name, L)) or 4e9
+  elseif key == "ach" then
+    local A = ns.Achievements
+    local seen = {}
+    local mine = A and A.CountFor(ns.playerKey)
+    if mine and mine > 0 and ns.db.settings.shareActivity ~= false then
+      seen[ns.playerKey] = true
+      rows[#rows + 1] = { name = ns.playerKey, class = classOf(ns.playerKey), value = mine }
+    end
+    for name in ns.Shared.Each("ah") do
+      local n = not seen[name] and A.CountFor(name)
+      if n and n > 0 then rows[#rows + 1] = { name = name, class = classOf(name), value = n } end
     end
   else
     for name, st in ns.Shared.Each("st") do
@@ -419,14 +370,10 @@ function News:Init()
 end
 
 function News:Login()
-  local s = act()
-  -- milestones already passed before this version (exact time unknown: use now)
-  local lvl = C.Call(UnitLevel, "player")
-  if type(lvl) == "number" then
-    for _, L in ipairs(News.MILESTONES) do
-      if lvl >= L and not s.lt[L] then s.lt[L] = (ns.char.firstLogin or time()) end
-    end
-  end
+  act()
+  -- 0.9.1 and older kept roster sightings for the "first to N" races: no longer used
+  local g = guild()
+  if g then g.reach = nil end
   News.PruneLocal()
   News.Rebuild()
   ns.Every(3600, News.PruneLocal)
@@ -454,21 +401,14 @@ local function mobName(npcId, fallback)
   return (m and m.nm) or fallback or ("rare #" .. tostring(npcId))
 end
 
-local CLASS_NAMES = {
-  WARRIOR = "Warrior", PALADIN = "Paladin", HUNTER = "Hunter", ROGUE = "Rogue", PRIEST = "Priest",
-  SHAMAN = "Shaman", MAGE = "Mage", WARLOCK = "Warlock", DRUID = "Druid",
-}
-
 function News.Text(e)
   local n = who(e.who)
   if e.ty == "lv" then
     return ("%s reached level |cfff2c75c%d|r"):format(n, e.a)
-  elseif e.ty == "ms" then
-    local L, cl = tostring(e.a):match("^(%d+):?(%u*)$")
-    if cl and cl ~= "" then
-      return ("|cfff2c75c★|r %s is the first %s in the guild to reach %s"):format(n, CLASS_NAMES[cl] or cl:lower(), L)
-    end
-    return ("|cfff2c75c★ %s is the first in the guild to reach %s!|r"):format(n, L or tostring(e.a))
+  elseif e.ty == "ach" then
+    local A = ns.Achievements
+    local t = A and A.NewsText(e.a)
+    return t and ("%s %s"):format(n, t) or n
   elseif e.ty == "rare" then
     local names = { n }
     for _, w in ipairs(e.with or {}) do names[#names + 1] = who(w) end

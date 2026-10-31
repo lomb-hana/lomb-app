@@ -39,7 +39,7 @@ T.fonts = {
 T.sizes = {
   window   = { w = 780, h = 480 },
   titleBar = 34,
-  nav      = { w = 118, h = 26 },          -- left sidebar
+  nav      = { w = 118, h = 24 },          -- left sidebar (15 entries must fit)
   content  = { w = 642 },                  -- window.w - nav.w - 2 * pad
   tab      = { w = 100, h = 26 },
   footer   = 22,
@@ -57,7 +57,8 @@ T.rosterColumns = {
   { key = "level",  label = "Lvl",         w = 36, justify = "CENTER" },
   { key = "class",  label = "Class",       w = 80 },
   { key = "rankIndex", label = "Rank",     w = 96 },
-  { key = "zone",   label = "Zone",        w = 128 },
+  { key = "zone",   label = "Zone",        w = 120 },
+  { key = "ach",    label = "Ach",         w = 36, justify = "CENTER" },
   { key = "online", label = "Last online", w = 90, justify = "RIGHT" },
 }
 

@@ -92,6 +92,7 @@ Shared.Store = store
 function Shared.Define(def)
   assert(type(def.kind) == "string" and #def.kind <= 4, "kind")
   assert(type(def.build) == "function" and type(def.validate) == "function", "build + validate")
+  assert(not Shared.kinds[def.kind], "dataset kind already defined: " .. def.kind)
   def.enabled = def.enabled or function() return true end
   Shared.kinds[def.kind] = def
   def.publishSoon = ns.Debounce(def.debounce or 5, function() Shared.Publish(def.kind) end)

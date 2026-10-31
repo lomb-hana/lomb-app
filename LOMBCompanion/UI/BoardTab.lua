@@ -9,7 +9,7 @@ local MEDALS = { { 0.95, 0.78, 0.36 }, { 0.78, 0.80, 0.86 }, { 0.80, 0.52, 0.30 
 
 local function fmt(key, v)
   if key == "played" then return ("%d h"):format(v) end
-  if key == "level" then return tostring(v) end
+  if key == "level" or key == "ach" then return tostring(v) end
   return W.Thousands(v)
 end
 
@@ -53,33 +53,7 @@ local function updateRow(row, r)
   row.value:SetText(r.valueText or "")
 end
 
--- "Firsts": one row per milestone level, guild first + class firsts
-function Tab.FirstsRows()
-  local rows = {}
-  local ms = News.Milestones()
-  for i = #News.MILESTONES, 1, -1 do
-    local L = News.MILESTONES[i]
-    local m = ms[L]
-    if m and m.first then
-      local cls = {}
-      for cl, e in pairs(m.classes) do
-        if e.name ~= m.first.name then cls[#cls + 1] = { cl = cl, e = e } end
-      end
-      table.sort(cls, function(a, b) return a.e.t < b.e.t end)
-      local parts = {}
-      for _, c in ipairs(cls) do parts[#parts + 1] = T.classColorText(c.cl, ns.Compat.ShortName(c.e.name)) end
-      rows[#rows + 1] = {
-        rank = 99, rankText = tostring(L), name = m.first.name, class = News.ClassOf(m.first.name),
-        detail = #parts > 0 and ("class firsts: " .. table.concat(parts, ", ")) or "first of any class",
-        valueText = (m.first.approx and "~" or "") .. date("%b %d", m.first.t),
-      }
-    end
-  end
-  return rows
-end
-
 function Tab.Rows()
-  if Tab.board == "firsts" then return Tab.FirstsRows() end
   local def
   for _, b in ipairs(News.BOARDS) do if b.key == Tab.board then def = b end end
   local rows = News.Board(Tab.board, def and def.weekly and Tab.weekly)
@@ -98,7 +72,7 @@ UI.RegisterTab({
     p.buttons = {}
     local prev
     for _, b in ipairs(News.BOARDS) do
-      local btn = W.Button(p, b.label, 80, 22, function() Tab.board = b.key; UI.Refresh("board") end)
+      local btn = W.Button(p, b.label, b.key == "ach" and 96 or 80, 22, function() Tab.board = b.key; UI.Refresh("board") end)
       if prev then btn:SetPoint("LEFT", prev, "RIGHT", 6, 0) else btn:SetPoint("TOPLEFT", 0, 0) end
       p.buttons[b.key], prev = btn, btn
     end
@@ -139,7 +113,7 @@ UI.RegisterTab({
     local rows = Tab.Rows()
     p.list:SetItems(rows)
     if #rows == 0 then
-      p.empty:SetText(Tab.board == "firsts" and "Nobody has reached level 10 yet. Get out there!" or
+      p.empty:SetText(Tab.board == "ach" and "No achievements shared yet. They appear as guildmates with the addon earn them." or
         "Nothing here yet. Stats appear as guildmates with the addon play.")
       p.empty:Show()
     else
