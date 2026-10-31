@@ -1,6 +1,6 @@
 local H = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/harness.lua")
 
-print("News, achievements and leaderboards")
+print("News, dungeon clears and leaderboards")
 
 local ROSTER = {
   { name = "Testy-Forever", rank = "Officer", level = 12, className = "Hunter", class = "HUNTER", online = true },
@@ -237,6 +237,178 @@ H.test("unread badge counts others' news and clears on open", function()
   ns.UI.Select("news")
   for _ = 1, #ns.News.FILTERS do ns.NewsTab.Cycle() end
   H.eq(ns.NewsTab.filter, 1, "filter cycle wraps")
+end)
+
+local function group(names, raid)
+  for i = 1, 40 do H.units["party" .. i] = nil; H.units["raid" .. i] = nil end
+  for i, n in ipairs(names) do H.units[(raid and "raid" or "party") .. i] = { name = n } end
+  H.state.groupSize = #names > 0 and (raid and #names or #names + 1) or 0
+  H.state.raid = raid or false
+end
+local function boss(ns, npcId, name)
+  local m = ns.Bestiary.Ensure(npcId)
+  m.nm, m.cl = name, "elite"
+  return m
+end
+local function count(ns, ty)
+  local n = 0
+  for _, e in ipairs(ns.News.items) do if e.ty == ty then n = n + 1 end end
+  return n
+end
+
+H.test("dungeon clear: the last boss dies, guildmates in the group are named", function()
+  local ns = boot()
+  H.state.instanceType = "party"
+  group({ "Oakenhollow", "Brindlewick", "Strangerx", "Wanderby" })
+  boss(ns, 644, "Rhahk'Zor"); boss(ns, 639, "Edwin VanCleef")
+  ns.Bestiary.CountKill(H.guid(644, "B1"), 644)
+  H.advance(2)
+  H.eq(count(ns, "dg"), 0, "not the last boss: no line")
+  ns.Bestiary.CountKill(H.guid(639, "B2"), 639)
+  H.advance(130)
+  local e = find(ns, "dg")
+  H.ok(e, "clear in the feed")
+  H.eq(strip(ns.News.Text(e)), "Testy, Brindlewick, Oakenhollow and party cleared Deadmines")
+  H.ok(ns.News.Involves(e, "Oakenhollow-Forever"), "the group is part of the line")
+  H.ok(not ns.News.Involves(e, "Strangerx-Forever"))
+  local nw = lastOf(ns, "nw")
+  local sent
+  for _, it in ipairs(nw.d.e) do if it[1] == "dg" then sent = it end end
+  H.ok(sent, "clear shared")
+  H.eq(sent[2], 36); H.eq(sent[5].n, 5); H.eq(#sent[5].g, 2, "guildmates only, not the pugs")
+  local only = ns.News.Filter("dg")
+  H.eq(#only, 1, "Dungeons filter")
+  H.eq(only[1].ty, "dg")
+  local hasFilter
+  for _, f in ipairs(ns.News.FILTERS) do if f.key == "dg" then hasFilter = f.label end end
+  H.eq(hasFilter, "Dungeons")
+  H.state.instanceType = "none"
+  group({})
+end)
+
+H.test("a whole-guild group reads without 'party'; same name out in the world is not a clear", function()
+  local ns = boot()
+  H.state.instanceType = "party"
+  group({ "Oakenhollow" })
+  boss(ns, 4275, "Archmage Arugal")
+  ns.Bestiary.CountKill(H.guid(4275, "C1"), 4275)
+  H.advance(2)
+  H.eq(strip(ns.News.Text(find(ns, "dg"))), "Testy and Oakenhollow cleared Shadowfang Keep")
+  H.state.instanceType = "none"
+  boss(ns, 6487, "Arcanist Doan")
+  ns.Bestiary.CountKill(H.guid(6487, "C2"), 6487)
+  H.advance(2)
+  H.eq(count(ns, "dg"), 1, "outside an instance: nothing")
+  group({})
+end)
+
+H.test("Scarlet Monastery wings and Blackfathom's real last boss", function()
+  local ns = boot()
+  H.state.instanceType = "party"
+  boss(ns, 3975, "Herod"); boss(ns, 4829, "Aku'mai"); boss(ns, 6243, "Gelihast")
+  ns.Bestiary.CountKill(H.guid(6243, "D0"), 6243)
+  ns.Bestiary.CountKill(H.guid(3975, "D1"), 3975)
+  ns.Bestiary.CountKill(H.guid(4829, "D2"), 4829)
+  H.advance(2)
+  local lines = {}
+  for _, e in ipairs(ns.News.items) do if e.ty == "dg" then lines[#lines + 1] = strip(ns.News.Text(e)) end end
+  table.sort(lines)
+  H.eq(#lines, 2, "Gelihast is not the last boss")
+  H.eq(lines[1], "Testy cleared Blackfathom Deeps")
+  H.eq(lines[2], "Testy cleared Scarlet Monastery (Armory)")
+  H.state.instanceType = "none"
+end)
+
+H.test("reports from the same group merge into one line; another group stays separate", function()
+  local ns = boot()
+  H.roster[#H.roster + 1] = { name = "Kettlefoot-Forever", rank = "Member", level = 20, className = "Mage", class = "MAGE", online = true }
+  H.roster[#H.roster + 1] = { name = "Sorrelvane-Forever", rank = "Member", level = 21, className = "Rogue", class = "ROGUE", online = true }
+  rescan()
+  remote(ns, "Oakenhollow-Forever", "nw", { e = { { "dg", 36, nil, H.epoch - 120, { n = 3, g = { "Brindlewick" } } } } })
+  remote(ns, "Brindlewick-Forever", "nw", { e = { { "dg", 36, nil, H.epoch - 110, { n = 3, g = { "Oakenhollow" } } } } })
+  remote(ns, "Kettlefoot-Forever", "nw", { e = { { "dg", 36, nil, H.epoch - 100, { n = 2, g = { "Sorrelvane" } } } } })
+  H.advance(2)
+  local lines = {}
+  for _, e in ipairs(ns.News.items) do if e.ty == "dg" then lines[#lines + 1] = strip(ns.News.Text(e)) end end
+  table.sort(lines)
+  H.eq(#lines, 2)
+  H.eq(lines[1], "Brindlewick, Oakenhollow and party cleared Deadmines")
+  H.eq(lines[2], "Kettlefoot and Sorrelvane cleared Deadmines")
+end)
+
+H.test("raid clears list a few names, then a count", function()
+  local ns = boot()
+  local g = {}
+  for i = 1, 7 do
+    local nm = "Raider" .. string.char(96 + i)
+    H.roster[#H.roster + 1] = { name = nm .. "-Forever", rank = "Member", level = 60, className = "Mage", class = "MAGE", online = true }
+    g[#g + 1] = nm
+  end
+  rescan()
+  remote(ns, "Oakenhollow-Forever", "nw", { e = { { "dg", 249, nil, H.epoch - 60, { n = 20, g = g } } } })
+  H.advance(2)
+  H.eq(strip(ns.News.Text(find(ns, "dg"))),
+    "Oakenhollow, Raidera, Raiderb, Raiderc, 4 more and party cleared Onyxia's Lair")
+end)
+
+H.test("bad dungeon reports are cleaned up", function()
+  local ns = boot()
+  remote(ns, "Oakenhollow-Forever", "nw", { e = {
+    { "dg", 36, string.rep("x", 40), H.epoch - 30, { n = 900, g = { "Bad Name", 7, "Brindlewick" } } },
+    { "dg", "x", nil, H.epoch - 20 },
+  } })
+  H.advance(2)
+  local d = ns.Shared.Get("nw", "Oakenhollow-Forever")
+  H.eq(#d.e, 1)
+  H.eq(d.e[1][3], nil, "unknown wing dropped")
+  H.eq(d.e[1][5].n, 1, "silly group size reset")
+  H.eq(#d.e[1][5].g, 1); H.eq(d.e[1][5].g[1], "Brindlewick")
+end)
+
+H.test("guild events that were held show with their attendance", function()
+  local ns = boot()
+  local E = ns.Events
+  H.calendar = { { at = H.epoch - 2 * 86400, title = "Stockades", by = "Oakenhollow", len = 3600 } }
+  E.ReadCalendar()
+  local rec = E.List("past")[1]
+  E.Guild().att[rec.k] = { n = 3, who = { Oakenhollow = 3, Testy = 2, Brindlewick = 1 }, start = rec.start }
+  ns.News.Rebuild()
+  local e = find(ns, "ev")
+  H.ok(e, "held event in the feed")
+  H.eq(strip(ns.News.Text(e)), "Guild event Stockades was held: 3 attended")
+  H.eq(#ns.News.Filter("ev"), 1)
+  -- one not yet held, or with nobody recorded: no line
+  H.calendar = { { at = H.epoch + 86400, title = "Later", by = "Testy", len = 3600 },
+    { at = H.epoch - 3 * 86400, title = "Nobody came", by = "Testy", len = 3600 } }
+  E.ReadCalendar()
+  ns.News.Rebuild()
+  H.eq(count(ns, "ev"), 1)
+end)
+
+H.test("0.9.2 achievement data is ignored and cleared; no achievement news or boards", function()
+  local ns = boot()
+  local db, cdb = _G.LOMBCompanionDB, _G.LOMBCompanionCharDB
+  local g = ns.DB.Guild()
+  g.shared.ah = { ["Oakenhollow-Forever"] = { r = 1, at = H.epoch, d = { e = { lv20 = H.epoch } } } }
+  ns.char.ach, ns.char.achX, ns.char.achQ, ns.char.achSeedUntil = { lv10 = H.epoch }, {}, {}, H.epoch
+  ns.char.act.lt = { [10] = H.epoch }
+  ns.db.achAcct = { c60MAGE = { t = H.epoch } }
+  local ns2 = H.boot({ db = db, charDB = cdb })
+  H.state.level = 12
+  H.roster = copyRoster()
+  H.fire("GUILD_ROSTER_UPDATE")
+  H.advance(5)
+  H.eq(ns2.Achievements, nil, "no achievements module")
+  H.eq(ns2.Shared.kinds.ah, nil, "no achievements dataset")
+  H.eq(ns2.DB.Guild().shared.ah, nil, "stored copies dropped")
+  H.eq(ns2.char.ach, nil); H.eq(ns2.char.achSeedUntil, nil); H.eq(ns2.db.achAcct, nil)
+  H.eq(ns2.char.act.lt, nil, "old level times dropped")
+  for _, b in ipairs(ns2.News.BOARDS) do H.ok(b.key ~= "ach" and b.key ~= "firsts", b.key) end
+  for _, f in ipairs(ns2.News.FILTERS) do H.ok(f.key ~= "ach" and f.key ~= "ms", f.label) end
+  -- an old client still sending "ah" is ignored
+  remote(ns2, "Brindlewick-Forever", "ah", { e = { lv10 = H.epoch } })
+  H.eq(ns2.DB.Guild().shared.ah, nil)
+  for _, e in ipairs(ns2.News.items) do H.ok(e.ty ~= "ach", "no achievement lines") end
 end)
 
 H.test("news survives a relog; offline level-ups are marked approximate", function()

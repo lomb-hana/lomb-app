@@ -7,8 +7,9 @@ ns.NewsTab = Tab
 
 local ICONS = {
   lv = "Interface\\Icons\\Spell_Holy_SurgeOfLight",
-  ach = "Interface\\Icons\\INV_Misc_Trophy_03",
   rare = "Interface\\Icons\\Ability_Hunter_SniperShot",
+  dg = "Interface\\Icons\\INV_Misc_Key_03",
+  ev = "Interface\\Icons\\INV_Misc_Note_02",
   rc = "Interface\\Icons\\Trade_BlackSmithing",
   join = "Interface\\Icons\\Spell_Holy_PrayerOfFortitude",
   left = "Interface\\Icons\\Spell_Shadow_Teleport",
@@ -80,7 +81,7 @@ UI.RegisterTab({
 
     p.foot = W.Text(p, "narrow", 11, "muted")
     p.foot:SetPoint("BOTTOMLEFT", 0, 6)
-    p.foot:SetText("Level-ups and joins come from the guild roster; rares, recipes and achievements from guildmates with the addon.")
+    p.foot:SetText("Level-ups and joins come from the guild roster; rares, dungeons and recipes from guildmates with the addon.")
 
     ns:Listen("NEWS_UPDATED", function() UI.Refresh("news") end)
     return p
@@ -94,7 +95,7 @@ UI.RegisterTab({
     p.count:SetText(("%d item%s"):format(#items, #items == 1 and "" or "s"))
     if #items == 0 then
       p.empty:SetText(f.key and "Nothing of that kind yet." or
-        "No news yet.\n\nLevel-ups, rare kills, new recipes and achievements show up here as they happen.")
+        "No news yet.\n\nLevel-ups, rare kills, dungeon clears, new recipes and guild events show up here as they happen.")
       p.empty:Show()
     else
       p.empty:Hide()

@@ -410,7 +410,6 @@ function H.installAPI(opts)
   env.GetLootSourceInfo = function(i) local s = H.loot[i]; if s then return unpack(s.sources) end end
 
   H.itemNames = {}
-  H.itemQuality = {}
   env.C_Item = {
     GetItemInfo = function(id)
       if type(id) == "string" then
@@ -422,7 +421,7 @@ function H.installAPI(opts)
         end
       end
       local name = (H.itemNames and H.itemNames[id]) or ("Item " .. id)
-      return name, "|cffffffff|Hitem:" .. id .. "::|h[" .. name .. "]|h|r", (H.itemQuality and H.itemQuality[id]) or 1, 1, 1, "", "", 1, "", 134400
+      return name, "|cffffffff|Hitem:" .. id .. "::|h[" .. name .. "]|h|r", 1, 1, 1, "", "", 1, "", 134400
     end,
     GetItemIconByID = function() return 134400 end,
     GetDetailedItemLevelInfo = function() return 20 end,

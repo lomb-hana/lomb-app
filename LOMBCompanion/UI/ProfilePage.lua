@@ -27,46 +27,13 @@ local function itemLine(parent)
   return l
 end
 
--- label on the left, value on the right; w = nil spans the whole panel
-local function statLine(parent, x, y, w)
+local function statLine(parent, y)
   local label = W.Text(parent, "narrow", 11, "muted")
-  label:SetPoint("TOPLEFT", x, y)
+  label:SetPoint("TOPLEFT", 10, y)
   local value = W.Text(parent, "body", 12, "text", "RIGHT")
-  if w then
-    value:SetPoint("TOPLEFT", x + 40, y)
-    value:SetWidth(w - 40)
-  else
-    value:SetPoint("TOPRIGHT", -10, y)
-    value:SetWidth(220)
-  end
+  value:SetPoint("TOPRIGHT", -10, y)
+  value:SetWidth(200)
   return { label = label, value = value }
-end
-
-local BADGES, BADGE, BADGE_ROW = 22, 22, 11
-
-local function badge(parent)
-  local b = CreateFrame("Frame", nil, parent)
-  b:SetSize(BADGE, BADGE)
-  b:EnableMouse(true)
-  b.icon = b:CreateTexture(nil, "ARTWORK")
-  b.icon:SetAllPoints()
-  b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  b.more = W.Text(b, "narrow", 10, "gold", "CENTER", "OVERLAY")
-  b.more:SetPoint("CENTER")
-  W.Tooltip(b, function(tt, self)
-    if self.extra then
-      tt:SetText(("%d more achievements"):format(self.extra), 1, 1, 1)
-      tt:AddLine("Click \"See all\" to list them.", 0.6, 0.57, 0.66)
-      return
-    end
-    local e = self.entry
-    if not e then return end
-    tt:SetText(e.def.name, 0.95, 0.78, 0.36)
-    tt:AddLine(e.def.desc, 0.9, 0.88, 0.94, true)
-    tt:AddLine("Earned " .. ns.Achievements.DateText(e.t, e.x), 0.6, 0.57, 0.66)
-    if e.x then tt:AddLine("~ before LOMB could see it: the exact date isn't known.", 0.6, 0.57, 0.66, true) end
-  end)
-  return b
 end
 
 function Page.New(parent, onBack)
@@ -113,71 +80,44 @@ function Page.New(parent, onBack)
   info:SetPoint("TOPLEFT", gear, "TOPRIGHT", 8, 0)
   info:SetPoint("BOTTOMRIGHT", 0, 0)
   f.info = info
-  -- achievements (top: the part the guild looks at first)
-  local at = W.SectionTitle(info, "Achievements")
-  at:SetPoint("TOPLEFT", 10, -6)
-  f.achAll = W.Button(info, "See all", 56, 18, function()
-    if f.name and ns.AchievementsTab then ns.AchievementsTab.ShowFor(f.name) end
-  end)
-  f.achAll:SetPoint("TOPRIGHT", -6, -5)
-  f.achAll.tip = "Every achievement, with dates."
-  f.achCount = W.Text(info, "narrow", 11, "gold", "RIGHT")
-  f.achCount:SetPoint("RIGHT", f.achAll, "LEFT", -8, 0)
-  f.badges = {}
-  for i = 1, BADGES do
-    local b = badge(info)
-    local col, r = (i - 1) % BADGE_ROW, math.floor((i - 1) / BADGE_ROW)
-    b:SetPoint("TOPLEFT", 10 + col * (BADGE + 3), -28 - r * (BADGE + 3))
-    f.badges[i] = b
-  end
-  f.achLatest = {}
-  for i = 1, 3 do
-    local l = W.Text(info, "narrow", 11, "text")
-    l:SetPoint("TOPLEFT", 10, -80 - (i - 1) * 16)
-    l:SetPoint("RIGHT", -10, 0)
-    l:SetWordWrap(false)
-    f.achLatest[i] = l
-  end
-  f.achEmpty = W.Text(info, "narrow", 11, "muted")
-  f.achEmpty:SetPoint("TOPLEFT", 10, -30)
-  f.achEmpty:SetPoint("RIGHT", -10, 0)
-  f.achEmpty:SetWordWrap(true)
-  local div = W.Divider(info)
-  div:SetPoint("TOPLEFT", 10, -130)
-  div:SetPoint("TOPRIGHT", -10, -130)
-
   local it = W.SectionTitle(info, "Progress")
-  it:SetPoint("TOPLEFT", 10, -136)
+  it:SetPoint("TOPLEFT", 10, -6)
   f.xpLabel = W.Text(info, "narrow", 11, "muted")
-  f.xpLabel:SetPoint("TOPLEFT", 10, -156)
-  f.xp = W.Bar(info, 280, 6, "accent", "panel2")
-  f.xp:SetPoint("TOPLEFT", 10, -170)
+  f.xpLabel:SetPoint("TOPLEFT", 10, -28)
+  f.xp = W.Bar(info, 280, 8, "accent", "panel2")
+  f.xp:SetPoint("TOPLEFT", 10, -44)
   f.xp:SetPoint("RIGHT", -10, 0)
   f.xp.text:Hide()
   f.stats = {}
-  local half = 136
-  local defs = { { "ilvl", "Item lvl", 10, -182, half }, { "played", "Played", 158, -182, half },
-    { "kills", "Kills", 10, -198, half }, { "rares", "Rares", 158, -198, half },
-    { "main", "Main", 10, -214 }, { "alts", "Alts", 10, -230 } }
-  for _, d in ipairs(defs) do
-    local st = statLine(info, d[3], d[4], d[5])
-    st.label:SetText(d[2])
-    f.stats[d[1]] = st
+  local defs = { { "ilvl", "Item level" }, { "played", "Played" }, { "kills", "Kills" }, { "rares", "Rares" },
+    { "main", "Main" }, { "alts", "Alts" } }
+  for i, d in ipairs(defs) do
+    local s = statLine(info, -58 - (i - 1) * 18)
+    s.label:SetText(d[2])
+    f.stats[d[1]] = s
   end
   local pt = W.SectionTitle(info, "Professions")
-  pt:SetPoint("TOPLEFT", 10, -250)
+  pt:SetPoint("TOPLEFT", 10, -172)
   f.profs = {}
   for i = 1, 4 do
-    local x, y = 10 + ((i - 1) % 2) * 148, -272 - math.floor((i - 1) / 2) * 26
     local label = W.Text(info, "narrow", 11, "text")
-    label:SetPoint("TOPLEFT", x, y)
-    local bar = W.Bar(info, 136, 6, "gold", "panel2")
-    bar:SetPoint("TOPLEFT", x, y - 14)
-    bar.text:Hide()
+    label:SetPoint("TOPLEFT", 10, -194 - (i - 1) * 18)
+    local bar = W.Bar(info, 80, 8, "gold", "panel2")
+    bar:SetPoint("TOPRIGHT", -10, -197 - (i - 1) * 18)
     f.profs[i] = { label = label, bar = bar }
   end
   f.noProf = W.Text(info, "narrow", 11, "muted")
-  f.noProf:SetPoint("TOPLEFT", 10, -272)
+  f.noProf:SetPoint("TOPLEFT", 10, -194)
+  local nt = W.SectionTitle(info, "Recent news")
+  nt:SetPoint("TOPLEFT", 10, -270)
+  f.news = {}
+  for i = 1, 4 do
+    local l = W.Text(info, "narrow", 11, "text")
+    l:SetPoint("TOPLEFT", 10, -290 - (i - 1) * 16)
+    l:SetPoint("RIGHT", -10, 0)
+    l:SetWordWrap(false)
+    f.news[i] = l
+  end
 
   function f:Show2(name)
     self.name = name
@@ -190,9 +130,8 @@ function Page.New(parent, onBack)
   local soon = ns.Debounce(0.3, function() f:Render() end)
   ns:Listen("PROFILES_UPDATED", soon)
   ns:Listen("PEER_UPDATED", soon)
-  ns:Listen("SHARED_UPDATED", function(kind, owner) if owner == f.name and (kind == "gr" or kind == "st" or kind == "ah") then soon() end end)
+  ns:Listen("SHARED_UPDATED", function(kind, owner) if owner == f.name and (kind == "gr" or kind == "st") then soon() end end)
   ns:On("GET_ITEM_INFO_RECEIVED", soon)
-  ns:Listen("ACHIEVEMENTS_UPDATED", soon)
   return f
 end
 
@@ -227,11 +166,6 @@ function Page.Render(f, p)
   if row and row.zone and row.zone ~= "" then bits[#bits + 1] = row.zone end
   if row then bits[#bits + 1] = ns.Roster.FormatLastOnline(row) end
   if p.peer and p.peer.v then bits[#bits + 1] = "|cffb873ffLOMB " .. tostring(p.peer.v) .. "|r" end
-  local A = ns.Achievements
-  local earned = A and A.For(p.name) and A.Earned(p.name) or nil
-  if earned then
-    bits[#bits + 1] = ("|cfff2c75c★ %d achievement%s|r"):format(#earned, #earned == 1 and "" or "s")
-  end
   f.sub:SetText(table.concat(bits, "  ·  "))
   f.whisper:SetShown(not p.isMe)
 
@@ -310,46 +244,13 @@ function Page.Render(f, p)
   f.noProf:SetShown(#profs == 0)
   f.noProf:SetText("None shared.")
 
-  Page.RenderAchievements(f, p, earned)
-end
-
-function Page.RenderAchievements(f, p, earned)
-  local A = ns.Achievements
-  local list = earned or {}
-  local private = p.isMe and ns.db.settings.shareActivity == false
-  f.achCount:SetText(earned and (("%d of %d"):format(#list, A.TOTAL) .. (private and "  |cff777080(only you)|r" or "")) or "")
-  f.achAll:SetShown(earned ~= nil)
-  local shown = math.min(#list, BADGES)
-  local extra = #list > BADGES and (#list - BADGES + 1) or nil
-  for i, b in ipairs(f.badges) do
-    local e = list[i]
-    b.entry, b.extra = nil, nil
-    if extra and i == BADGES then
-      b.extra = extra
-      b.icon:SetColorTexture(0.16, 0.13, 0.2, 1)
-      b.more:SetText("+" .. extra)
-      b:Show()
-    elseif e and i <= shown then
-      b.entry = e
-      b.icon:SetTexture(e.def.icon)
-      b.more:SetText("")
-      b:Show()
-    else
-      b:Hide()
+  local n = 0
+  for _, e in ipairs(ns.News and ns.News.items or {}) do
+    if n >= #f.news then break end
+    if ns.News.Involves(e, p.name) then
+      n = n + 1
+      f.news[n]:SetText(ns.News.Text(e) .. "  |cff777080" .. ns.News.Ago(e.t) .. "|r")
     end
   end
-  for i, l in ipairs(f.achLatest) do
-    local e = list[i]
-    l:SetText(e and ("|cfff2c75c%s|r  |cff777080%s|r"):format(e.def.name, A.DateText(e.t, e.x)) or "")
-    l:SetShown(e ~= nil)
-  end
-  local msg
-  if not earned then
-    if p.peer == nil then msg = "Doesn't have LOMB Companion yet, so achievements aren't shared."
-    else msg = "Has activity sharing turned off, or hasn't sent achievements yet." end
-  elseif #list == 0 then
-    msg = p.isMe and "None yet. Open the Achievements tab to see what's close." or "None earned yet."
-  end
-  f.achEmpty:SetText(msg or "")
-  f.achEmpty:SetShown(msg ~= nil)
+  for i = n + 1, #f.news do f.news[i]:SetText(i == 1 and "|cff777080Nothing yet.|r" or "") end
 end

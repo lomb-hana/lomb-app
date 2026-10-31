@@ -6,29 +6,32 @@
 --     roster, so the same events get the same ids.
 --   * each member's own addon (shared dataset "nw"): exact level-up times, rare
 --     kills and newly learned recipes.
---   * achievements (shared dataset "ah", see Achievements.lua): "X reached 300
---     Tailoring". Personal ones, earned at your own pace: there are no races.
+--   * dungeon and raid clears: the last boss of an instance died in front of
+--     someone with the addon (Bestiary kill recording); guildmates who were in
+--     the same group are named with them, and reports from the same group merge.
+--   * guild events that have been held, with how many attended (Events.lua).
 -- Leaderboards use shared dataset "st": level, kills, rares, whole hours played
--- and this week's kills/rares, plus the achievement count from "ah".
+-- and this week's kills/rares.
 -- These are self-reported and just for fun. No gold, no deaths, no locations.
 local _, ns = ...
 local C = ns.Compat
 local News = ns:NewModule("News")
 local V = ns.Shared.V
 
-News.LEVEL_MARKS = { 10, 20, 30, 40, 50, 60 }   -- own level times, kept to date achievements
 News.MAX_OWN = 30            -- own events shared
 News.MAX_LOCAL = 300         -- roster events kept
 News.KEEP_DAYS = 60
-News.GROUP_WINDOW = 15 * 60  -- same rare killed by several of us = one news line
+News.GROUP_WINDOW = 15 * 60  -- same rare (or dungeon) by several of us = one news line
+News.MAX_NAMES = 5           -- names shown in one dungeon line before "and N more"
 News.items = {}              -- the merged feed, newest first
-News.TYPES = { lv = true, rare = true, rc = true, join = true, left = true, ach = true }
+News.TYPES = { lv = true, rare = true, dg = true, rc = true, ev = true, join = true, left = true }
 News.FILTERS = {
   { key = nil,    label = "All news" },
   { key = "lv",   label = "Level-ups" },
   { key = "rare", label = "Rare kills" },
-  { key = "ach",  label = "Achievements" },
+  { key = "dg",   label = "Dungeons" },
   { key = "rc",   label = "New recipes" },
+  { key = "ev",   label = "Guild events" },
   { key = "gl",   label = "Joins & leaves" },
 }
 
@@ -43,6 +46,8 @@ local function day(t) return math.floor((t or time()) / 86400) end
 function News.Id(ty, who, a, t)
   if ty == "join" or ty == "left" then return ("%s:%s:%d"):format(ty, who, day(t)) end
   if ty == "rare" then return ("rare:%s:%s:%d"):format(who, tostring(a), day(t)) end
+  if ty == "dg" then return ("dg:%s:%s:%d"):format(who, tostring(a), t or 0) end
+  if ty == "ev" then return "ev:" .. tostring(a) end
   return ("%s:%s:%s"):format(ty, who, tostring(a or ""))
 end
 
@@ -55,7 +60,6 @@ local function act()
     a = {}
     ns.char.act = a
   end
-  a.lt = a.lt or {}       -- [level 10/20/../60] = epoch reached (dates achievements; never shared)
   a.r = a.r or 0          -- rares killed
   a.ev = a.ev or {}       -- own events, newest first: { ty, a, b, t }
   a.wk = a.wk or { w = News.WeekId(), k = 0, r = 0 }
@@ -66,10 +70,11 @@ News.Act = act
 
 local function sharing() return ns.db.settings.shareActivity ~= false end
 
-function News.AddOwn(ty, a, b, t)
+-- x: extra details (dungeon clears: { n = group size, g = { guildmates' short names } })
+function News.AddOwn(ty, a, b, t, x)
   local s = act()
   t = t or time()
-  table.insert(s.ev, 1, { ty, a, b, t })
+  table.insert(s.ev, 1, { ty, a, b, t, x })
   while #s.ev > News.MAX_OWN do table.remove(s.ev) end
   ns.Shared.MarkDirty("nw")
   News.RebuildSoon()
@@ -78,10 +83,6 @@ end
 function News.OnLevel(level)
   level = C.Safe(level)
   if type(level) ~= "number" then return end
-  local s = act()
-  for _, L in ipairs(News.LEVEL_MARKS) do
-    if level >= L and not s.lt[L] then s.lt[L] = time() end
-  end
   News.AddOwn("lv", level)
   ns.Shared.MarkDirty("st")
 end
@@ -96,7 +97,71 @@ function News.OnKill(npcId)
     s.wk.r = s.wk.r + 1
     News.AddOwn("rare", npcId, m.nm)
   end
+  News.CheckClear(m and m.nm)
   ns.Shared.MarkDirty("st")
+end
+
+---------------------------------------------------------------------------
+-- Dungeon and raid clears
+---------------------------------------------------------------------------
+-- The bundled boss lists aren't in kill order, so each instance's last boss is
+-- named here, by dungeon id (Scarlet Monastery: one per wing). A name that isn't
+-- in the bundled list is skipped. Forever's own dungeons aren't listed: their
+-- last boss isn't known, so they post no clear line.
+News.FINAL_BOSSES = {
+  [33] = { ["Archmage Arugal"] = true },             -- Shadowfang Keep
+  [34] = { ["Bazil Thredd"] = true },                -- Stormwind Stockade
+  [36] = { ["Edwin VanCleef"] = true },              -- Deadmines
+  [43] = { ["Mutanus the Devourer"] = true },        -- Wailing Caverns
+  [47] = { ["Charlga Razorflank"] = true },          -- Razorfen Kraul
+  [48] = { ["Aku'mai"] = true },                     -- Blackfathom Deeps
+  [90] = { ["Mekgineer Thermaplugg"] = true },       -- Gnomeregan
+  [189] = { ["Bloodmage Thalnos"] = "Graveyard", ["Arcanist Doan"] = "Library",
+    ["Herod"] = "Armory", ["High Inquisitor Whitemane"] = "Cathedral" },
+  [249] = { ["Onyxia"] = true },                     -- Onyxia's Lair
+  [389] = { ["Bazzalan"] = true },                   -- Ragefire Chasm
+}
+
+local function squash(s) return (tostring(s or ""):lower():gsub("[^%w]", "")) end
+
+local finals
+-- { [squashed boss name] = { did, wing } }, from the bundled dungeon list
+function News.Finals()
+  if finals then return finals end
+  finals = {}
+  local list = ns.FDBData and ns.FDBData.dungeons or {}
+  for did, bosses in pairs(News.FINAL_BOSSES) do
+    local dg = list[did]
+    for _, b in ipairs(dg and dg.b or {}) do
+      local wing = bosses[b]
+      if wing then finals[squash(b)] = { did = did, wing = wing ~= true and wing or nil } end
+    end
+  end
+  return finals
+end
+
+function News.DungeonName(did, wing)
+  local dg = ns.FDBData and ns.FDBData.dungeons and ns.FDBData.dungeons[did]
+  local n = dg and dg.n or ("dungeon #" .. tostring(did))
+  return wing and ("%s (%s)"):format(n, wing) or n
+end
+
+-- A boss died that we counted as our (group's) kill: was it the last one?
+function News.CheckClear(bossName)
+  local f = bossName and News.Finals()[squash(bossName)]
+  if not f then return false end
+  if C.Call(IsInInstance) == false then return false end   -- same name out in the world
+  local mates, size = {}, 1
+  if ns.Events and ns.Events.GroupNames then
+    local names = ns.Events.GroupNames()
+    size = math.max(#names, 1)
+    local mine = C.ShortName(ns.playerKey)
+    for _, nm in ipairs(names) do
+      if nm ~= mine and ns.Events.IsMember(nm) then mates[#mates + 1] = nm end
+    end
+  end
+  News.AddOwn("dg", f.did, f.wing, nil, { n = size, g = mates })
+  return true
 end
 
 function News.OnRecipes(_, fresh)
@@ -136,7 +201,7 @@ function News.BuildEvents()
   if not sharing() then return nil end
   local s, out, cutoff = act(), {}, time() - 30 * 86400
   for _, e in ipairs(s.ev) do
-    if e[4] >= cutoff then out[#out + 1] = { e[1], e[2], e[3], e[4] } end
+    if e[4] >= cutoff then out[#out + 1] = { e[1], e[2], e[3], e[4], e[5] } end
   end
   return { e = out }
 end
@@ -149,12 +214,25 @@ function News.ValidateEvents(d)
     if type(e) == "table" then
       local ty, t = e[1], V.time(e[4])
       local a = V.int(e[2], 0, 1e7)
-      local ok = t and a and (ty == "lv" or ty == "rare" or ty == "rc")
+      local ok = t and a and (ty == "lv" or ty == "rare" or ty == "rc" or ty == "dg")
       if ok and ty == "lv" and a > 100 then ok = false end
       if ok then
-        local b = e[3]
+        local b, x = e[3], nil
         if ty == "rc" then b = (b == "i" or b == "s") and b or "i" else b = V.str(b, 48) end
-        out[#out + 1] = { ty, a, b, t }
+        if ty == "dg" then
+          local wings = News.FINAL_BOSSES[a]
+          local known = false
+          for _, w in pairs(wings or {}) do if w == b then known = true end end
+          b = known and b or nil
+          local xd = type(e[5]) == "table" and e[5] or {}
+          x = { n = V.int(xd.n, 1, 40) or 1, g = {} }
+          for k, nm in ipairs(type(xd.g) == "table" and xd.g or {}) do
+            if k > 39 then break end
+            nm = V.name(nm)
+            if nm then x.g[#x.g + 1] = nm end
+          end
+        end
+        out[#out + 1] = { ty, a, b, t, x }
       end
     end
   end
@@ -212,7 +290,7 @@ News.ClassOf = classOf
 ---------------------------------------------------------------------------
 function News.Rebuild()
   local byId, items = {}, {}
-  local function add(ty, who, a, b, t, away)
+  local function add(ty, who, a, b, t, away, x)
     if not News.TYPES[ty] or not who or not t then return end
     local id = News.Id(ty, who, a, t)
     local cur = byId[id]
@@ -222,37 +300,64 @@ function News.Rebuild()
       return
     end
     local e = { id = id, ty = ty, who = who, a = a, b = b, t = t, x = away or nil }
+    if ty == "dg" then
+      e.n, e.mates = type(x) == "table" and x.n or 1, {}
+      for _, nm in ipairs(type(x) == "table" and x.g or {}) do e.mates[C.FullName(nm)] = true end
+      e.mates[who] = nil
+    end
     byId[id] = e
     items[#items + 1] = e
   end
   -- our own straight away (before / without publishing)
-  for _, e in ipairs(act().ev) do add(e[1], ns.playerKey, e[2], e[3], e[4]) end
+  for _, e in ipairs(act().ev) do add(e[1], ns.playerKey, e[2], e[3], e[4], nil, e[5]) end
   for owner, d in ns.Shared.Each("nw") do
-    for _, e in ipairs(d.e or {}) do add(e[1], owner, e[2], e[3], e[4]) end
+    for _, e in ipairs(d.e or {}) do add(e[1], owner, e[2], e[3], e[4], nil, e[5]) end
   end
   local g = guild()
   if g and g.news then
     for _, e in pairs(g.news) do add(e.ty, e.w, e.a, e.b, e.t, e.x) end
   end
-  -- achievements (theirs and ours), recent ones only
-  local A, cutoff = ns.Achievements, time() - News.KEEP_DAYS * 86400
-  for _, e in ipairs(A and A.NewsItems() or {}) do
-    if e.t >= cutoff then add("ach", e.who, e.id, nil, e.t) end
+  -- guild events that have been held (attendance taken), recent ones only
+  local E, now = ns.Events, time()
+  if E and E.List and E.Attendance then
+    for _, rec in ipairs(E.List("past")) do
+      if rec.ct == "GUILD_EVENT" and rec.stop >= now - News.KEEP_DAYS * 86400 then
+        local n = E.Attendance(rec.k).present
+        if n > 0 then add("ev", rec.by and C.FullName(rec.by) or "?", rec.k, { title = rec.title, n = n }, rec.stop) end
+      end
+    end
   end
   table.sort(items, function(x, y)
     if x.t ~= y.t then return x.t > y.t end
     return x.id < y.id
   end)
-  -- group the same rare killed by several guildmates close together
-  local out, lastRare = {}, {}
+  -- group the same rare killed by several guildmates close together, and
+  -- reports of the same clear from people in the same group
+  local out, lastRare, lastDg = {}, {}, {}
+  local function sameGroup(x, y)
+    if x.mates[y.who] or y.mates[x.who] then return true end
+    for nm in pairs(y.mates) do if x.mates[nm] then return true end end
+    return false
+  end
   for _, e in ipairs(items) do
     local prev = e.ty == "rare" and lastRare[e.a]
+    local key = e.ty == "dg" and (tostring(e.a) .. ":" .. tostring(e.b or "")) or nil
+    local dprev
+    for _, d in ipairs(key and lastDg[key] or {}) do
+      if d.t - e.t <= News.GROUP_WINDOW and sameGroup(d, e) then dprev = d; break end
+    end
     if prev and prev.t - e.t <= News.GROUP_WINDOW then
       prev.with = prev.with or {}
       prev.with[#prev.with + 1] = e.who
+    elseif dprev then
+      dprev.mates[e.who] = true
+      for nm in pairs(e.mates) do dprev.mates[nm] = true end
+      dprev.mates[dprev.who] = nil
+      dprev.n = math.max(dprev.n, e.n)
     else
       out[#out + 1] = e
       if e.ty == "rare" then lastRare[e.a] = e end
+      if key then lastDg[key] = lastDg[key] or {}; table.insert(lastDg[key], e) end
     end
   end
   News.items = out
@@ -261,6 +366,11 @@ function News.Rebuild()
   return out
 end
 News.RebuildSoon = ns.Debounce(1, function() News.Rebuild() end)
+
+-- Is `name` part of this news line (the one it's about, or in the group)?
+function News.Involves(e, name)
+  return e.who == name or (e.mates ~= nil and e.mates[name] == true) or false
+end
 
 function News.Filter(key)
   if not key then return News.items end
@@ -303,7 +413,6 @@ News.BOARDS = {
   { key = "kills",  label = "Kills",    weekly = true },
   { key = "rares",  label = "Rares",    weekly = true },
   { key = "played", label = "Played",   weekly = false },
-  { key = "ach",    label = "Achievements", weekly = false },
 }
 
 -- rows: { name, class, value, text } best first
@@ -321,30 +430,17 @@ function News.Board(key, weekly)
     for name, st in ns.Shared.Each("st") do
       if not seen[name] and st.lv then rows[#rows + 1] = { name = name, class = classOf(name), value = st.lv } end
     end
-  elseif key == "ach" then
-    local A = ns.Achievements
-    local seen = {}
-    local mine = A and A.CountFor(ns.playerKey)
-    if mine and mine > 0 and ns.db.settings.shareActivity ~= false then
-      seen[ns.playerKey] = true
-      rows[#rows + 1] = { name = ns.playerKey, class = classOf(ns.playerKey), value = mine }
-    end
-    for name in ns.Shared.Each("ah") do
-      local n = not seen[name] and A.CountFor(name)
-      if n and n > 0 then rows[#rows + 1] = { name = name, class = classOf(name), value = n } end
-    end
   else
     for name, st in ns.Shared.Each("st") do
       local v
       if key == "kills" then v = weekly and (st.wk and st.wk.w == week and st.wk.k or 0) or st.k
       elseif key == "rares" then v = weekly and (st.wk and st.wk.w == week and st.wk.r or 0) or st.r
       elseif key == "played" then v = st.pt end
-      if v and v > 0 then rows[#rows + 1] = { name = name, class = classOf(name), value = v, tie = 0 } end
+      if v and v > 0 then rows[#rows + 1] = { name = name, class = classOf(name), value = v } end
     end
   end
   table.sort(rows, function(x, y)
     if x.value ~= y.value then return x.value > y.value end
-    if (x.tie or 0) ~= (y.tie or 0) then return (x.tie or 0) < (y.tie or 0) end
     return x.name < y.name
   end)
   local rank, prev = 0, nil
@@ -370,10 +466,16 @@ function News:Init()
 end
 
 function News:Login()
-  act()
-  -- 0.9.1 and older kept roster sightings for the "first to N" races: no longer used
-  local g = guild()
-  if g then g.reach = nil end
+  -- leftovers, never read again: roster sightings and level times for the old
+  -- "first to N" races (0.9.1 and older), and the achievements of 0.9.2
+  local s, g, c = act(), guild(), ns.char
+  s.lt = nil
+  c.ach, c.achX, c.achQ, c.achSeedUntil = nil, nil, nil, nil
+  ns.db.achAcct = nil
+  if g then
+    g.reach = nil
+    if g.shared then g.shared.ah = nil end
+  end
   News.PruneLocal()
   News.Rebuild()
   ns.Every(3600, News.PruneLocal)
@@ -383,6 +485,8 @@ end
 ns:On("PLAYER_LEVEL_UP", function(_, level) News.OnLevel(level) end)
 ns:Listen("KILL_RECORDED", function(npcId) News.OnKill(npcId) end)
 ns:Listen("RECIPES_LEARNED", News.OnRecipes)
+ns:Listen("ATTENDANCE_UPDATED", function() News.RebuildSoon() end)
+ns:Listen("EVENTS_UPDATED", function() News.RebuildSoon() end)
 ns:Listen("ROSTER_UPDATED", function() News.RebuildSoon(); ns:Fire("BOARD_UPDATED") end)
 ns:Listen("PROFILE_CHANGED", function() ns.Shared.MarkDirty("st") end)
 
@@ -405,10 +509,23 @@ function News.Text(e)
   local n = who(e.who)
   if e.ty == "lv" then
     return ("%s reached level |cfff2c75c%d|r"):format(n, e.a)
-  elseif e.ty == "ach" then
-    local A = ns.Achievements
-    local t = A and A.NewsText(e.a)
-    return t and ("%s %s"):format(n, t) or n
+  elseif e.ty == "dg" then
+    local names, others = { n }, {}
+    for nm in pairs(e.mates or {}) do others[#others + 1] = nm end
+    table.sort(others)
+    for _, nm in ipairs(others) do names[#names + 1] = who(nm) end
+    local total = #names
+    if total > News.MAX_NAMES then
+      for k = total, News.MAX_NAMES, -1 do names[k] = nil end
+      names[#names + 1] = ("%d more"):format(total - News.MAX_NAMES + 1)
+    end
+    if (e.n or 1) > total then names[#names + 1] = "party" end
+    local list = #names == 1 and names[1]
+      or (table.concat(names, ", ", 1, #names - 1) .. " and " .. names[#names])
+    return ("%s cleared |cfff2c75c%s|r"):format(list, News.DungeonName(e.a, e.b))
+  elseif e.ty == "ev" then
+    local d = type(e.b) == "table" and e.b or {}
+    return ("Guild event |cffe6e0f0%s|r was held: %d attended"):format(d.title or "?", d.n or 0)
   elseif e.ty == "rare" then
     local names = { n }
     for _, w in ipairs(e.with or {}) do names[#names + 1] = who(w) end

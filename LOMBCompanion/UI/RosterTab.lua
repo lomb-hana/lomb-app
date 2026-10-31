@@ -68,7 +68,6 @@ local function createRow(list, i)
         if prof and prof ~= "" then tt:AddDoubleLine("Professions", prof, 0.6, 0.57, 0.66, 1, 1, 1) end
         if p.il then tt:AddDoubleLine("Item level", tostring(p.il), 0.6, 0.57, 0.66, 1, 1, 1) end
         if p.pt then tt:AddDoubleLine("Played", p.pt .. "h", 0.6, 0.57, 0.66, 1, 1, 1) end
-        if r.ach then tt:AddDoubleLine("Achievements", ("%d of %d"):format(r.ach, ns.Achievements.TOTAL), 0.6, 0.57, 0.66, 0.95, 0.78, 0.36) end
       elseif peer.sharing == false then
         tt:AddLine("Not sharing gear / professions.", 0.6, 0.57, 0.66)
       end
@@ -93,10 +92,9 @@ local function updateRow(row, r)
   row.cells.class:SetText(r.className or "")
   row.cells.rankIndex:SetText(r.rank or "")
   row.cells.zone:SetText(r.zone or "")
-  row.cells.ach:SetText(r.ach and ("|cfff2c75c%d|r"):format(r.ach) or "|cff555060-|r")
   row.cells.online:SetText(Roster.FormatLastOnline(r))
   for key, fs in pairs(row.cells) do
-    if key ~= "short" and key ~= "online" and key ~= "ach" then fs:SetTextColor(W.rgba(dim and "muted" or "text")) end
+    if key ~= "short" and key ~= "online" then fs:SetTextColor(W.rgba(dim and "muted" or "text")) end
   end
 end
 
@@ -141,7 +139,7 @@ UI.RegisterTab({
         fs:SetText(col.label:upper())
         b:SetScript("OnClick", function()
           local key = col.key == "short" and "short" or col.key == "class" and "className" or col.key
-          if view.sort == key then view.desc = not view.desc else view.sort, view.desc = key, (key == "level" or key == "ach") end
+          if view.sort == key then view.desc = not view.desc else view.sort, view.desc = key, (key == "level") end
           UI.Refresh("roster")
         end)
       end
@@ -160,7 +158,6 @@ UI.RegisterTab({
 
     ns:Listen("ROSTER_UPDATED", function() UI.Refresh("roster") end)
     ns:Listen("PEER_UPDATED", function() UI.Refresh("roster") end)
-    ns:Listen("ACHIEVEMENTS_UPDATED", ns.Debounce(1, function() UI.Refresh("roster") end))
     ns:Listen("PROFILES_UPDATED", function() UI.Refresh("roster") end)
     p.browse = { search, online, addon, alts, p.counts, header, p.list, p.empty }
     Tab.panel = p

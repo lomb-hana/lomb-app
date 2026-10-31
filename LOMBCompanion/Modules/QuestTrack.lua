@@ -157,15 +157,6 @@ function Track.Progress(ids)
   return done, #ids
 end
 
--- How many quests this character has completed: the game's history when it
--- answers, else the turn-ins the addon has seen (whichever is larger).
-function Track.DoneCount()
-  local d, s = 0, 0
-  for _ in pairs(doneSet or {}) do d = d + 1 end
-  for _ in pairs(saved() or {}) do s = s + 1 end
-  return math.max(d, s)
-end
-
 -- one line for /lomb quests (what to check on Nov 4)
 function Track.Report()
   local n = 0

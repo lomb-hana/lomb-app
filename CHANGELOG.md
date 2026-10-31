@@ -1,10 +1,28 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1 and v0.6.10 is 0.9.2**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2 and v0.6.11 is 0.9.3**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
 
+## v0.6.11 (in-game 0.9.3): achievements removed, 2026-10-30
+
+Pre-release, untested in game. Supersedes v0.6.10. WoW already has its own achievements, so LOMB's are gone again. News is now a guild activity feed instead. There are still no guild "firsts" and no races.
+
+- **Removed:** the Achievements tab, the Achievements section on profiles, the roster's achievements column and tooltip line, the achievement News lines and their filter, the Achievements leaderboard, the "my achievements" answers and buttons in Ask LOMB, and the achievements sync data with its tests.
+- **Restored:** the "Recent news" panel on member profiles. It now also lists dungeon clears the member was part of.
+- **News is a guild activity feed.** Level-ups ("X reached level 20"), joins and leaves, rare kills and new recipes work exactly as before. New in this version:
+  - **Dungeon and raid clears:** posted when a dungeon's last boss dies while you're inside, using the bundled dungeon data and the Bestiary's kill recording. Guildmates in the same group share one line, for example "Quillanne, Brindlewick and party cleared Deadmines". "And party" means people from outside the guild were in the group too. Guildmates without the addon are named from the group of whoever reported it, and reports from several members of the same group are merged. Big raid lines name the first few people, then "N more". Scarlet Monastery is counted per wing (Graveyard, Library, Armory, Cathedral). Forever's own dungeons (City of Dalaran, Excavation Site: Wetlands, Ruins of Lordaeron, The Hall of Thanes) don't post clears yet, because their last boss isn't known.
+  - **Guild events:** an event that was held shows as one line with its attendance count, for example "Guild event Deadmines run was held: 6 attended".
+  - **Filters:** All news, Level-ups, Rare kills, Dungeons, New recipes, Guild events, Joins & leaves.
+- **Leaderboard:** levels, kills, rares and hours played.
+- **Settings:** "Share my news and leaderboard stats" also covers dungeon clears.
+- **Saved data from 0.9.2:** achievement data is ignored and deleted at log-in. Achievement data still sent by guildmates on 0.9.2 is ignored harmlessly.
+- Kept from 0.9.2: the check that stops two shared data sets from using the same ID.
+- The screenshots were refreshed: the achievements shots (49 to 52) are gone, and shot 51 is now the Dungeons filter.
+
 ## v0.6.10 (in-game 0.9.2): personal achievements, 2026-10-30
+
+**Superseded by v0.6.11:** the achievements below were removed again in v0.6.11 (in-game 0.9.3).
 
 Pre-release, untested in game. The guild "firsts" are gone. Instead there are personal achievements that anyone can earn at their own pace. Nobody is racing anyone.
 

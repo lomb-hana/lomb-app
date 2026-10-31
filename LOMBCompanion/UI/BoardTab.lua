@@ -9,7 +9,7 @@ local MEDALS = { { 0.95, 0.78, 0.36 }, { 0.78, 0.80, 0.86 }, { 0.80, 0.52, 0.30 
 
 local function fmt(key, v)
   if key == "played" then return ("%d h"):format(v) end
-  if key == "level" or key == "ach" then return tostring(v) end
+  if key == "level" then return tostring(v) end
   return W.Thousands(v)
 end
 
@@ -72,7 +72,7 @@ UI.RegisterTab({
     p.buttons = {}
     local prev
     for _, b in ipairs(News.BOARDS) do
-      local btn = W.Button(p, b.label, b.key == "ach" and 96 or 80, 22, function() Tab.board = b.key; UI.Refresh("board") end)
+      local btn = W.Button(p, b.label, 80, 22, function() Tab.board = b.key; UI.Refresh("board") end)
       if prev then btn:SetPoint("LEFT", prev, "RIGHT", 6, 0) else btn:SetPoint("TOPLEFT", 0, 0) end
       p.buttons[b.key], prev = btn, btn
     end
@@ -113,8 +113,7 @@ UI.RegisterTab({
     local rows = Tab.Rows()
     p.list:SetItems(rows)
     if #rows == 0 then
-      p.empty:SetText(Tab.board == "ach" and "No achievements shared yet. They appear as guildmates with the addon earn them." or
-        "Nothing here yet. Stats appear as guildmates with the addon play.")
+      p.empty:SetText("Nothing here yet. Stats appear as guildmates with the addon play.")
       p.empty:Show()
     else
       p.empty:Hide()

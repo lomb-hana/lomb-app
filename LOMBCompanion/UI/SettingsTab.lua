@@ -18,10 +18,10 @@ local OPTIONS = {
   { key = "shareRecipes", label = "Share the recipes I know (for \"who can craft\")",
     tip = "Item and spell IDs of what you can make, read when you open a profession window. Off = guildmates won't see you as a crafter.",
     after = function() ns.Shared.MarkDirty("rc") end },
-  { key = "shareActivity", label = "Share my news, achievements and leaderboard stats",
-    tip = "Level-ups, rare kills, new recipes and achievements for the News tab and profiles; kills, rares and " ..
-      "achievement count for the Leaderboard. Off = you're left out of all of it (your roster level still shows).",
-    after = function() ns.Shared.MarkDirty("st"); ns.Shared.MarkDirty("nw"); ns.Shared.MarkDirty("ah") end },
+  { key = "shareActivity", label = "Share my news and leaderboard stats",
+    tip = "Level-ups, rare kills, new recipes and dungeon clears for the News tab; kills, rares and hours played " ..
+      "for the Leaderboard. Off = you're left out of both (your roster level still shows).",
+    after = function() ns.Shared.MarkDirty("st"); ns.Shared.MarkDirty("nw") end },
   { key = "shareRares", label = "Tell guildmates when I spot a rare",
     tip = "Sends the rare's name and level, the zone, and where you are on the map (e.g. 45, 62) when you see it. "
       .. "At most once per rare every 10 minutes. Nothing else about where you are is sent." },

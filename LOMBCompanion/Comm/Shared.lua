@@ -258,7 +258,7 @@ end
 function Shared.OnData(sender, d)
   local def = type(d.k) == "string" and Shared.kinds[d.k]
   local rev = V.time(d.r)
-  local s = store(d.k)
+  local s = def and store(d.k)
   if not def or not rev or not s then
     Shared.stats.rejected = Shared.stats.rejected + 1
     return
