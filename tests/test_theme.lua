@@ -40,6 +40,9 @@ H.test("the clean look, once chosen, draws no storybook extras", function()
   ns.UI.Open("roster")
   for id, b in pairs(ns.UI.tabButtons) do H.ok(not b.icon, id .. " has no icon") end
   H.ok(not ns.UI.flourishes, "no flourishes")
+  H.eq(ns.UI.titleClose.points[1][2], -6, "the X where it always was")
+  H.eq(ns.UI.titleClose.w, 22)
+  H.eq(ns.UI.titleLogo.points[1][2], 8, "the moon where it always was")
   H.eq(T.Playful("bestiary.none", "plain"), "plain")
 end)
 
@@ -58,7 +61,18 @@ H.test("a saved storybook look is applied before any window is built", function(
   local roster = ns.UI.tabButtons.roster
   H.ok(same(roster.icon.vertex, T.colors.accent), "the open tab's icon is gold")
   H.ok(same(ns.UI.tabButtons.news.icon.vertex, T.colors.muted), "other icons are muted")
-  H.eq(#ns.UI.flourishes, 3, "three flourishes")
+  H.eq(#ns.UI.flourishes, 4, "four flourishes")
+  -- title bar: mirrored ink flourishes in both top corners, outside the X and the logo
+  local fl, fr = ns.UI.flourishes[1], ns.UI.flourishes[2]
+  H.eq(fl.points[1][1], "TOPLEFT"); H.eq(fl.points[1][2], 3); H.eq(fl.points[1][3], -3)
+  H.eq(fr.points[1][1], "TOPRIGHT"); H.eq(fr.points[1][2], -3); H.eq(fr.points[1][3], -3)
+  H.eq(fl.w, fr.w, "same size")
+  H.eq(fl.texCoord and fl.texCoord[1], 0, "left one as drawn")
+  H.eq(fr.texCoord and fr.texCoord[1], 1, "right one mirrored")
+  local close, logo = ns.UI.titleClose, ns.UI.titleLogo
+  local cp, lp = close.points[#close.points], logo.points[#logo.points]
+  H.ok(cp[1] == "RIGHT" and -cp[4] >= 3 + 26, "the X sits left of the right flourish")
+  H.ok(lp[1] == "LEFT" and lp[4] >= 3 + 26, "the moon sits right of the left flourish")
   H.ok(ns.UI.storyDivider, "moon divider in the sidebar")
   for _, tab in ipairs(ns.UI.tabs) do ns.UI.Open(tab.id); H.advance(0.3, 0.3) end
   H.noErrors("every tab in the storybook look")

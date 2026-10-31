@@ -166,6 +166,7 @@ function UI.Create()
   local close = W.IconButton(bar, "x", "Close", function() f:Hide() end, 22)
   close.label:SetFont(T.fonts.body, 16, "")
   close:SetPoint("RIGHT", -6, 0)
+  UI.titleClose, UI.titleLogo = close, logo
 
   -- sidebar navigation
   local nav = W.Panel(f, "panel", "border")
@@ -202,7 +203,7 @@ function UI.Create()
   UI.footerText:SetJustifyH("LEFT")
   UI.footerText:SetWordWrap(false)
 
-  if T.IsStorybook() then UI.Storybook(f, bar, title, sub, nav) end
+  if T.IsStorybook() then UI.Storybook(f, bar, title, sub, nav, logo, close) end
 
   f:SetScript("OnShow", function()
     if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPEN) end
@@ -231,7 +232,7 @@ local function tiled(parent, file, layer, sub, alpha)
   return t
 end
 
-function UI.Storybook(f, bar, title, sub, nav)
+function UI.Storybook(f, bar, title, sub, nav, logo, close)
   local S = T.STORY
   local sky = tiled(f, S.stars, "BACKGROUND", 2, 0.35)
   sky:SetPoint("TOPLEFT", 1, -1)
@@ -247,7 +248,8 @@ function UI.Storybook(f, bar, title, sub, nav)
   title:SetTextColor(unpack(T.ink))
   sub:SetTextColor(unpack(T.inkSoft))
 
-  -- flourishes: the two ends of the title bar (ink), the bottom corners of the window (gold)
+  -- flourishes: the two top corners of the title bar (ink, mirrored), the bottom corners of
+  -- the window (gold). The close button and the logo step in to make room for them.
   local function curl(parent, point, x, y, size, flipX, flipY, color, layer)
     local c = parent:CreateTexture(nil, layer or "OVERLAY")
     c:SetTexture(S.flourish)
@@ -261,8 +263,19 @@ function UI.Storybook(f, bar, title, sub, nav)
     return c
   end
   local gold = T.colors.accent
+  local CURL, INSET = 26, 3
+  if close then
+    close:SetSize(20, 20)
+    close:ClearAllPoints()
+    close:SetPoint("RIGHT", bar, "RIGHT", -(INSET + CURL + 4), 0)
+  end
+  if logo then
+    logo:ClearAllPoints()
+    logo:SetPoint("LEFT", bar, "LEFT", INSET + CURL + 4, 0)
+  end
   UI.flourishes = {
-    curl(bar, "TOPRIGHT", -34, -3, 26, true, false, T.inkSoft, "ARTWORK"),
+    curl(bar, "TOPLEFT", INSET, -INSET, CURL, false, false, T.inkSoft, "ARTWORK"),
+    curl(bar, "TOPRIGHT", -INSET, -INSET, CURL, true, false, T.inkSoft, "ARTWORK"),
     curl(f, "BOTTOMLEFT", 2, T.sizes.footer + 1, 30, false, true, gold),
     curl(f, "BOTTOMRIGHT", -2, T.sizes.footer + 1, 30, true, true, gold),
   }
