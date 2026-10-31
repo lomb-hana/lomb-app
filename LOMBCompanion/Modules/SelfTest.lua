@@ -1,8 +1,10 @@
 -- LOMB Companion: /lomb test -- a self-test for launch day.
 -- Checks that the game gives the addon what it needs (APIs, guild roster, addon
 -- channel, calendar, skill lines), that the bundled data and saved variables are
--- healthy, and -- when a guildmate with LOMB is online -- that a message makes it
--- there and back. Prints PASS / WARN / FAIL lines in chat and opens a window the
+-- healthy, that every feature's own functions run (one read-only line per
+-- feature: Me, Crafters, News, Leaderboard, Bestiary, Quests & items, Loot,
+-- Ask LOMB, Events, Wishlist, Guild bank, Settings & look, Tour), and -- when
+-- a guildmate with LOMB is online -- that a message makes it there and back. Prints PASS / WARN / FAIL lines in chat and opens a window the
 -- report can be copied from. Nothing personal goes in the report: no character,
 -- guild or guildmate names.
 local _, ns = ...
@@ -25,18 +27,26 @@ local function get(path)
   return v
 end
 
--- name, required, alternative
+-- name, required, alternative, what stays off without it (optional ones)
 ST.APIS = {
   { "C_ChatInfo.SendAddonMessage", true, "SendAddonMessage" },
   { "C_ChatInfo.RegisterAddonMessagePrefix", true, "RegisterAddonMessagePrefix" },
   { "GetGuildRosterInfo", true }, { "GetNumGuildMembers", true }, { "GetGuildInfo", true },
   { "C_Timer.After", true }, { "UnitGUID", true },
-  { "GetGuildRosterLastOnline" }, { "GetServerTime" },
-  { "C_Calendar.OpenCalendar" }, { "C_Calendar.GetDayEvent" }, { "C_DateAndTime.GetCurrentCalendarTime" },
-  { "GetSkillLineInfo", false, "C_SkillInfo.GetSkillLineInfo" },
-  { "GetLootSlotInfo" }, { "GetLootSourceInfo" },
-  { "C_Map.GetBestMapForUnit" }, { "C_Item.GetItemInfo", false, "GetItemInfo" },
-  { "RequestTimePlayed" }, { "GetTradeSkillLine" },
+  { "GetGuildRosterLastOnline", false, nil, "last-online in the roster" },
+  { "GetServerTime", false, nil, "realm-time event clocks" },
+  { "C_Calendar.OpenCalendar", false, nil, "the Events tab" }, { "C_Calendar.GetDayEvent", false, nil, "the Events tab" },
+  { "C_DateAndTime.GetCurrentCalendarTime", false, nil, "event times" },
+  { "GetSkillLineInfo", false, "C_SkillInfo.GetSkillLineInfo", "professions on the Me tab" },
+  { "GetLootSlotInfo", false, nil, "bestiary loot" }, { "GetLootSourceInfo", false, nil, "bestiary loot" },
+  { "GetNumLootItems", false, nil, "bestiary loot" }, { "GetLootSlotLink", false, nil, "bestiary loot" },
+  { "C_Map.GetBestMapForUnit", false, nil, "zones and rare spots" },
+  { "C_Item.GetItemInfo", false, "GetItemInfo", "item names and icons" },
+  { "RequestTimePlayed", false, nil, "time played and the Played board" },
+  { "GetTradeSkillLine", false, nil, "recipe scanning for Crafters" },
+  { "GetNumGroupMembers", false, nil, "event attendance" }, { "IsInRaid", false, nil, "event attendance" },
+  { "GetInventoryItemLink", false, nil, "gear on profiles" },
+  { "C_Container.GetContainerItemInfo", false, "GetContainerItemInfo", "the guild bank list" },
 }
 
 ---------------------------------------------------------------------------
@@ -59,12 +69,12 @@ checks[#checks + 1] = function()
     local ok = type(get(a[1])) == "function" or (a[3] and type(get(a[3])) == "function")
     if not ok then
       local into = a[2] and missingReq or missingOpt
-      into[#into + 1] = a[1]
+      into[#into + 1] = a[4] and (a[1] .. " (" .. a[4] .. ")") or a[1]
     end
   end
   if #missingReq > 0 then return "fail", "Game APIs", "missing: " .. table.concat(missingReq, ", ") end
   if #missingOpt > 0 then
-    return "warn", "Game APIs", ("%d of %d found; missing (features using them stay off): %s"):format(
+    return "warn", "Game APIs", ("%d of %d found; missing (what stays off): %s"):format(
       #ST.APIS - #missingOpt, #ST.APIS, table.concat(missingOpt, ", "))
   end
   return "pass", "Game APIs", ("all %d found"):format(#ST.APIS)
@@ -158,6 +168,150 @@ checks[#checks + 1] = function()
   if db.schema ~= ns.DB.SCHEMA then return "warn", "Saved variables", detail end
   if kb > 8192 then return "warn", "Saved variables", detail .. "; large files make logging out slow" end
   return "pass", "Saved variables", detail
+end
+
+---------------------------------------------------------------------------
+-- one line per feature: each calls the feature's own functions the way its tab
+-- does (read-only: nothing is sent, posted or changed; counts only, no names)
+---------------------------------------------------------------------------
+local function count(t) local n = 0; for _ in pairs(t or {}) do n = n + 1 end; return n end
+local function plural(n, word, many) return ("%d %s"):format(n, n == 1 and word or many or (word .. "s")) end
+local function has(path) return type(get(path)) == "function" end
+local function onOff(v) return v and "on" or "off" end
+
+checks[#checks + 1] = function()
+  local Me = ns.Me
+  local p = Me.Profile()
+  if type(p) ~= "table" then return "fail", "Me tab", "your profile couldn't be built" end
+  local played = Me.PlayedNow()
+  local detail = ("profile ready (level %s, %s); played %s; sharing %s"):format(tostring(p.lv or "?"),
+    plural(count(p.pr), "profession"), played and "known" or "not read yet", onOff(ns.db.settings.shareProfile))
+  if not p.lv then return "warn", "Me tab", detail end
+  return "pass", "Me tab", detail
+end
+
+checks[#checks + 1] = function()
+  local Cr = ns.Crafting
+  local mine = 0
+  for _, e in ipairs(Cr.MyCounts()) do mine = mine + e.n end
+  local rows = Cr.Search({})
+  return "pass", "Crafters", ("%s listed from %s; %d of yours scanned; sharing %s, tooltips %s"):format(
+    plural(#rows, "recipe"), plural(Cr.CrafterCount(), "guildmate"), mine,
+    onOff(ns.db.settings.shareRecipes), onOff(ns.db.settings.tooltips))
+end
+
+checks[#checks + 1] = function()
+  local News = ns.News
+  return "pass", "News", ("%s in the feed, %d unread; activity sharing %s"):format(plural(#(News.items or {}), "item"),
+    News.Unread and News.Unread() or 0, onOff(ns.db.settings.shareActivity))
+end
+
+checks[#checks + 1] = function()
+  local News, parts = ns.News, {}
+  for _, b in ipairs(News.BOARDS) do
+    parts[#parts + 1] = ("%s %d"):format(b.label:lower(), #News.Board(b.key, b.weekly))
+  end
+  if #parts == 0 then return "fail", "Leaderboard", "no boards defined" end
+  return "pass", "Leaderboard", plural(#parts, "board") .. " built (" .. table.concat(parts, ", ") .. " rows)"
+end
+
+checks[#checks + 1] = function()
+  local mobs, mine = 0, 0
+  for _, m in pairs(ns.db.bestiary or {}) do
+    mobs = mobs + 1
+    if m.rec and m.rec[ns.playerKey] then mine = mine + 1 end
+  end
+  local listed = #ns.Bestiary.List("", { filter = "all" })
+  local st = ns.db.settings
+  local detail = ("%s known (%d listed), %d recorded by you; sharing %s, rare alerts %s"):format(
+    plural(mobs, "creature"), listed, mine, onOff(st.shareBestiary), onOff(st.rareAlerts))
+  if not has("UnitGUID") then return "warn", "Bestiary", detail .. "; can't tell creatures apart on this client" end
+  return "pass", "Bestiary", detail
+end
+
+checks[#checks + 1] = function()
+  local FDB, Track, G = ns.FDB, ns.QuestTrack, ns.Guides
+  if not FDB.Available() then return "fail", "Quests & items", "the ForeverDB.net data isn't available" end
+  local quests = #FDB.QuestList({})
+  local items = #FDB.ItemSearch("linen", 5)
+  local api = Track.api or {}
+  local detail = ("%s searchable, item search works (%d for \"linen\"); quest log %s, done-quest marks %s; class guides %s")
+    :format(plural(quests, "quest"), items, api.log and "readable" or "not readable",
+      Track.Knows() and "on" or "waiting for data", G.Available() and "loaded" or "missing")
+  if quests == 0 or items == 0 or not G.Available() then return "warn", "Quests & items", detail end
+  return "pass", "Quests & items", detail
+end
+
+checks[#checks + 1] = function()
+  local D, Loot = ns.FDBData, ns.Loot
+  local did
+  for id in pairs(D and D.dungeons or {}) do if not did or id < did then did = id end end
+  if not did then return "warn", "Loot browser", "no dungeons in the bundled data: the loot browser stays empty" end
+  local res = Loot.For(did)
+  return "pass", "Loot browser", ("%s browsable (the first lists %s)")
+    :format(plural(count(D.dungeons), "instance"), plural(#res.items, "item"))
+end
+
+checks[#checks + 1] = function()
+  local Ask = ns.Ask
+  local q = Ask.EXAMPLES[2]
+  local ans = Ask.Answer(q)                -- answered, not added to your history
+  local n = ans and #ans.lines or 0
+  if n == 0 then return "fail", "Ask LOMB", "a sample question got no answer" end
+  local detail = ("a sample question got a %d-line answer; %s in your history"):format(n, plural(#Ask.history, "question"))
+  if ans.unknown then return "warn", "Ask LOMB", detail .. " (it didn't know the sample)" end
+  return "pass", "Ask LOMB", detail
+end
+
+checks[#checks + 1] = function()
+  local E = ns.Events
+  local g = E.Guild and E.Guild()
+  if not g then return "warn", "Events", "no guild data yet" end
+  local st = ns.db.settings
+  local detail = ("%d upcoming, %d past; attendance recording %s, sharing %s, noted for %s"):format(
+    #E.List("upcoming"), #E.List("past"), onOff(st.recordAttendance), onOff(st.shareAttendance),
+    plural(count(g.att), "event"))
+  if not st.recordAttendance then return "warn", "Events", detail end
+  return "pass", "Events", detail
+end
+
+checks[#checks + 1] = function()
+  local WL = ns.Wishlist
+  local others = 0
+  for owner in ns.Shared.Each("wl") do if owner ~= ns.playerKey then others = others + 1 end end
+  return "pass", "Wishlist", ("%d of %d entries on yours, %s in the list; %d guildmate%s' lists known"):format(
+    #WL.Mine(), WL.MAX, plural(#WL.All("all", ""), "row"), others, others == 1 and "" or "s")
+end
+
+checks[#checks + 1] = function()
+  local B = ns.Bank
+  local n = 0
+  for _ in B.Each() do n = n + 1 end
+  return "pass", "Guild bank", ("%s; %s shared"):format(B.IsBankChar() and "this is a bank character" or "not a bank character",
+    plural(n, "bank ledger"))
+end
+
+checks[#checks + 1] = function()
+  local T, UI, st = ns.Theme, ns.UI, ns.db.settings
+  local look = T and T.look
+  if not (T and T.palettes and T.palettes[look]) then return "fail", "Settings & look", "the look didn't apply" end
+  local broken = 0
+  for _, t in ipairs(UI.tabs) do if type(t.build) ~= "function" then broken = broken + 1 end end
+  local detail = ("look %s (saved %s); %s, %d broken"):format(look, tostring(st.theme), plural(#UI.tabs, "tab"), broken)
+  if broken > 0 then return "fail", "Settings & look", detail end
+  if look ~= st.theme then return "warn", "Settings & look", detail .. "; the saved look isn't the one showing" end
+  return "pass", "Settings & look", detail
+end
+
+checks[#checks + 1] = function()
+  local Tour, ok = ns.Tour, 0
+  for _, step in ipairs(Tour.STEPS) do
+    if type(step.title) == "string" and type(step.body) == "string" and type(step.target) == "function" then ok = ok + 1 end
+  end
+  local detail = ("%d of %d steps ready; %s (/lomb tour shows it again)"):format(ok, #Tour.STEPS,
+    ns.db.settings.tourDone and "seen" or "not seen yet")
+  if ok < #Tour.STEPS or ok == 0 then return "fail", "Tour", detail end
+  return "pass", "Tour", detail
 end
 
 checks[#checks + 1] = function()

@@ -179,4 +179,70 @@ H.test("the copy window opens with the report", function()
   H.noErrors("copy window")
 end)
 
+local function report(ns)
+  local got
+  ns.SelfTest.Run({ quiet = true, onDone = function(text, counts) got = { text = text, counts = counts } end })
+  return got.text, got.counts
+end
+local FEATURE_LINES = { "Me tab", "Crafters", "News", "Leaderboard", "Bestiary", "Quests & items", "Loot browser",
+  "Ask LOMB", "Events", "Wishlist", "Guild bank", "Settings & look", "Tour" }
+
+H.test("a line for every feature: all pass on a fresh install, nothing sent, no names", function()
+  local ns = boot()
+  H.said = {}
+  local text, counts = report(ns)
+  for _, label in ipairs(FEATURE_LINES) do
+    local l = lineOf(text, label)
+    H.ok(l, "line for " .. label)
+    H.ok(l:find("^%[PASS%]"), l)
+  end
+  H.ok(lineOf(text, "Game APIs"):find("^%[PASS%]"), lineOf(text, "Game APIs"))
+  H.ok(lineOf(text, "Leaderboard"):find("4 boards built", 1, true), lineOf(text, "Leaderboard"))
+  H.ok(lineOf(text, "Quests & items"):find("class guides loaded", 1, true), lineOf(text, "Quests & items"))
+  H.ok(lineOf(text, "Tour"):find("4 of 4 steps ready", 1, true), lineOf(text, "Tour"))
+  H.ok(lineOf(text, "Settings & look"):find("look storybook", 1, true), lineOf(text, "Settings & look"))
+  H.eq(counts.fail, 0, text)
+  H.eq(#H.said, 0, "no chat messages")
+  H.eq(#H.sent, 0, "no addon messages without peers")
+  H.eq(#ns.Ask.history, 0, "the sample question isn't added to Ask history")
+  H.ok(not text:find("Testy") and not text:find("Brindlewick") and not text:find("Oakenhollow"), "no names")
+  H.noErrors("feature lines")
+end)
+
+H.test("feature lines read live data", function()
+  local ns = boot()
+  ns.Wishlist.Add("n", "Linen Cloth", 3)
+  ns.Bestiary.ApplyRemote("Oakenhollow-Forever", { n = 99001, nm = "Test Wolf" })
+  ns.db.settings.recordAttendance = false
+  local text = report(ns)
+  H.ok(lineOf(text, "Wishlist"):find("1 of 20 entries on yours", 1, true), lineOf(text, "Wishlist"))
+  H.ok(lineOf(text, "Bestiary"):find("1 creature known (1 listed)", 1, true), lineOf(text, "Bestiary"))
+  H.ok(lineOf(text, "Events"):find("^%[WARN%].*recording off"), lineOf(text, "Events"))
+  H.ok(not text:find("Test Wolf", 1, true), "no creature names either")
+end)
+
+H.test("a feature whose functions break shows up as a failed check", function()
+  local ns = boot()
+  local keep = ns.Crafting.Search
+  ns.Crafting.Search = function() error("boom") end
+  local text, counts = report(ns)
+  ns.Crafting.Search = keep
+  H.eq(lineOf(text, "Crafters"), nil, "no pass line")
+  H.ok(text:find("Check crashed", 1, true) and text:find("boom", 1, true), text)
+  H.ok(counts.fail >= 1)
+end)
+
+H.test("missing optional APIs are named with what stays off", function()
+  local ns = boot()
+  local keep = { _G.GetNumGroupMembers, _G.RequestTimePlayed }
+  _G.GetNumGroupMembers, _G.RequestTimePlayed = nil, nil
+  local text, counts = report(ns)
+  _G.GetNumGroupMembers, _G.RequestTimePlayed = keep[1], keep[2]
+  local l = lineOf(text, "Game APIs")
+  H.ok(l:find("^%[WARN%]") and l:find("GetNumGroupMembers (event attendance)", 1, true)
+    and l:find("RequestTimePlayed (time played and the Played board)", 1, true)
+    and l:find("missing (what stays off)", 1, true), l)
+  H.eq(counts.fail, 0, "optional APIs only warn")
+end)
+
 H.done()

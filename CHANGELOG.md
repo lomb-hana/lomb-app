@@ -1,8 +1,20 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6, v0.6.15 is 0.9.7 and v0.6.16 is 0.9.8**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6, v0.6.15 is 0.9.7, v0.6.16 is 0.9.8 and v0.6.17 is 0.9.9**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.17 (in-game 0.9.9): a self-test line for every feature, and fixes, 2026-10-31
+
+Pre-release, untested in game. `/lomb test` grows a line for each feature, and a full code review fixed the bugs below. Nothing else changes.
+
+- **`/lomb test` checks every feature.** New lines after Saved variables, each calling the feature's own functions the way its tab does: **Me tab** (profile, professions, played, sharing), **Crafters** (recipe search, your scanned recipes), **News** (feed, unread), **Leaderboard** (all four boards build), **Bestiary** (list, sharing, rare alerts), **Quests & items** (quest list and item search over the ForeverDB.net data, quest tracking, class guides), **Loot browser**, **Ask LOMB** (answers a sample question without adding it to your history), **Events** (upcoming/past, attendance recording and sharing), **Wishlist**, **Guild bank**, **Settings & look** (the saved look is the one showing, every tab builds) and **Tour** (all steps ready). Every line is read-only: nothing is sent, posted or changed, and no names appear in the report. A feature whose functions break shows up as a failed check.
+- **Game APIs line** checks more of the optional APIs (group size, loot slots, gear links, bag slots) and says what stays off when one is missing, e.g. "GetNumGroupMembers (event attendance)".
+- **Fixed: guild data from other players is cleaned before it's shown.** Rare sightings, shared bestiary entries, guildmates' profiles (version, class, professions, level, item level, played time) and the "a newer version is out" notice could carry chat colour/link codes or oversized values from a broken or hostile client. They are now trimmed, stripped of escape codes and range-checked; bestiary entries with fractional or zero ids are dropped.
+- **Fixed: inspected gear wiped at login.** Gear you'd inspected was pruned as "not in the guild" if the prune ran before the guild roster had loaded. It now waits for the roster.
+- **Fixed: a lost /played.** If the game never answered the addon's quiet /played request, your next typed /played could be swallowed. The quiet flag now clears itself after 10 seconds.
+- **Fixed: wishlist heart on a full list.** Clicking the heart in the loot browser when your wishlist was full threw a Lua error instead of saying why. It now says the list is full.
+- Tests: new tests for each fix (each fails without it) and for the new self-test lines (all present and passing on a fresh install, live data shown, a broken feature fails, nothing sent, no names).
 
 ## v0.6.16 (in-game 0.9.8): storybook title bar, 2026-10-31
 
