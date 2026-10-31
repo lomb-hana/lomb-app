@@ -107,6 +107,10 @@ FrameMT.__index = function(_, k)
   return nil
 end
 
+function Frame:SetTexture(path) self.texturePath = path end
+function Frame:GetTexture() return self.texturePath end
+function Frame:SetVertexColor(r, g, b, a) self.vertex = { r, g, b, a } end
+function Frame:SetTextColor(r, g, b, a) self.textColor = { r, g, b, a } end
 function Frame:RegisterEvent(e) self.events[e] = true end
 function Frame:UnregisterEvent(e) self.events[e] = nil end
 function Frame:UnregisterAllEvents() self.events = {} end
@@ -451,6 +455,8 @@ function H.installAPI(opts)
   env.IsShiftKeyDown = function() return false end
   env.IsControlKeyDown = function() return false end
   env.StaticPopup_Show = function() end
+  H.reloads = 0
+  env.ReloadUI = function() H.reloads = H.reloads + 1 end
   env.GetCoinTextureString = function(c) return tostring(c) .. "c" end
   env.SecondsToTime = function(s) return tostring(s) .. "s" end
   env.FONT_COLOR_CODE_CLOSE = "|r"

@@ -218,10 +218,10 @@ UI.RegisterTab({
     p.items:SetItems(items)
     p.count:SetText(("%d items"):format(#L.items))
     if #L.items == 0 then
-      p.empty:SetText("The bank character's bags are empty.")
+      p.empty:SetText(ns.Theme.Playful("bank.none", "The bank character's bags are empty."))
       p.empty:Show()
     elseif #items == 0 then
-      p.empty:SetText("Nothing in the bank matches that.")
+      p.empty:SetText(ns.Theme.Playful("bank.search", "Nothing in the bank matches that."))
       p.empty:Show()
     else
       p.empty:Hide()

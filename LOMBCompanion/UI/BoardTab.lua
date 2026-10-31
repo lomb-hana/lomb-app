@@ -117,7 +117,7 @@ UI.RegisterTab({
     local rows = Tab.Rows()
     p.list:SetItems(rows, tostring(Tab.board) .. "|" .. tostring(Tab.weekly))
     if #rows == 0 then
-      p.empty:SetText("Nothing here yet. Stats appear as guildmates with the addon play.")
+      p.empty:SetText(ns.Theme.Playful("board.none", "Nothing here yet. Stats appear as guildmates with the addon play."))
       p.empty:Show()
     else
       p.empty:Hide()

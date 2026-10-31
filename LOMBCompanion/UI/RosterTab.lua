@@ -169,7 +169,8 @@ UI.RegisterTab({
     p.list:SetItems(items, W.ViewKey(view))
     local inGuild = ns.Compat.Call(IsInGuild)
     p.empty:SetShown(#items == 0)
-    p.empty:SetText(inGuild and "No one matches." or "You're not in a guild yet.\nJoin Land of Make Believe and your guildmates show up here.")
+    p.empty:SetText(inGuild and ns.Theme.Playful("roster.search", "No one matches.")
+      or "You're not in a guild yet.\nJoin Land of Make Believe and your guildmates show up here.")
     p.counts:SetText(("%d online  ·  %d members  ·  %d with LOMB"):format(
       Roster.online or 0, #Roster.members, inGuild and Roster.PeerCount() + 1 or 0))
   end,

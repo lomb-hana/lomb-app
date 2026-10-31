@@ -49,6 +49,14 @@ function UI.NavButton(parent, tab)
   b.bar:Hide()
   b.label = W.Text(b, "body", 11, "muted", "LEFT")
   b.label:SetPoint("LEFT", 14, 0)
+  if T.IsStorybook() and T.TAB_ICON_IDS[tab.id] then   -- storybook look: a little drawn icon before the label
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetTexture(T.TabIcon(tab.id))
+    b.icon:SetSize(14, 14)
+    b.icon:SetPoint("LEFT", 10, 0)
+    b.icon:SetVertexColor(W.rgba("muted"))
+    b.label:SetPoint("LEFT", 29, 0)
+  end
   b.label:SetText(tab.label)
   b.badge = W.Text(b, "narrow", 10, "accent", "RIGHT")
   b.badge:SetPoint("RIGHT", -8, 0)
@@ -73,6 +81,7 @@ function UI.NavButton(parent, tab)
     self.bar:SetShown(on)
     if on then self.hover:Hide() end
     self.label:SetTextColor(W.rgba(on and "text" or "muted"))
+    if self.icon then self.icon:SetVertexColor(W.rgba(on and "accent" or "muted")) end
   end
   function b:SetBadge(text) self.badge:SetText(text or "") end
   return b
@@ -193,6 +202,8 @@ function UI.Create()
   UI.footerText:SetJustifyH("LEFT")
   UI.footerText:SetWordWrap(false)
 
+  if T.IsStorybook() then UI.Storybook(f, bar, title, sub, nav) end
+
   f:SetScript("OnShow", function()
     if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPEN) end
     ns.Roster.Request()
@@ -207,6 +218,60 @@ function UI.Create()
   UI.frame = f
   ns.Every(2, function() if f:IsShown() then UI.UpdateFooter() end end)
   return f
+end
+
+-- The storybook look's extras, drawn over the clean frame: stars in the night sky behind
+-- everything, a parchment title bar written in ink, gold flourishes in the corners and a
+-- moon divider at the foot of the sidebar. All art is our own (tools/make_storybook.py).
+local function tiled(parent, file, layer, sub, alpha)
+  local t = parent:CreateTexture(nil, layer, nil, sub)
+  t:SetTexture(file, "REPEAT", "REPEAT")
+  if t.SetHorizTile then t:SetHorizTile(true); t:SetVertTile(true) end
+  t:SetAlpha(alpha or 1)
+  return t
+end
+
+function UI.Storybook(f, bar, title, sub, nav)
+  local S = T.STORY
+  local sky = tiled(f, S.stars, "BACKGROUND", 2, 0.35)
+  sky:SetPoint("TOPLEFT", 1, -1)
+  sky:SetPoint("BOTTOMRIGHT", -1, 1)
+  local navSky = tiled(nav, S.stars, "BACKGROUND", 2, 0.22)
+  navSky:SetPoint("TOPLEFT", 1, -1)
+  navSky:SetPoint("BOTTOMRIGHT", -1, 1)
+
+  local paper = tiled(bar, S.parchment, "BORDER", 0, 1)
+  paper:SetPoint("TOPLEFT", 1, -1)
+  paper:SetPoint("BOTTOMRIGHT", -1, 2)
+  if paper.SetHorizTile then paper:SetVertTile(false) end
+  title:SetTextColor(unpack(T.ink))
+  sub:SetTextColor(unpack(T.inkSoft))
+
+  -- flourishes: the two ends of the title bar (ink), the bottom corners of the window (gold)
+  local function curl(parent, point, x, y, size, flipX, flipY, color, layer)
+    local c = parent:CreateTexture(nil, layer or "OVERLAY")
+    c:SetTexture(S.flourish)
+    c:SetSize(size, size)
+    c:SetPoint(point, x, y)
+    local l, r, t, b = 0, 1, 0, 1
+    if flipX then l, r = 1, 0 end
+    if flipY then t, b = 1, 0 end
+    c:SetTexCoord(l, r, t, b)
+    c:SetVertexColor(unpack(color))
+    return c
+  end
+  local gold = T.colors.accent
+  UI.flourishes = {
+    curl(bar, "TOPRIGHT", -34, -3, 26, true, false, T.inkSoft, "ARTWORK"),
+    curl(f, "BOTTOMLEFT", 2, T.sizes.footer + 1, 30, false, true, gold),
+    curl(f, "BOTTOMRIGHT", -2, T.sizes.footer + 1, 30, true, true, gold),
+  }
+  local div = nav:CreateTexture(nil, "ARTWORK")
+  div:SetTexture(S.divider)
+  div:SetSize(100, 8)
+  div:SetPoint("BOTTOM", 0, 40)   -- above the gold corner flourish
+  div:SetVertexColor(gold[1], gold[2], gold[3], 0.8)
+  UI.storyDivider = div
 end
 
 -- Resizing: never smaller than the original 780x480 (every tab is laid out for at least

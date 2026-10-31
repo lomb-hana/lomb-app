@@ -66,6 +66,17 @@ local OPTIONS = {
     tip = "Off: the bestiary card hides while you fight and comes back after." },
   { key = "cardLocked", label = "Lock card position",
     tip = "Stops the bestiary card from being dragged by accident." },
+  { section = "Look" },
+  { key = "storybook", label = "Storybook look (Land of Make Believe)",
+    tip = "Night sky, gold and parchment, with tab icons and storybook empty pages. "
+      .. "Off is the clean look. Switching reloads the interface.",
+    get = function() return S().theme == "storybook" end,
+    set = function(v) S().theme = v and "storybook" or "clean" end,
+    after = function(v)
+      if ns.Theme.look == S().theme then return end
+      W.Confirm((v and "Switch to the storybook look?" or "Switch back to the clean look?")
+        .. "\nThe interface reloads to redraw every window.", function() if ReloadUI then ReloadUI() end end)
+    end },
   { section = "Other" },
   { key = "hideMinimap", label = "Hide minimap button",
     get = function() return S().minimap.hide end,

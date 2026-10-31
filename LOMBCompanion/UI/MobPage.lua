@@ -453,7 +453,7 @@ function MobPage.New(parent, width)
   page.empty:SetPoint("CENTER")
   page.empty:SetWidth(width - 40)
   page.empty:SetWordWrap(true)
-  page.empty:SetText("Pick a creature on the left, or target one in the world.")
+  page.empty:SetText(ns.Theme.Playful("mob.pick", "Pick a creature on the left, or target one in the world."))
   function page:SetMob(npcId) ns.SafeCall(MobPage.Render, self, npcId) end
   -- what to redraw after the window is resized (QuestsTab swaps in its own)
   function page:Rerender() if self.npcId then self:SetMob(self.npcId) end end

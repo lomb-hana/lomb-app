@@ -115,6 +115,8 @@ end
 ns:On("ADDON_LOADED", function(_, loaded)
   if loaded ~= ADDON_NAME then return end
   ns.DB.Load()
+  -- the look is picked before any frame is built (Settings > Look reloads the UI)
+  if ns.Theme and ns.Theme.Apply then ns.Theme.Apply(ns.db.settings.theme) end
   for _, m in ipairs(ns.modules) do
     if m.Init then ns.SafeCall(m.Init, m) end
   end

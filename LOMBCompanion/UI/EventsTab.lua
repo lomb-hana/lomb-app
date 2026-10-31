@@ -268,8 +268,8 @@ UI.RegisterTab({
     p.list:SetItems(items, view.which)
     if #items == 0 then
       p.empty:SetText(view.which == "upcoming"
-        and "No upcoming guild events.\n\nEvents come from the in-game calendar: officers add them there."
-        or "No past events yet.")
+        and ns.Theme.Playful("events.none", "No upcoming guild events.\n\nEvents come from the in-game calendar: officers add them there.")
+        or ns.Theme.Playful("events.past", "No past events yet."))
       p.empty:Show()
     else
       p.empty:Hide()

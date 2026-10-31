@@ -242,7 +242,7 @@ UI.RegisterTab({
         p.empty:SetText("No recipes shared yet.\n\nOpen each of your profession windows once and LOMB Companion " ..
           "remembers what you can make. Guildmates with the addon do the same, and their recipes show up here.")
       else
-        p.empty:SetText("Nothing matches that search.")
+        p.empty:SetText(ns.Theme.Playful("crafters.search", "Nothing matches that search."))
       end
       p.empty:Show()
     else
