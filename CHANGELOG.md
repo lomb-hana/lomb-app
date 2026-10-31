@@ -4,6 +4,11 @@ Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown 
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
 
+## Unreleased (theme-titlebar branch)
+
+- **Storybook title bar.** The ink corner flourish now sits in the far top-right corner, to the right of the close button (which is a little smaller, 20 instead of 22), and a mirrored copy sits in the top-left corner. The moon and the title move right to clear it. The Clean look is unchanged.
+- Screenshots redrawn with the new title bar.
+
 ## v0.6.15 (in-game 0.9.7): storybook by default, 2026-10-30
 
 Pre-release, untested in game. The storybook look is now the default.

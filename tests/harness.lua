@@ -159,6 +159,7 @@ function Frame:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function Frame:ClearAllPoints() self.points = {} end
 function Frame:GetPoint() local p = self.points[1]; if p then return unpack(p) end return "CENTER", nil, "CENTER", 0, 0 end
 function Frame:GetNumPoints() return #self.points end
+function Frame:SetTexCoord(...) self.texCoord = { ... } end
 function Frame:SetText(t)
   self.text = t
   if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self, false) end
