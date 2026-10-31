@@ -1,13 +1,15 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6 and v0.6.15 is 0.9.7**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0, v0.6.9 is 0.9.1, v0.6.10 is 0.9.2, v0.6.11 is 0.9.3, v0.6.12 is 0.9.4, v0.6.13 is 0.9.5, v0.6.14 is 0.9.6, v0.6.15 is 0.9.7 and v0.6.16 is 0.9.8**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
 
-## Unreleased (theme-titlebar branch)
+## v0.6.16 (in-game 0.9.8): storybook title bar, 2026-10-31
+
+Pre-release, untested in game. A small fix to the storybook title bar; nothing else changes.
 
 - **Storybook title bar.** The ink corner flourish now sits in the far top-right corner, to the right of the close button (which is a little smaller, 20 instead of 22), and a mirrored copy sits in the top-left corner. The moon and the title move right to clear it. The Clean look is unchanged.
-- Screenshots redrawn with the new title bar.
+- Screenshots: every README screenshot and the `theme/` images redrawn for 0.9.8 with the new title bar.
 
 ## v0.6.15 (in-game 0.9.7): storybook by default, 2026-10-30
 
