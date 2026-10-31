@@ -1,8 +1,22 @@
 # Changelog
 
-Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9 and v0.6.8 is 0.9.0**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
+Release tags follow the roadmap (v0.1 … v1.0). The addon's own version, shown in game and in the TOC, is separate: **release v0.6.0 is in-game version 0.8.2, v0.6.1 is 0.8.3, v0.6.2 is 0.8.4, v0.6.3 is 0.8.5, v0.6.4 is 0.8.6, v0.6.5 is 0.8.7, v0.6.6 is 0.8.8, v0.6.7 is 0.8.9, v0.6.8 is 0.9.0 and v0.6.9 is 0.9.1**, because v0.7 and v0.8 were built before ForeverDB.net approved API access for v0.6.
 
 Nothing here has been tested in the real game yet. WoW: Forever launches on November 4, 2026.
+
+## v0.6.9 (in-game 0.9.1): forgiving Ask LOMB, 2026-10-30
+
+Pre-release, untested in game. Ask LOMB still works entirely offline and is still not an AI: it's word matching and name search over the bundled data, done more forgivingly.
+
+- **Reads questions loosely.** Case, punctuation and filler words ("please", "can you", "the", "hey") are ignored, contractions are expanded ("what's", "where's", "i'm"), and common typos of question words are fixed ("wher", "wich", "selz").
+- **Synonyms and short forms:** q/quest, lvl/lv/level, mob/creature/npc, drop/loot, sell/buy/vendor, make/craft/create, where/find/location, dungeon/instance, plus plurals and "-ing" forms.
+- **Levels said any way:** "quests my level", "quests near/at/for my level", "around my lvl", "lvl 20 quests", "quests for 20", "level 20 quests", "quests 18-22", "quests between 18 and 22". "My zone" and "here" mean the zone you're in.
+- **Scores readings instead of matching patterns.** Every kind of answer (quest, item, dungeon, boss, zone, NPC, node, ...) gets a score from the words in the question and how well the rest matches a real name, and the best one wins. Word order no longer matters ("loot deadmines" and "deadmines loot" both work).
+- **Forgiving names:** typos, missing or extra letters, swapped letters, joined or split words and short names all match ("deadmine", "van cleef", "vancleef", "defias brotherhod", "hoger"). Common short names work too: dm, vc, rfc, wc, sfk, stocks, bfd, gnomer, ony; wsg, ab, av, stv, sw, org, tb, uc.
+- **"Did you mean …?"** When it isn't sure, it gives its best guess and up to three clickable "Did you mean …?" lines for the other likely readings. When nothing matches it says "Best guess for ..." or "I couldn't find ...", and only then "I don't know that one".
+- New `Modules/AskParse.lua` holds the reading and scoring; `Ask.lua` keeps the answers.
+- Tests: a table of 299 paraphrases (typos, short forms, word orders) in `tests/ask_phrasings.txt`, each checked for the right intent and target. Name matching got faster too (about 25 ms a question in the test harness).
+- No new ForeverDB.net requests (0).
 
 ## v0.6.8 (in-game 0.9.0): code clean-up, 2026-10-30
 

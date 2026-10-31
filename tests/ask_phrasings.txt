@@ -1,0 +1,307 @@
+# Ask LOMB phrasings: intent | target | question
+# One row per way of asking. The Lua test (tests/test_ask_phrasings.lua) checks
+# every row against the real bundle; the preview's JS port checks the same file
+# with node (rows whose target isn't in the preview's sample data only check
+# the intent). Targets: a name, "me" / "20" / "18-22" for quest levels,
+# "@Zone" or "@here" for a zone, a slug for gathering. "unknown" means the
+# answer must say it doesn't know (no made-up match).
+# The test player is a level 18 Alliance rogue in Westfall.
+quests | me | quests my level
+quests | me | quests near my level
+quests | me | quests at my level
+quests | me | quests for my level
+quests | me | around my lvl
+quests | me | my level
+quests | 20 | lvl 20 quests
+quests | 20 | quests for 20
+quests | 20 | level 20 quests
+quests | 18-22 | quests 18-22
+quests | @here | quests in my zone
+quests | @here | quests here
+quests | @Duskwood | quests in duskwood
+quests | @Duskwood | duskwod quests
+loot | Deadmines | deadmines loot
+loot | Deadmines | deadmine loot
+loot | Deadmines | what drops in the deadmines
+loot | Edwin VanCleef | vancleef drops
+loot | Edwin VanCleef | van cleef loot
+loot | Edwin VanCleef | what does edwin vancleef drop
+info | Linen Cloth | linen cloth
+sells | Linen Cloth | who sells linen cloth
+sells | Fine Thread | who sells fine thread
+info | Fine Thread | fine thread
+sells | Fine Thread | where can i buy fine thread
+make | Heavy Linen Bandage | how do i make heavy linen bandage
+make | Heavy Linen Bandage | how to craft heavy linen bandage
+make | Heavy Linen Bandage | heavy linen bandage recipe
+crafters | Copper Chain Belt | who can craft copper chain belt
+disenchant | Battleforge Boots | what does battleforge boots disenchant into
+disenchant | Battleforge Boots | de battleforge boots
+set | Blackened Defias Armor | which set is blackened defias armor in
+drops | Linen Cloth | what drops linen cloth
+drops | Linen Cloth | where does linen cloth drop
+start | WANTED: "Hogger" | where does hogger start
+start | WANTED: "Hogger" | who gives hogger
+turnin | The Defias Brotherhood | where do i turn in the defias brotherhood
+turnin | The Defias Brotherhood | turn in defias brotherhood
+next | Red Leather Bandanas | what comes after red leather bandanas
+next | The Defias Brotherhood | next quest after the defias brotherhood
+train |  | what can i train
+train |  | what should i train
+gather | mining | where do i level mining
+gather | herbalism | best place to level herbalism
+find | Briarthorn | where is briarthorn
+info | Briarthorn | briarthorn
+find | Copper Ore | where can i mine copper
+info | Copper Ore | copper ore
+info | Deadmines | deadmines level and bosses
+info | Deadmines | dm
+info | Ragefire Chasm | rfc
+info | Elwynn Forest | what is elwynn forest
+info | Warsong Gulch | tell me about warsong gulch
+find | Barkeep Daniels | where is barkeep daniels
+info | Barkeep Daniels | barkeep daniels
+event |  | next event
+event |  | when is the next raid
+event |  | upcoming guild events
+unknown |  | asdf qwerty
+unknown |  | who sells zzzzzz flurble
+loot | Shadowfang Keep | what drops in sfk
+quests | me | quests near me level
+quests | me | quests my lvl
+quests | me | quest my level
+quests | me | q my level
+quests | me | qs for my lvl
+quests | me | whats near my level
+quests | me | any quests around my level
+quests | me | give me some quests for my level please
+quests | me | show me quests at my lvl
+quests | 20 | lvl20 quests
+quests | 20 | lv 20 quests
+quests | 20 | quests lvl 20
+quests | 20 | quests level 20
+quests | 12 | quests for level 12
+quests | 12 | quests for lvl 12
+quests | 12 | level 12
+quests | 12 | lvl 12
+quests | 12 | quest 12
+quests | 18-22 | quests 18 to 22
+quests | 18-22 | quests 18 - 22
+quests | 18-22 | quests between 18 and 22
+quests | 18-22 | lvl 18-22 quests
+quests | 15-17 | quests from 15 to 17
+quests | @here | my zone quests
+quests | @here | quests in this zone
+quests | @here | quests around here
+quests | @here | what quests are here
+quests | @here | quests near me
+quests | @Westfall | quests in westfall
+quests | @Westfall | westfall quests
+quests | @Westfall | quests in westfal
+quests | @Redridge Mountains | redridge quests
+quests | @Redridge Mountains | quests redrige mountains
+quests | 20@Redridge Mountains | level 20 quests in redridge
+quests | me@Duskwood | quests for my level in duskwood
+info | Deadmines | deadmines
+info | Deadmines | deadmine
+info | Deadmines | the deadmines
+info | Deadmines | dead mines
+loot | Deadmines | deadmines drops
+loot | Deadmines | deadmines loot table
+loot | Deadmines | loot deadmines
+loot | Deadmines | loot in deadmines
+loot | Deadmines | what drops in dm
+loot | Deadmines | dm loot
+loot | Deadmines | vc loot
+loot | Edwin VanCleef | what does van cleef drop
+loot | Edwin VanCleef | vancleef loot
+info | Edwin VanCleef | edwin van cleef
+info | Edwin VanCleef | vancleef
+info | Edwin VanCleef | who is vancleef
+info | WANTED: "Hogger" | hogger
+info | WANTED: "Hogger" | hoger
+start | WANTED: "Hogger" | where does hoger start
+find | WANTED: "Hogger" | where is hogger quest
+start | WANTED: "Hogger" | hogger quest start
+start | WANTED: "Hogger" | who gives the hogger quest
+start | The Defias Brotherhood | start of the defias brotherhood
+start | The Defias Brotherhood | where do i pick up the defias brotherhood
+turnin | The Defias Brotherhood | defias brotherhood turn in
+turnin | The Defias Brotherhood | where do i hand in the defias brotherhood
+turnin | The Defias Brotherhood | turnin defias brotherhod
+next | The Defias Brotherhood | defias brotherhood next
+next | The Defias Brotherhood | whats after the defias brotherhood
+next | Red Leather Bandanas | what follows red leather bandanas
+next | Red Leather Bandanas | red leather bandanas next quest
+info | Linen Cloth | linen
+info | Linen Cloth | linnen cloth
+info | Linen Cloth | lenin cloth
+sells | Linen Cloth | who sells linen
+sells | Fine Thread | who sells fine thread?
+sells | Fine Thread | fine thread vendor
+sells | Fine Thread | vendor fine thread
+sells | Fine Thread | where to buy fine thread
+sells | Fine Thread | buy fine thread
+sells | Fine Thread | how much is fine thread
+info | Fine Thread | fine thred
+sells | Fine Thread | who sells fien thread
+sells | Fine Thread | can i buy fine thread anywhere
+info | Heavy Linen Bandage | heavy linen bandage
+make | Heavy Linen Bandage | how do i make heavy linen bandages
+make | Heavy Linen Bandage | craft heavy linen bandage
+make | Heavy Linen Bandage | make heavy linen bandage
+make | Heavy Linen Bandage | heavy linen bandage mats
+make | Heavy Linen Bandage | what do i need for heavy linen bandage
+make | Heavy Linen Bandage | reagents for heavy linen bandage
+make | Heavy Linen Bandage | heavy linnen bandage recipe
+crafters | Copper Chain Belt | who can make copper chain belt
+crafters | Copper Chain Belt | copper chain belt crafter
+crafters | Copper Chain Belt | anyone craft copper chain belt
+crafters | Copper Chain Belt | who crafts copper chain belts
+info | Copper Chain Belt | copper chain belt
+disenchant | Battleforge Boots | battleforge boots disenchant
+disenchant | Battleforge Boots | disenchant battleforge boots
+disenchant | Battleforge Boots | what do battleforge boots de into
+info | Battleforge Boots | battleforge boots
+set | Blackened Defias Armor | blackened defias armor set
+set | Blackened Defias Armor | what set is blackened defias armor
+info | Blackened Defias Armor | blackened defias armor
+set | Defias Leather | defias leather set
+info | Defias Leather | defias leather
+drops | Linen Cloth | what drops linen cloth?
+drops | Linen Cloth | linen cloth drops
+drops | Linen Cloth | where does linen cloth drop from
+drops | Linen Cloth | who drops linen cloth
+drops | Linen Cloth | what mobs drop linen cloth
+train |  | what can i train?
+train |  | what can i learn
+train |  | trainer
+train |  | new spells
+train |  | skills to train
+gather | mining | where should i level mining
+gather | mining | mining leveling
+gather | mining | best place to level mining
+gather | herbalism | level herbalism
+gather | herbalism | herbalism leveling
+gather | herbalism | where to herb
+find | Briarthorn | where can i find briarthorn
+find | Briarthorn | briarthorn location
+find | Briarthorn | where is briarthorn found
+info | Briarthorn | briarthron
+info | Peacebloom | peacebloom
+find | Peacebloom | where to find peacebloom
+info | Copper Vein | copper vein
+info | Copper Ore | copper
+find | Copper Ore | where can i find copper ore
+info | Tin Ore | tin ore
+info | Deadmines | deadmines level
+info | Deadmines | what level is deadmines
+info | Deadmines | deadmines bosses
+info | Deadmines | bosses in deadmines
+info | Ragefire Chasm | ragefire chasm
+info | Ragefire Chasm | rfc level
+info | Wailing Caverns | wailing caverns
+info | Wailing Caverns | wc
+info | Shadowfang Keep | sfk
+info | Shadowfang Keep | shadowfang keep
+info | Stormwind Stockade | stockade
+info | Stormwind Stockade | the stockade
+info | Elwynn Forest | elwynn forest
+info | Elwynn Forest | elwyn forest
+info | Redridge Mountains | what level is redridge
+info | Redridge Mountains | redridge mountains
+info | Warsong Gulch | warsong gulch
+info | Warsong Gulch | wsg
+find | Barkeep Daniels | where is barkeep daniel
+info | Gina MacGregor | gina macgregor
+find | Gina MacGregor | where is gina macgregor
+event |  | next event?
+event |  | next guild event
+event |  | any events
+event |  | guild events
+event |  | upcoming events
+event |  | whens the next raid
+event |  | next raid
+unknown |  | hello
+find | WANTED: "Hogger" | wher is hogger
+find | Barkeep Daniels | were is barkeep daniels
+sells | Fine Thread | who selz fine thread
+loot | Deadmines | wat drops in deadmines
+loot | Deadmines | deadmins loot
+info | Deadmines | dedmines
+loot | Deadmines | dead mine loot
+loot | Shadowfang Keep | shadowfang keep loot
+loot | Shadowfang Keep | sfk drops
+loot | Ragefire Chasm | rfc loot
+loot | Wailing Caverns | wailing caverns loot
+quests | me | quets my level
+quests | me | qeusts near my level
+quests | me | quest near my lvl
+quests | 20 | questss lvl 20
+quests | 20 | lvl 20
+quests | 15@Westfall | lvl 15 quests westfall
+quests | 25 | quests lv 25
+quests | 10-12 | quests 10-12
+quests | 18-22 | q 18-22
+quests | 20-24@Redridge Mountains | quests 20 to 24 in redridge
+quests | 30 | level 30 quests
+gather | herbalism | herbing
+gather | mining | mining
+gather | mining | where to mine
+gather | fishing | fishing
+turnin | Red Leather Bandanas | where do i turn in red leather bandanas
+turnin | Red Leather Bandanas | red leather bandanas turn in
+start | Red Leather Bandanas | start red leather bandanas
+info | Red Leather Bandanas | red leather bandanas
+start | Red Leather Bandanas | where does red leather bandanas start
+next | Red Leather Bandanas | what next after red leather bandanas
+disenchant | Battleforge Boots | battleforge boots de
+disenchant | Battleforge Boots | does battleforge boots disenchant
+set | Blackened Defias Armor | blackened defias armor which set
+set | Blackened Defias Armor | set for blackened defias armor
+sells | Linen Cloth | linen cloth vendor
+sells | Linen Cloth | linen cloth who sells
+make | Copper Chain Belt | copper chain belt recipe
+make | Copper Chain Belt | how to make copper chain belt
+make | Copper Chain Belt | copper chain belt mats
+crafters | Copper Chain Belt | who makes copper chain belt
+crafters | Copper Chain Belt | any crafters for copper chain belt
+make | Linen Bag | how do i make a linen bag
+make | Linen Bag | linen bag recipe
+find | Peacebloom | peacebloom location
+info | Silverleaf | silverleaf
+find | Silverleaf | where can i find silverleaf
+info | Tin Vein | tin vein
+find | Tin Ore | where is tin
+info | Mageroyal | mageroyal
+info | Earthroot | earthroot
+find | Briarthorn | briarthorn spawns
+info | Briarthorn | what is briarthorn
+info | Deadmines | info on deadmines
+info | Deadmines | tell me about the deadmines
+info | Deadmines | deadmines info
+info | Elwynn Forest | about elwynn forest
+info | Westfall | westfall
+info | Duskwood | duskwood
+info | Westfall | what is westfall
+make |  | what can i craft
+make |  | what can i make
+make |  | how do i make
+event |  | calendar
+event |  | whats the next guild event
+event |  | events
+event |  | raid tonight?
+quests | @Westfall | can you show me quests in westfall please
+quests | me | are there any quests near my level
+quests | me | what are some good quests for me
+quests | me | quests for me
+quests | me | i need quests
+quests | me | whats my level quests
+quests | me | i'm looking for quests my level
+quests | me | around my lvl
+quests | @here | quests in my zone
+loot | Deadmines | loot deadmines
+info | Deadmines | dm bosses
+quests | @Stranglethorn Vale | stv quests
+quests | 20 | lv 20 q
+sells | Fine Thread | hey can you please tell me who sells fine thread

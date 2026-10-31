@@ -1,7 +1,9 @@
 -- LOMB Companion: Ask LOMB -- a question box that answers from the bundled
--- ForeverDB.net snapshot and what the guild has shared. It works offline: it
--- matches the question against a fixed set of question shapes, looks the names up
--- in the bundle, and builds the answer from the same lookups the other views use.
+-- ForeverDB.net snapshot and what the guild has shared. It works offline and is
+-- not an AI: AskParse reads the words (synonyms, typos, "my level", "here"),
+-- each kind of answer gets a score from its keywords plus how well a name in
+-- the bundle fits, and the winner is built from the same lookups the other
+-- views use. Close-but-not-exact names get "Did you mean" chips.
 -- Nothing is ever sent anywhere; /lomb ask only prints to your own chat frame.
 --
 -- An answer is { q = question, lines = { line... }, data = bool (uses ForeverDB data) }.
@@ -45,40 +47,65 @@ local function norm(s)
 end
 Ask.Norm = norm
 
-local PREFIXES = { "hey lomb ", "hi lomb ", "lomb ", "hey ", "hi ", "please ", "can you tell me ", "could you tell me ",
-  "do you know ", "tell me ", "i want to know ", "i need to know ", "any idea ", "so ", "ok ", "okay " }
-
-local function tidy(q)
-  local changed = true
-  while changed do
-    changed = false
-    for _, p in ipairs(PREFIXES) do
-      if q:sub(1, #p) == p then q = q:sub(#p + 1); changed = true end
-    end
-  end
-  q = q:gsub(" please$", ""):gsub(" thanks?$", ""):gsub(" thank you$", "")
-  return q
-end
-
 local playerLevel = ns.Compat.PlayerLevel
 local playerZone = ns.Compat.PlayerZone
+local P = ns.AskParse
 
 ---------------------------------------------------------------------------
 -- Name indexes (built the first time a question needs them)
 ---------------------------------------------------------------------------
 local names = {}
 
+-- short names people use for dungeons
+Ask.DUNGEON_ALIAS = {
+  dm = "Deadmines", vc = "Deadmines", rfc = "Ragefire Chasm", wc = "Wailing Caverns", sfk = "Shadowfang Keep",
+  stocks = "Stormwind Stockade", stockade = "Stormwind Stockade", stockades = "Stormwind Stockade",
+  ony = "Onyxia's Lair", onyxia = "Onyxia's Lair", bfd = "Blackfathom Deeps", gnomer = "Gnomeregan",
+  rfk = "Razorfen Kraul", sm = "Scarlet Monastery", mistmantle = "Manor Mistmantle",
+}
+
+Ask.ZONE_ALIAS = {
+  wsg = "Warsong Gulch", ab = "Arathi Basin", av = "Alterac Valley", stv = "Stranglethorn Vale",
+  sw = "Stormwind City", ironforge = "Ironforge", org = "Orgrimmar", tb = "Thunder Bluff", uc = "Undercity",
+  hinterlands = "The Hinterlands", barrens = "The Barrens", redridge = "Redridge Mountains",
+}
+
 local function build(kind)
   local d = D()
   local list = {}
-  local function put(name, id) if name and name ~= "" then list[#list + 1] = { norm(name), id, name } end end
+  local function put(name, id) if name and name ~= "" then list[#list + 1] = { key = P.Key(name), id = id, name = name } end end
   if not d then return list end
   if kind == "quest" then for id, q in pairs(d.quests or {}) do put(q.n, id) end
   elseif kind == "item" then for id, e in pairs(d.items or {}) do put(e[1], id) end
   elseif kind == "vendor" then for id, v in pairs(d.vendors or {}) do put(v.n, id) end
-  elseif kind == "dungeon" then for id, dg in pairs(d.dungeons or {}) do put(dg.n, id) end
-  elseif kind == "zone" then for id, z in pairs(d.zones or {}) do put(z.n, id) end
+  elseif kind == "dungeon" then
+    for id, dg in pairs(d.dungeons or {}) do
+      put(dg.n, id)
+      for alias, target in pairs(Ask.DUNGEON_ALIAS) do
+        if target == dg.n then list[#list + 1] = { key = P.Key(alias), id = id, name = dg.n } end
+      end
+    end
+  elseif kind == "boss" then
+    for did, dg in pairs(d.dungeons or {}) do
+      for i, b in ipairs(dg.b or {}) do put(b, { did, i }) end
+    end
+  elseif kind == "zone" then
+    for id, z in pairs(d.zones or {}) do
+      put(z.n, id)
+      for alias, target in pairs(Ask.ZONE_ALIAS) do
+        if target == z.n then list[#list + 1] = { key = P.Key(alias), id = id, name = z.n } end
+      end
+    end
   elseif kind == "set" then for id, s in pairs(d.itemsets or {}) do put(s.n, id) end
+  elseif kind == "node" then
+    for _, slug in ipairs({ "herbalism", "mining" }) do
+      local g = G().Gathering(slug)
+      for i, n in ipairs(g and g.nodes or {}) do
+        local id = { slug, i, n }
+        put(n.n, id)
+        if n.it then put(FDB().ItemName(n.it), id) end
+      end
+    end
   elseif kind == "npc" then
     local seen = {}
     for _, q in pairs(d.quests or {}) do
@@ -89,11 +116,14 @@ local function build(kind)
         end
       end
     end
+  elseif kind == "mob" then
+    for npcId, m in pairs(ns.db and ns.db.bestiary or {}) do put(m.nm, npcId) end
   end
   return list
 end
 
 local function index(kind)
+  if kind == "mob" then return build(kind) end   -- guild data changes as you play
   if not names[kind] then names[kind] = build(kind) end
   return names[kind]
 end
@@ -101,32 +131,31 @@ end
 function Ask.ResetIndex() names = {} end
 function Ask.IndexBuilt(kind) return names[kind] ~= nil end
 
-local function strip(t)
-  t = t:gsub("^the quest ", ""):gsub("^quest ", ""):gsub(" quest$", ""):gsub(" item$", "")
-  return t
-end
+local MIN = 45   -- below this a name doesn't really match
 
--- Find things of one kind by name: exact first, then "starts with", then "contains"
--- (and the name inside the question). Returns a list of { id, name, score }, best first.
--- `prefer(id)` returns a number; higher wins between equal matches.
+-- Find things of one kind by name, forgivingly (see AskParse.Match). Returns a
+-- list of { id, name, score, kind }, best first. `prefer(id)` breaks ties.
 local function find(kind, text, prefer, limit)
-  text = strip(norm(text))
-  if text == "" then return {} end
-  local alt = text:gsub("^the ", ""):gsub("^an? ", "")
-  local out = {}
+  local q = P.Key(text)
+  if q.c == "" then return {} end
+  local out, seen = {}, {}
   for _, e in ipairs(index(kind)) do
-    local n, score = e[1], nil
-    if n == text or n == alt then score = 4
-    elseif n:gsub("^the ", "") == alt then score = 4
-    elseif #alt >= 3 and n:sub(1, #alt) == alt then score = 3
-    elseif #alt >= 3 and n:find(alt, 1, true) then score = 2
-    elseif #n >= 5 and (" " .. text .. " "):find(" " .. n .. " ", 1, true) then score = 1 end
-    if score then out[#out + 1] = { id = e[2], name = e[3], score = score, len = #n, pref = prefer and prefer(e[2]) or 0 } end
+    local s = P.Match(e.key, q)
+    if s >= MIN then
+      local k = e.name .. "\0" .. tostring(type(e.id) == "table" and (e.id.id or e.id[2]) or e.id)
+      local old = seen[k]
+      if not old or old.score < s then
+        local r = { id = e.id, name = e.name, score = s, len = #e.name, kind = kind, pref = prefer and prefer(e.id) or 0 }
+        if old then for f, v in pairs(r) do old[f] = v end else seen[k] = r; out[#out + 1] = r end
+      end
+    end
   end
+  -- scores a few points apart count as a tie, so the better-known thing wins
   table.sort(out, function(a, b)
-    if a.score ~= b.score then return a.score > b.score end
+    local ba, bb = math.floor(a.score / 4), math.floor(b.score / 4)
+    if ba ~= bb then return ba > bb end
     if a.pref ~= b.pref then return a.pref > b.pref end
-    if a.score == 1 and a.len ~= b.len then return a.len > b.len end   -- longest name found inside the question
+    if a.score ~= b.score then return a.score > b.score end
     if a.len ~= b.len then return a.len < b.len end
     if type(a.id) == "number" and type(b.id) == "number" then return a.id < b.id end
     return a.name < b.name
@@ -136,9 +165,22 @@ local function find(kind, text, prefer, limit)
 end
 Ask.Find = find
 
-local function best(kind, text, prefer)
-  local r = find(kind, text, prefer, 1)[1]
-  return r and r.id, r
+-- Names sharing words with the text, for "best guess" when nothing matches well.
+local function loose(kind, text, prefer, limit)
+  local q = P.Key(text)
+  local out = {}
+  for _, e in ipairs(index(kind)) do
+    local h = P.Overlap(e.key, q)
+    if h > 0 then out[#out + 1] = { id = e.id, name = e.name, hits = h, kind = kind, pref = prefer and prefer(e.id) or 0, len = #e.name } end
+  end
+  table.sort(out, function(a, b)
+    if a.hits ~= b.hits then return a.hits > b.hits end
+    if a.pref ~= b.pref then return a.pref > b.pref end
+    if a.len ~= b.len then return a.len < b.len end
+    return a.name < b.name
+  end)
+  if #out > limit then for k = #out, limit + 1, -1 do out[k] = nil end end
+  return out
 end
 
 -- quests: your side first, then nearest your level
@@ -157,7 +199,7 @@ local function itemPref(id)
   local e = D() and D().items[id]
   local p = (e and e[2] or 1)
   if FDB().Known(id) then p = p + 10 end
-  return p
+  return p + math.min(#FDB().ItemFacts(id).reagentFor, 20)   -- "linen" is the cloth everyone uses
 end
 
 local function linkedID(raw, what)
@@ -206,18 +248,6 @@ local function status(id)
   if s == "done" then return GOOD .. "  done|r" elseif s == "ready" then return "|cffffd36b  turn in|r"
   elseif s == "log" then return "|cff8fc8ff  in log|r" end
   return ""
-end
-
--- Other close matches with a different name, when the best one wasn't exact.
-local function others(a, list, kindWord)
-  local top = list[1]
-  if not top or top.score >= 4 then return end
-  local more, seen = {}, { [top.name] = true }
-  for k = 2, #list do
-    local r = list[k]
-    if #more < 3 and r.score >= 2 and not seen[r.name] then seen[r.name] = true; more[#more + 1] = r.name end
-  end
-  if #more > 0 then a:muted(("Or did you mean the %s %s?"):format(kindWord, table.concat(more, " / "))) end
 end
 
 ---------------------------------------------------------------------------
@@ -660,89 +690,196 @@ local function eventAnswer(a)
 end
 
 ---------------------------------------------------------------------------
--- Resolving "X" in a question to something the bundle knows
+-- Reading the question: which kind of answer, about what
 ---------------------------------------------------------------------------
-local function itemFrom(raw, text, pred)
-  local id = linkedID(raw, "item")
-  if id then return id end
-  local list = find("item", text, itemPref, 12)
-  if pred then
-    for _, r in ipairs(list) do if r.score >= 2 and pred(r.id) then return r.id, list end end
-  end
-  return list[1] and list[1].id, list
-end
-
-local function questFrom(raw, text)
-  local id = linkedID(raw, "quest")
-  if id and FDB().Quest(id) then return id end
-  local list = find("quest", text, questPref, 6)
-  return list[1] and list[1].id, list
-end
-
 local function sold(id) return #FDB().ItemFacts(id).soldBy > 0 end
 local function made(id) return #FDB().ItemFacts(id).madeBy > 0 end
+local function inSet(id) return G().SetForItem(id) ~= nil end
 
-local keywords
-local function notFound(a, what, text)
-  a:say(("I couldn't find %s called \"%s\"."):format(what, text))
-  -- names sharing the most words (4+ letters) with what was asked
-  local words = {}
-  for w in keywords(strip(norm(text))):gmatch("%S+") do if #w >= 4 then words[#words + 1] = w end end
-  local near = {}
-  if #words > 0 then
-    local kind = what == "a quest" and "quest" or "item"
-    local scored, seen = {}, {}
-    for _, e in ipairs(index(kind)) do
-      local hits = 0
-      for _, w in ipairs(words) do if e[1]:find(w, 1, true) then hits = hits + 1 end end
-      if hits > 0 and not seen[e[3]] then
-        seen[e[3]] = true
-        scored[#scored + 1] = { id = e[2], name = e[3], hits = hits, pref = kind == "item" and itemPref(e[2]) or questPref(e[2]) }
-      end
+local PREFER = { quest = questPref, item = itemPref }
+
+-- What each kind of answer can be about, in order of preference on a tie.
+local KINDS = {
+  next = { "quest" }, turnin = { "quest" }, start = { "quest" },
+  sells = { "item" }, crafters = { "item" }, make = { "item" }, disenchant = { "item" }, drops = { "item" },
+  loot = { "dungeon", "boss", "mob" },
+  set = { "set", "item" },
+  find = { "node", "npc", "vendor", "zone", "dungeon", "quest", "item", "boss", "mob" },
+  info = { "dungeon", "boss", "zone", "set", "quest", "vendor", "npc", "node", "item", "mob" },
+}
+-- the item has to be sold / made / in a set for these, when a close name is
+local PRED = { sells = sold, crafters = made, make = made, set = inSet }
+-- answers that can do without a name
+local OPTIONAL = { make = true, crafters = true }
+-- answers that need nothing more than the words
+local BARE = { event = true, train = true, gather = true }
+
+-- Everything matching `text` across kinds, best first ({ id, name, score, kind }).
+local function resolve(st, kinds, text, raw)
+  local ck = table.concat(kinds, ",") .. "\0" .. text
+  if st.cache[ck] then return st.cache[ck] end
+  local all = {}
+  local function has(k) for _, x in ipairs(kinds) do if x == k then return true end end end
+  local lq = linkedID(raw, "quest")
+  if lq and has("quest") and FDB().Quest(lq) then
+    all[#all + 1] = { kind = "quest", id = lq, name = FDB().Quest(lq).n, score = 100, rank = 0, pref = 0, len = 0 }
+  end
+  local li = linkedID(raw, "item")
+  if li and has("item") then all[#all + 1] = { kind = "item", id = li, name = FDB().ItemName(li), score = 100, rank = 0, pref = 0, len = 0 } end
+  if #all == 0 and text ~= "" then
+    for rank, kind in ipairs(kinds) do
+      for _, r in ipairs(find(kind, text, PREFER[kind], 8)) do r.rank = rank; all[#all + 1] = r end
     end
-    table.sort(scored, function(x, y)
-      if x.hits ~= y.hits then return x.hits > y.hits end
-      if x.pref ~= y.pref then return x.pref > y.pref end
-      return x.name < y.name
+    -- near-equal scores (a few points apart) go by kind first: "redridge" is the zone
+    table.sort(all, function(a, b)
+      local ba, bb = math.floor(a.score / 4), math.floor(b.score / 4)
+      if ba ~= bb then return ba > bb end
+      if a.rank ~= b.rank then return a.rank < b.rank end
+      if a.pref ~= b.pref then return a.pref > b.pref end
+      if a.score ~= b.score then return a.score > b.score end
+      return a.len < b.len
     end)
-    for k = 1, math.min(3, #scored) do near[k] = scored[k] end
   end
-  if #near > 0 then
-    a:fdb()
-    a:muted("Closest names in the bundle:")
-    for _, r in ipairs(near) do
-      if what == "a quest" then a:link("  " .. r.name, "quests", r.id) else a:link("  " .. FDB().ItemText(r.id), "items", r.id) end
+  st.cache[ck] = all
+  return all
+end
+
+-- Pick the one to answer about: the best, or for items a close one that fits.
+local function pick(list, pred)
+  local top = list[1]
+  if not top or not pred then return top end
+  for _, r in ipairs(list) do
+    if r.score < top.score - 12 then break end
+    if r.kind ~= "item" or pred(r.id) then return r end
+  end
+  return top
+end
+
+-- Score one reading of the question: keyword weight plus how well a name fits.
+local function evaluate(st, it)
+  local q, name = st.q, it.name
+  local plan = { intent = name, kw = it.kw }
+  if BARE[name] then
+    plan.total = it.kw
+    if name == "gather" then
+      for _, t in ipairs(q.toks) do if t.c == "gprof" then plan.slug = P.GPROF[t.w] or P.GPROF[t.w:gsub("s$", "")]; break end end
+      if not plan.slug then return nil end
     end
-  else
-    a:muted("The bundle covers WoW: Forever's quests, vendors and recipes, and gear up to level 30.")
+    return plan
   end
+  local rest = P.Rest(q, P.STRIP[name] or {})
+  plan.rest = rest
+  if name == "quests" then
+    plan.total = it.kw
+    if rest ~= "" then
+      local z = resolve(st, { "zone" }, rest, st.raw)[1]
+      if z then plan.zone = z.name; plan.cand = z; plan.list = { z }; plan.total = it.kw + P.Fit(z.score) + z.score / 200
+      else plan.total = it.kw - 3 end
+    end
+    return plan
+  end
+  if rest == "" and not linkedID(st.raw, "item") and not linkedID(st.raw, "quest") then
+    if OPTIONAL[name] and q.has.make then plan.total = it.kw; plan.empty = true; return plan end
+    return nil
+  end
+  local list = resolve(st, KINDS[name], rest, st.raw)
+  plan.list = list
+  plan.cand = pick(list, PRED[name])
+  -- the closer name breaks ties between readings ("loot deadmines")
+  plan.total = it.kw + (plan.cand and (P.Fit(plan.cand.score) + plan.cand.score / 200) or -1)
+  return plan
+end
+
+-- The best reading of a question. Readings are tried strongest-words first and
+-- the search stops once nothing left could win, so unneeded name lists aren't built.
+local function decide(raw, st)
+  local q = P.Read(raw)
+  st.q, st.raw = q, raw
+  local best
+  for _, it in ipairs(P.Intents(q, true)) do
+    if best and it.kw + 4.5 <= best.total then break end
+    local plan = evaluate(st, it)
+    if plan and (not best or plan.total > best.total) then best = plan end
+  end
+  return best, q
+end
+
+local function levelOpts(q)
+  local lv = playerLevel()
+  if q.mylevel or not (q.range or q.num) then
+    if not lv then return nil end
+    return math.max(1, lv - 2), lv + 2, ("Near level %d"):format(lv), "me"
+  elseif q.range then
+    return q.range[1], q.range[2], ("Levels %d-%d"):format(q.range[1], q.range[2]), q.range[1] .. "-" .. q.range[2]
+  end
+  return math.max(1, q.num - 1), q.num + 1, ("Around level %d"):format(q.num), tostring(q.num)
+end
+
+-- The reading in short, for tests: { intent, target, score }.
+function Ask.Parse(raw)
+  local plan, q = decide(tostring(raw or ""), { cache = {} })
+  if not plan then return { intent = "none", target = "" } end
+  local target = plan.cand and plan.cand.name or ""
+  if plan.intent == "quests" then
+    local lvlPart = ""
+    if q.mylevel or q.range or q.num or not (plan.zone or q.here) then lvlPart = select(4, levelOpts(q)) or "me" end
+    local zonePart = plan.zone or (q.here and "here")
+    target = lvlPart .. (zonePart and ("@" .. zonePart) or "")
+  elseif plan.intent == "gather" then target = plan.slug
+  elseif plan.empty then target = "" end
+  return { intent = plan.intent, target = target, score = plan.cand and plan.cand.score, kind = plan.cand and plan.cand.kind }
+end
+
+-- "Did you mean" chips for other close names, when the best one wasn't exact.
+local function didYouMean(a, plan, skip)
+  local top = plan.cand
+  if not top or top.score >= 95 or not plan.list then return end
+  local again = P.AGAIN[plan.intent] or P.AGAIN.info
+  local seen, n = { [top.name] = true }, 0
+  if skip then seen[skip] = true end
+  for _, r in ipairs(plan.list) do
+    if n >= 3 or r.score < top.score - 25 then break end
+    if not seen[r.name] then
+      seen[r.name] = true
+      n = n + 1
+      a:ask("  Did you mean " .. r.name .. "?", again:format(r.name))
+    end
+  end
+  a.suggest = n > 0 or nil
+end
+
+local function makeList(a)
+  a:say("I answer about one thing at a time: try \"How do I make Heavy Linen Bandage?\" or \"Who can craft Copper Chain Belt?\".")
+  a:tab("Open Crafters (what the guild can make)", "crafters")
+  a:link("Open the recipe lists in Quests & Items", "recipes", nil)
   return true
 end
 
--- Best guess at what a bare name is: { kind, id, ... } or nil
-local function anything(raw, text)
-  local qid = linkedID(raw, "quest")
-  if qid and FDB().Quest(qid) then return "quest", qid end
-  local iid = linkedID(raw, "item")
-  if iid then return "item", iid end
-  local cands = {}
-  local function try(kind, prefer, rank)
-    local r = find(kind, text, prefer, 1)[1]
-    if r and r.score >= 2 then cands[#cands + 1] = { kind = kind, id = r.id, name = r.name, score = r.score, rank = rank } end
+local function mobAnswer(a, npcId)
+  local m = ns.db and ns.db.bestiary[npcId]
+  local B = ns.Bestiary
+  if not (m and B) then return false end
+  local agg = B.Aggregate(m)
+  a:say(("%s  %s(guild kills: %d)|r"):format(m.nm or "?", MUTED, agg.kills))
+  table.sort(agg.loot, function(x, y) if x.rate ~= y.rate then return x.rate > y.rate end return x.itemID < y.itemID end)
+  if #agg.loot == 0 then a:muted("Nobody in the guild has recorded loot from it yet."); return true end
+  for k = 1, math.min(#agg.loot, 6) do
+    local e = agg.loot[k]
+    a:link(("  %s  %s%d%% of %d corpses|r"):format(FDB().ItemText(e.itemID), MUTED, math.floor(e.rate * 100 + 0.5), e.kills), "items", e.itemID)
   end
-  try("dungeon", nil, 9); try("zone", nil, 8); try("set", nil, 7); try("quest", questPref, 6)
-  try("vendor", nil, 5); try("npc", nil, 4); try("item", itemPref, 3)
-  local slug, i, n = G().FindNode(text)
-  if slug and norm(n.n) == strip(norm(text)) then cands[#cands + 1] = { kind = "node", id = { slug, i, n }, score = 4, rank = 10 } end
-  table.sort(cands, function(x, y) if x.score ~= y.score then return x.score > y.score end return x.rank > y.rank end)
-  local c = cands[1]
-  if c then return c.kind, c.id, c end
+  a:muted("Guild-recorded: corpses that had it, from guildmates looting with the addon on.")
+  return true
 end
+
+local function bossLoot(a, id) return lootAnswer(a, id[1], id[2]) end
 
 local function describe(a, kind, id)
   if kind == "quest" then return questAnswer(a, id)
   elseif kind == "item" then return itemAnswer(a, id)
   elseif kind == "dungeon" then return dungeonAnswer(a, id)
+  elseif kind == "boss" then
+    a:say(("%s is a boss in:"):format(D().dungeons[id[1]].b[id[2]]))
+    return dungeonAnswer(a, id[1])
   elseif kind == "zone" then
     if G().Zone(id) and G().Zone(id).bg then
       local e = G().BattlegroundList(G().Zone(id).n)[1]
@@ -752,268 +889,146 @@ local function describe(a, kind, id)
   elseif kind == "set" then return setAnswer(a, id)
   elseif kind == "vendor" then return vendorAnswer(a, id)
   elseif kind == "npc" then return npcAnswer(a, id)
-  elseif kind == "node" then return nodeAnswer(a, id[1], id[2], id[3]) end
+  elseif kind == "node" then return nodeAnswer(a, id[1], id[2], id[3])
+  elseif kind == "mob" then return mobAnswer(a, id) end
   return false
 end
 
----------------------------------------------------------------------------
--- Question shapes, tried in order. Each pattern runs on the tidied question;
--- the first capture (if any) is the thing being asked about.
----------------------------------------------------------------------------
-local GATHER = { herbalism = "herbalism", herb = "herbalism", herbs = "herbalism", mining = "mining", mine = "mining",
-  ore = "mining", skinning = "skinning", skin = "skinning", fishing = "fishing", fish = "fishing" }
-
-local RULES = {}
-local function rule(patterns, fn) RULES[#RULES + 1] = { p = patterns, fn = fn } end
-
-rule({ "next guild event", "next event", "next raid", "upcoming event", "guild events?$", "any events" },
-  function(a) return eventAnswer(a) end)
-
-rule({ "^what should i train", "^what can i train", "^what do i train", "^what to train", "^train$", "^training$",
-  "^what does my trainer have", "^what s new at my trainer", "^anything to train", "^do i need to train", "^what spells", "^what abilities" },
-  function(a) return trainAnswer(a) end)
-
-rule({ "^what can i make$", "^what can i craft$", "^what can i cook$", "^what recipes", "^recipes$" },
-  function(a)
-    a:say("I answer about one thing at a time: try \"How do I make Heavy Linen Bandage?\" or \"Who can craft Copper Chain Belt?\".")
-    a:tab("Open Crafters (what the guild can make)", "crafters")
-    a:link("Open the recipe lists in Quests & Items", "recipes", nil)
-    return true
-  end)
-
-rule({ "^where should i level (%a+)$", "^where to level (%a+)$", "^where can i level (%a+)$", "^where do i level (%a+)$",
-  "^best zones? for (%a+)$", "^best place to level (%a+)$", "^level (%a+)$", "^how do i level (%a+)$" },
-  function(a, x)
-    local slug = GATHER[x]
-    if not slug then return false end
-    return levelGatherAnswer(a, slug)
-  end)
-
-rule({ "^quests? near my level", "^quests? for my level", "^quests? at my level", "^quests? around my level",
-  "^what quests? should i do", "^what quests? can i do", "^what should i quest", "^quests? for me$", "^any quests? for me" },
-  function(a)
-    local lv = playerLevel()
-    if not lv then a:say("I can't tell your level right now."); return true end
-    return questListAnswer(a, { minLevel = math.max(1, lv - 2), maxLevel = lv + 2, side = FDB().PlayerSide() },
-      ("Near level %d"):format(lv))
-  end)
-
-rule({ "^quests? for level (%d+)", "^level (%d+) quests?$", "^quests? at level (%d+)" },
-  function(a, x)
-    local lv = tonumber(x)
-    return questListAnswer(a, { minLevel = math.max(1, lv - 1), maxLevel = lv + 1, side = FDB().PlayerSide() }, ("Around level %d"):format(lv))
-  end)
-
-rule({ "^quests? in my zone", "^quests? here$", "^quests? around here", "^what quests? are here", "^quests? in this zone",
-  "^what quests? are in my zone", "^what quests? are in this zone" },
-  function(a)
-    local z = playerZone()
-    if not z then a:say("I can't tell which zone you're in."); return true end
-    if not FDB().Index().zones[z] then a:say(("The bundle has no quests in %s."):format(z)); return true end
-    return questListAnswer(a, { zone = z, side = FDB().PlayerSide() }, "In " .. z)
-  end)
-
-rule({ "^quests? in (.+)$", "^what quests? are in (.+)$", "^(.+) quests$" },
-  function(a, x)
-    local id, r = best("zone", x)
-    if not id or r.score < 2 then return false end
-    return questListAnswer(a, { zone = r.name, side = FDB().PlayerSide() }, "In " .. r.name)
-  end)
-
-rule({ "^what comes after (.+)$", "^what comes next after (.+)$", "^whats next after (.+)$", "^what is next after (.+)$",
-  "^what s next after (.+)$", "^whats after (.+)$", "^next quest after (.+)$", "^what follows (.+)$", "^after (.+) what next$",
-  "^what comes next in (.+)$", "^next in chain (.+)$", "^next part of (.+)$", "^whats the next part of (.+)$", "^where does (.+) lead$" },
-  function(a, x, raw)
-    x = x:gsub("^the chain ", ""):gsub(" chain$", "")
-    local id, list = questFrom(raw, x)
-    if not id then return notFound(a, "a quest", x) end
-    nextAnswer(a, id)
-    others(a, list or {}, "quest")
-    return true
-  end)
-
-rule({ "^where do i turn in (.+)$", "^where to turn in (.+)$", "^where can i turn in (.+)$", "^who do i turn in (.+) to$",
-  "^where do i hand in (.+)$", "^turn in (.+)$", "^who takes (.+)$", "^where does (.+) end$", "^who do i give (.+) to$" },
-  function(a, x, raw)
-    local id, list = questFrom(raw, x)
-    if not id then return notFound(a, "a quest", x) end
-    questAnswer(a, id, "end")
-    others(a, list or {}, "quest")
-    return true
-  end)
-
-rule({ "^who sells (.+)$", "^where can i buy (.+)$", "^where do i buy (.+)$", "^where to buy (.+)$", "^buy (.+)$",
-  "^which vendor sells (.+)$", "^what vendor sells (.+)$", "^vendor for (.+)$", "^who has (.+) for sale$" },
-  function(a, x, raw)
-    local id = itemFrom(raw, x, sold)
-    if not id then return notFound(a, "an item", x) end
-    return sellsAnswer(a, id)
-  end)
-
-rule({ "^who can craft (.+)$", "^who can make (.+)$", "^who in the guild can make (.+)$", "^who in the guild can craft (.+)$",
-  "^anyone can make (.+)$", "^can anyone make (.+)$", "^can anyone craft (.+)$", "^who crafts (.+)$", "^who makes (.+)$" },
-  function(a, x, raw)
-    local id = itemFrom(raw, x, made)
-    if not id then
-      -- enchants and other recipes with no item: the guild's shared recipe names
-      local want = strip(norm(x))
-      for _, h in ipairs(ns.Crafting and ns.Crafting.Search and ns.Crafting.Search({ search = x }) or {}) do
-        if h.name and norm(h.name):find(want, 1, true) and h.crafters and #h.crafters > 0 then
-          local short = {}
-          for k = 1, math.min(#h.crafters, 8) do short[#short + 1] = ns.Compat.ShortName(h.crafters[k]) or h.crafters[k] end
-          a:say(("Guild crafters for %s: %s"):format(h.name, table.concat(short, ", ")))
-          a:tab("Open Crafters", "crafters")
-          return true
-        end
-      end
-      return craftersAnswer(a, nil, x)
-    end
-    return craftersAnswer(a, id)
-  end)
-
-rule({ "^how do i make (.+)$", "^how to make (.+)$", "^how can i make (.+)$", "^how do i craft (.+)$", "^how to craft (.+)$",
-  "^how do i cook (.+)$", "^how to cook (.+)$", "^how do i brew (.+)$", "^how do i smelt (.+)$", "^recipe for (.+)$",
-  "^what do i need to make (.+)$", "^what do i need for (.+)$", "^whats in (.+)$", "^how is (.+) made$", "^make (.+)$", "^craft (.+)$" },
-  function(a, x, raw)
-    local id = itemFrom(raw, x, made)
-    if id and made(id) then return makeAnswer(a, id) end
-    -- maybe it's a recipe/spell name (enchants have no item)
-    local hits = FDB().RecipeList({ search = x })
-    for _, h in ipairs(hits) do
-      if norm(h.r.n) == strip(norm(x)) then return makeAnswer(a, nil, { prof = h.prof, i = h.i }) end
-    end
-    if hits[1] then return makeAnswer(a, nil, { prof = hits[1].prof, i = hits[1].i }) end
-    if id then a:link(FDB().ItemText(id), "items", id); a:say("It isn't crafted, as far as ForeverDB.net knows."); return true end
-    return notFound(a, "a recipe", x)
-  end)
-
-rule({ "^what does (.+) disenchant into$", "^what does (.+) disenchant to$", "^what do (.+) disenchant into$",
-  "^what will (.+) disenchant into$", "^disenchant (.+)$", "^what can i disenchant (.+) into$", "^can i disenchant (.+)$",
-  "^what does (.+) de into$", "^(.+) disenchants? into$", "^what gives (.+) when disenchanted$", "^where do i get (.+) from disenchanting$" },
-  function(a, x, raw)
-    local id = itemFrom(raw, x)
-    if not id then return notFound(a, "an item", x) end
-    return deAnswer(a, id)
-  end)
-
-rule({ "^what drops in (.+)$", "^what drops at (.+)$", "^what drops from (.+)$", "^what does (.+) drop$", "^what do (.+) drop$",
-  "^loot in (.+)$", "^loot from (.+)$", "^(.+) loot$", "^(.+) loot table$", "^what loot is in (.+)$", "^what loot does (.+) have$",
-  "^what can i get in (.+)$", "^what can i get from (.+)$", "^what drops off (.+)$" },
-  function(a, x)
-    x = x:gsub("^the dungeon ", ""):gsub(" dungeon$", ""):gsub(" raid$", "")
-    local did, dr = best("dungeon", x)
-    if did and dr.score >= 2 then return lootAnswer(a, did, "all") end
-    if not ns.Loot then return false end
-    local bdid, bi = ns.Loot.FindBoss(x)
-    if bdid then return lootAnswer(a, bdid, bi) end
-    return false
-  end)
-
-rule({ "^what drops (.+)$", "^who drops (.+)$", "^where does (.+) drop$", "^where do (.+) drop$", "^what mob drops (.+)$",
-  "^which mob drops (.+)$", "^what monster drops (.+)$", "^drops for (.+)$", "^what drops a (.+)$" },
-  function(a, x, raw)
-    local id = itemFrom(raw, x)
-    if not id then return notFound(a, "an item", x) end
-    return dropsAnswer(a, id)
-  end)
-
-rule({ "^which set is (.+) in$", "^what set is (.+) in$", "^what set is (.+) part of$", "^which set is (.+) part of$",
-  "^is (.+) part of a set$", "^is (.+) in a set$", "^what set does (.+) belong to$", "^set for (.+)$", "^(.+) set$", "^set (.+)$" },
-  function(a, x, raw)
-    local sid, sr = best("set", x)
-    if sid and sr.score >= 3 then return setAnswer(a, sid) end
-    local id = itemFrom(raw, x, function(i) return G().SetForItem(i) ~= nil end)
-    if not id then return notFound(a, "an item", x) end
-    local setId = G().SetForItem(id)
-    if not setId then a:link(FDB().ItemText(id), "items", id); a:say("It isn't part of any set up to level 30."); return true end
-    return setAnswer(a, setId, id)
-  end)
-
-rule({ "^where can i find (.+)$", "^where do i find (.+)$", "^where to find (.+)$", "^where can i pick (.+)$", "^where can i mine (.+)$",
-  "^where does (.+) grow$", "^where do i get (.+)$", "^where can i get (.+)$", "^where to get (.+)$", "^where can i farm (.+)$",
-  "^where to farm (.+)$", "^where do i farm (.+)$", "^where can i gather (.+)$", "^where is (.+)$", "^where are (.+)$", "^find (.+)$" },
-  function(a, x, raw)
-    x = x:gsub(" ore$", " ore"):gsub("^some ", "")
-    local slug, i, n = G().FindNode(x)
-    if slug and (norm(n.n) == strip(norm(x)) or (n.it and norm(FDB().ItemName(n.it)) == strip(norm(x)))) then
-      return nodeAnswer(a, slug, i, n)
-    end
-    local kind, id, c = anything(raw, x)
-    if kind == "quest" then return questAnswer(a, id, "start") end
-    if kind == "item" then
-      local s2, i2, n2 = G().NodeForItem(id)
-      if s2 then return nodeAnswer(a, s2, i2, n2) end
-      if sold(id) then return sellsAnswer(a, id) end
-      return dropsAnswer(a, id)
-    end
-    if kind then return describe(a, kind, id, c) end
-    if slug then return nodeAnswer(a, slug, i, n) end
-    return false
-  end)
-
-rule({ "^who gives (.+)$", "^where does (.+) start$", "^how do i start (.+)$", "^how do i get the quest (.+)$", "^where do i pick up (.+)$",
-  "^where do i get the quest (.+)$", "^who starts (.+)$" },
-  function(a, x, raw)
-    local id, list = questFrom(raw, x)
-    if not id then return notFound(a, "a quest", x) end
-    questAnswer(a, id, "start")
-    others(a, list or {}, "quest")
-    return true
-  end)
-
-rule({ "^what level is (.+)$", "^what level for (.+)$", "^(.+) level and bosses$", "^(.+) bosses and level$", "^(.+) levels?$",
-  "^(.+) bosses$", "^bosses in (.+)$", "^who are the bosses in (.+)$", "^what bosses are in (.+)$", "^how many bosses in (.+)$",
-  "^what level do i need for (.+)$", "^when can i do (.+)$", "^tell me about (.+)$", "^what about (.+)$", "^info on (.+)$", "^what is (.+)$", "^whats (.+)$" },
-  function(a, x, raw)
-    x = x:gsub("^the dungeon ", ""):gsub(" dungeon$", "")
-    local did, dr = best("dungeon", x)
-    if did and dr.score >= 2 then return dungeonAnswer(a, did) end
-    local bdid = FDB().DungeonForBoss(x)
-    if bdid then a:say(("%s is a boss in:"):format(x)); return dungeonAnswer(a, bdid) end
-    local kind, id, c = anything(raw, x)
-    if kind then return describe(a, kind, id, c) end
-    return false
-  end)
-
----------------------------------------------------------------------------
--- Fallback: search everything, or say so
----------------------------------------------------------------------------
-local STOP = {}
-for w in ("what where who how is the a an i do does can of to in me my for get find about tell it which and are there"):gmatch("%S+") do
-  STOP[w] = true
+-- One handler per kind of answer: (a, plan, candidate) -> true when answered.
+local DO = {}
+DO.event = function(a) return eventAnswer(a) end
+DO.train = function(a) return trainAnswer(a) end
+DO.gather = function(a, plan) return levelGatherAnswer(a, plan.slug) end
+DO.quests = function(a, plan, _, q)
+  local zone = plan.zone
+  if not zone and q.here then
+    zone = playerZone()
+    if not zone then a:say("I can't tell which zone you're in."); return true end
+    if not FDB().Index().zones[zone] then a:say(("The bundle has no quests in %s."):format(zone)); return true end
+  end
+  local opts = { zone = zone, side = FDB().PlayerSide() }
+  local title
+  if q.mylevel or q.range or q.num or not zone then
+    local lo, hi, t = levelOpts(q)
+    if not lo then a:say("I can't tell your level right now."); return true end
+    opts.minLevel, opts.maxLevel, title = lo, hi, t
+    if zone then title = title .. " in " .. zone end
+  else
+    title = "In " .. zone
+  end
+  return questListAnswer(a, opts, title)
 end
-
-function keywords(q)
-  local out = {}
-  for w in q:gmatch("%S+") do if not STOP[w] then out[#out + 1] = w end end
-  return table.concat(out, " ")
-end
-
-local function fallback(a, q, raw)
-  local kind, id, c = anything(raw, q)
-  if kind then return describe(a, kind, id, c) end
-  local k = keywords(q)
-  if #k >= 3 then
-    local kind2, id2, c2 = anything(raw, k)
-    if kind2 then return describe(a, kind2, id2, c2) end
-    local hits = {}
-    local function push(text, mode, key) if #hits < 6 then hits[#hits + 1] = { text, mode, key } end end
-    for _, r in ipairs(find("quest", k, questPref, 3)) do push("Quest: " .. r.name, "quests", r.id) end
-    for _, r in ipairs(find("item", k, itemPref, 3)) do push("Item: " .. FDB().ItemText(r.id), "items", r.id) end
-    for _, r in ipairs(find("dungeon", k, nil, 1)) do push("Dungeon: " .. r.name, "dungeons", r.id) end
-    for _, r in ipairs(find("zone", k, nil, 1)) do push("Zone: " .. r.name, "zones", r.id) end
-    for _, r in ipairs(find("vendor", k, nil, 2)) do push("Vendor: " .. r.name, "vendors", r.id) end
-    if #hits > 0 then
-      a:fdb()
-      a:say("Not sure what you mean, but these match:")
-      for _, h in ipairs(hits) do a:link("  " .. h[1], h[2], h[3]) end
+DO.next = function(a, _, c) return nextAnswer(a, c.id) end
+DO.turnin = function(a, _, c) return questAnswer(a, c.id, "end") end
+DO.start = function(a, _, c) return questAnswer(a, c.id, "start") end
+DO.sells = function(a, _, c) return sellsAnswer(a, c.id) end
+DO.disenchant = function(a, _, c) return deAnswer(a, c.id) end
+DO.drops = function(a, _, c) return dropsAnswer(a, c.id) end
+DO.crafters = function(a, plan, c)
+  if plan.empty then return makeList(a) end
+  if c and c.score >= MIN and made(c.id) then return craftersAnswer(a, c.id) end
+  -- enchants and other recipes with no item: the guild's shared recipe names
+  local want = P.Key(plan.rest)
+  for _, h in ipairs(ns.Crafting and ns.Crafting.Search and ns.Crafting.Search({ search = plan.rest }) or {}) do
+    if h.name and P.Match(P.Key(h.name), want) >= MIN and h.crafters and #h.crafters > 0 then
+      local short = {}
+      for k = 1, math.min(#h.crafters, 8) do short[#short + 1] = ns.Compat.ShortName(h.crafters[k]) or h.crafters[k] end
+      a:say(("Guild crafters for %s: %s"):format(h.name, table.concat(short, ", ")))
+      a:tab("Open Crafters", "crafters")
       return true
     end
   end
+  if c and c.score >= MIN then return craftersAnswer(a, c.id) end
+  return craftersAnswer(a, nil, plan.rest)
+end
+DO.make = function(a, plan, c)
+  if plan.empty then return makeList(a) end
+  if c and c.score >= MIN and made(c.id) then return makeAnswer(a, c.id) end
+  -- maybe it's a recipe/spell name (enchants have no item)
+  local want, bestHit, bestScore = P.Key(plan.rest), nil, MIN - 1
+  for _, h in ipairs(FDB().RecipeList({ search = plan.rest })) do
+    local s = P.Match(P.Key(h.r.n), want)
+    if s > bestScore then bestHit, bestScore = h, s end
+  end
+  if bestHit then return makeAnswer(a, nil, { prof = bestHit.prof, i = bestHit.i }) end
+  if c and c.score >= MIN then a:link(FDB().ItemText(c.id), "items", c.id); a:say("It isn't crafted, as far as ForeverDB.net knows."); return true end
+  return false
+end
+DO.loot = function(a, _, c)
+  if c.kind == "dungeon" then return lootAnswer(a, c.id, "all") end
+  if c.kind == "boss" then return bossLoot(a, c.id) end
+  return mobAnswer(a, c.id)
+end
+DO.set = function(a, _, c)
+  if c.kind == "set" then return setAnswer(a, c.id) end
+  local setId = G().SetForItem(c.id)
+  if not setId then a:link(FDB().ItemText(c.id), "items", c.id); a:say("It isn't part of any set up to level 30."); return true end
+  return setAnswer(a, setId, c.id)
+end
+DO.find = function(a, _, c)
+  if c.kind == "quest" then return questAnswer(a, c.id, "start") end
+  if c.kind == "item" then
+    local s2, i2, n2 = G().NodeForItem(c.id)
+    if s2 then return nodeAnswer(a, s2, i2, n2) end
+    if sold(c.id) then return sellsAnswer(a, c.id) end
+    return dropsAnswer(a, c.id)
+  end
+  return describe(a, c.kind, c.id)
+end
+DO.info = function(a, _, c) return describe(a, c.kind, c.id) end
+
+local WHAT = { next = "a quest", turnin = "a quest", start = "a quest", sells = "an item", crafters = "an item",
+  make = "a recipe", disenchant = "an item", drops = "an item", loot = "a dungeon, boss or creature",
+  set = "a set or item", find = "anything", info = "anything" }
+
+-- Nothing matched well: answer the best loose guess, offer the next ones.
+local function bestGuess(a, plan, st)
+  local kinds = KINDS[plan.intent] or KINDS.info
+  local text = plan.rest or ""
+  local all = {}
+  if text ~= "" then
+    for rank, kind in ipairs(kinds) do
+      if kind ~= "mob" and kind ~= "node" and kind ~= "boss" then
+        for _, r in ipairs(loose(kind, text, PREFER[kind], 4)) do r.rank = rank; all[#all + 1] = r end
+      end
+    end
+  end
+  table.sort(all, function(x, y)
+    if x.hits ~= y.hits then return x.hits > y.hits end
+    if x.rank ~= y.rank then return x.rank < y.rank end
+    if x.pref ~= y.pref then return x.pref > y.pref end
+    return x.len < y.len
+  end)
+  local again = P.AGAIN[plan.intent] or P.AGAIN.info
+  local g = all[1]
+  if g then
+    local before = #a.lines
+    a:say(("Best guess for \"%s\":"):format(text))
+    local ok, done = pcall(DO[plan.intent] or DO.info, a, plan, g, st.q)
+    if ok and done then
+      local seen, n = { [g.name] = true }, 0
+      for _, r in ipairs(all) do
+        if n >= 3 then break end
+        if not seen[r.name] then seen[r.name] = true; n = n + 1; a:ask("  Did you mean " .. r.name .. "?", again:format(r.name)) end
+      end
+      a.suggest = n > 0 or nil
+      return true
+    end
+    for k = #a.lines, before + 1, -1 do a.lines[k] = nil end
+  end
+  if plan.intent ~= "info" and text ~= "" then
+    a:say(("I couldn't find %s called \"%s\"."):format(WHAT[plan.intent] or "anything", text))
+    a:muted("The bundle covers WoW: Forever's quests, vendors and recipes, and gear up to level 30.")
+    return true
+  end
+  return false
+end
+
+local function unknown(a, raw)
   a:say("I don't know that one.")
   a:muted("I answer from the bundled ForeverDB.net data and what the guild shares. Try one of these:")
   local n = #Ask.EXAMPLES
-  local start = (#q % n) + 1
+  local start = (#raw % n) + 1
   for j = 0, 2 do local e = Ask.EXAMPLES[(start + j * 4 - 1) % n + 1]; a:ask("  " .. e, e) end
   a.unknown = true
   return true
@@ -1024,32 +1039,37 @@ end
 ---------------------------------------------------------------------------
 function Ask.Answer(raw)
   raw = tostring(raw or "")
-  local q = tidy(norm(raw))
   local a = newAnswer(raw)
-  if q == "" then
+  if P.Norm(raw) == "" then
     a:say("Ask me about quests, items, recipes, gathering, sets, dungeons, training or guild events.")
     for k = 1, 4 do a:ask("  " .. Ask.EXAMPLES[k], Ask.EXAMPLES[k]) end
     return a
   end
   if not (FDB() and FDB().Available()) then
     a:say("The ForeverDB.net data didn't load, so I can't look things up.")
-    if q:find("event") then eventAnswer(a) end
+    if P.Norm(raw):find("event") then eventAnswer(a) end
     return a
   end
-  for _, r in ipairs(RULES) do
-    for _, p in ipairs(r.p) do
-      local x = q:match(p)
-      if x then
-        local before = #a.lines
-        local ok, done = pcall(r.fn, a, type(x) == "string" and x or nil, raw)
-        if not ok then ns.Debug("Ask: %s", tostring(done)) end
-        if ok and done then return a end
-        for k = #a.lines, before + 1, -1 do a.lines[k] = nil end
-        break
-      end
+  local st = { cache = {} }
+  local ok, plan = pcall(decide, raw, st)
+  if not ok then ns.Debug("Ask: %s", tostring(plan)); plan = nil end
+  if plan then
+    local c = plan.cand
+    local fn = DO[plan.intent]
+    if fn and (BARE[plan.intent] or plan.intent == "quests" or plan.empty or (c and c.score >= MIN)
+        or (plan.intent == "crafters" or plan.intent == "make")) then
+      local before = #a.lines
+      if c and c.score < 60 and plan.rest and plan.rest ~= "" then a:say(("Best guess for \"%s\":"):format(plan.rest)) end
+      local ok2, done = pcall(fn, a, plan, c, st.q)
+      if not ok2 then ns.Debug("Ask: %s", tostring(done)) end
+      if ok2 and done then didYouMean(a, plan); return a end
+      for k = #a.lines, before + 1, -1 do a.lines[k] = nil end
     end
+    local ok3, done3 = pcall(bestGuess, a, plan, st)
+    if not ok3 then ns.Debug("Ask: %s", tostring(done3)) end
+    if ok3 and done3 then return a end
   end
-  fallback(a, q, raw)
+  unknown(a, raw)
   return a
 end
 
