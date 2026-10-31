@@ -100,15 +100,22 @@ end
 local function int(v, lo, hi) return type(v) == "number" and v >= lo and v <= hi and math.floor(v) == v and v or nil end
 
 -- A guildmate spotted a rare.
+-- a guildmate's strings get printed and toasted: drop control chars and |escapes
+local function clean(v, maxLen)
+  if type(v) ~= "string" or #v >= maxLen then return nil end
+  v = v:gsub("[%c|]", "")
+  return v ~= "" and v or nil
+end
+
 function R.OnRemote(sender, d)
   local n = int(d.n, 1, 10000000)
   if not n or sender == ns.playerKey then return false end
   if d.cl ~= "rare" and d.cl ~= "rareelite" then return false end
   local e = {
     n = n, cl = d.cl, by = sender, t = time(),
-    nm = type(d.nm) == "string" and #d.nm > 0 and #d.nm < 80 and d.nm or nil,
+    nm = clean(d.nm, 80),
     lv = int(d.lv, 1, 100),
-    z = type(d.z) == "string" and #d.z > 0 and #d.z < 64 and d.z or nil,
+    z = clean(d.z, 64),
     x = int(d.x, 0, 100), y = int(d.y, 0, 100),
   }
   if not (e.x and e.y) then e.x, e.y = nil, nil end

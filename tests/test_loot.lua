@@ -180,4 +180,19 @@ H.test("Ask LOMB: what drops in X, what does a boss drop, where does an item dro
   noErrors("ask")
 end)
 
+H.test("the heart on a full wishlist says why instead of erroring", function()
+  local ns = boot()
+  local Tab = ns.QuestsTab
+  for i = 1, ns.Wishlist.MAX do ns.Wishlist.Add("n", "Filler " .. i, 1) end
+  Tab.Show("dungeons", DM)
+  local p = tab(ns, "quests").panel
+  local seen
+  for _, c in ipairs(shownCells(p.page)) do if c.data.item == 2589 then seen = c end end
+  local lines = #DEFAULT_CHAT_FRAME.lines
+  seen.data.onWant(seen.data)
+  H.ok(not ns.Loot.Wanted(2589), "not added")
+  H.eq(#DEFAULT_CHAT_FRAME.lines, lines + 1, "the reason went to chat")
+  noErrors("full wishlist")
+end)
+
 H.done()

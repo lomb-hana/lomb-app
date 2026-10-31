@@ -125,6 +125,8 @@ function Me.RequestPlayed()
   if not RequestTimePlayed then return end
   silentRequest = true
   C.Call(RequestTimePlayed)
+  -- if the reply never reaches the chat print, don't swallow the player's own /played later
+  ns.After(10, function() silentRequest = false end)
 end
 
 local function installPlayedFilter()

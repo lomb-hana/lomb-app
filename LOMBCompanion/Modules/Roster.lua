@@ -110,11 +110,39 @@ end
 Roster.ScanSoon = ns.Debounce(0.5, Roster.Scan)
 
 -- Called by Sync when a guildmate's addon says hello / shares a profile.
+-- Peers' fields are shown in tooltips and on profile pages and saved to disk:
+-- plain short strings, numbers in range, a small professions table.
+local function peerStr(v, maxLen)
+  if type(v) ~= "string" then return nil end
+  v = v:sub(1, maxLen):gsub("[%c|]", "")
+  return v ~= "" and v or nil
+end
+local function peerNum(v, hi)
+  v = tonumber(v)
+  if not v or v ~= v or v < 0 or v > hi then return nil end
+  return v
+end
+local function peerProfessions(pr)
+  if type(pr) ~= "table" then return nil end
+  local out, n = {}, 0
+  for code, v in pairs(pr) do
+    code = peerStr(code, 24)
+    local rank = peerNum(type(v) == "table" and v[1] or v, 1000)
+    local max = type(v) == "table" and peerNum(v[2], 1000) or nil
+    if code and rank and n < 16 then
+      n = n + 1
+      out[code] = max and { rank, max } or rank
+    end
+  end
+  return n > 0 and out or nil
+end
+Roster.PeerProfessions = peerProfessions
+
 function Roster.UpdatePeer(sender, data)
   local g = ns.DB.Guild()
   if not g then return end
   local peer = g.peers[sender] or {}
-  peer.v = data.v or peer.v
+  peer.v = peerStr(data.v, 16) or peer.v
   peer.seen = time()
   if data.t == "P" then
     if data.off then
@@ -123,9 +151,9 @@ function Roster.UpdatePeer(sender, data)
     else
       peer.sharing = true
       peer.profile = {
-        lv = tonumber(data.lv), cl = type(data.cl) == "string" and data.cl or nil,
-        il = tonumber(data.il), pt = tonumber(data.pt),
-        pr = type(data.pr) == "table" and data.pr or nil,
+        lv = peerNum(data.lv, 100), cl = peerStr(data.cl, 16),
+        il = peerNum(data.il, 1000), pt = peerNum(data.pt, 1e6),
+        pr = peerProfessions(data.pr),
         ts = time(),
       }
     end

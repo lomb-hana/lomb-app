@@ -226,8 +226,8 @@ function Sync.Handle(sender, d)
   local newer = (type(d.p) == "number" and d.p > ns.PROTOCOL) or Sync.IsNewerVersion(d.v, ns.version)
   if newer then
     if not Sync.newerVersionSeen then
-      Sync.newerVersionSeen = tostring(d.v)
-      ns.Print("A guildmate has a newer LOMB Companion (%s). Grab it from the LOMB GitHub page.", tostring(d.v))
+      Sync.newerVersionSeen = (tostring(d.v):sub(1, 16):gsub("[%c|]", ""))
+      ns.Print("A guildmate has a newer LOMB Companion (%s). Grab it from the LOMB GitHub page.", Sync.newerVersionSeen)
     end
   end
   local h = handlers[d.t]

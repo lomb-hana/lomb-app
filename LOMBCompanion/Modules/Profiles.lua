@@ -101,8 +101,10 @@ end
 
 function Profiles.PruneInspected()
   local g = ns.DB.Guild()
+  -- an empty roster means it hasn't loaded yet, not that everyone left
+  local rosterKnown = #(ns.Roster.members or {}) > 0
   for name, e in pairs(g and g.inspected or {}) do
-    if time() - (e.t or 0) > 60 * 86400 or not ns.Roster.byName[name] then g.inspected[name] = nil end
+    if time() - (e.t or 0) > 60 * 86400 or (rosterKnown and not ns.Roster.byName[name]) then g.inspected[name] = nil end
   end
 end
 

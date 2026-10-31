@@ -538,31 +538,40 @@ function B.ChangedSince(since, who)
 end
 
 local function validCount(v) return type(v) == "number" and v >= 0 and v < 1e9 and v end
+local function validId(v) return type(v) == "number" and v >= 1 and v <= 10000000 and v % 1 == 0 and v end
+-- guildmates' strings end up in chat and on cards: no control chars, no |escapes
+local function cleanStr(v, maxLen)
+  if type(v) ~= "string" or #v >= maxLen then return nil end
+  v = v:gsub("[%c|]", "")
+  return v ~= "" and v or nil
+end
 local function validTime(v) return type(v) == "number" and v > 1.5e9 and v < 4e9 and v end
 
 -- Apply a guildmate's bestiary message. Returns true if anything changed.
 function B.ApplyRemote(sender, d)
-  local npcId = tonumber(d.n)
-  if not npcId or npcId <= 0 or npcId > 10000000 then return false end
+  local npcId = validId(tonumber(d.n))
+  if not npcId then return false end
   if sender == ns.playerKey then return false end
   local m = B.Ensure(npcId)
   local changed = false
-  if type(d.nm) == "string" and not m.nm and #d.nm < 80 then m.nm = d.nm; changed = true end
+  local nm, cl, ct = cleanStr(d.nm, 80), cleanStr(d.cl, 32), cleanStr(d.ct, 32)
+  if nm and not m.nm then m.nm = nm; changed = true end
   if validCount(d.lv) and (not m.lv or d.lv < m.lv) then m.lv = d.lv; changed = true end
   if validCount(d.lx) and (not m.lx or d.lx > m.lx) then m.lx = d.lx; changed = true end
-  if type(d.cl) == "string" and not m.cl then m.cl = d.cl; changed = true end
-  if type(d.ct) == "string" and not m.ct then m.ct = d.ct; changed = true end
+  if cl and not m.cl then m.cl = cl; changed = true end
+  if ct and not m.ct then m.ct = ct; changed = true end
   if validCount(d.hp) and (not m.hp or d.hp > m.hp) then m.hp = d.hp; changed = true end
   if type(d.z) == "table" then
-    for _, z in ipairs(d.z) do
-      if type(z) == "string" and #z < 64 and not m.z[z] and countKeys(m.z) < B.MAX_ZONES then
+    for _, raw in ipairs(d.z) do
+      local z = cleanStr(raw, 64)
+      if z and not m.z[z] and countKeys(m.z) < B.MAX_ZONES then
         m.z[z] = true; changed = true
       end
     end
   end
   if type(d.sp) == "table" then
     for _, id in ipairs(d.sp) do
-      if validCount(id) and not m.sp[id] and countKeys(m.sp) < B.MAX_SPELLS then
+      if validId(id) and not m.sp[id] and countKeys(m.sp) < B.MAX_SPELLS then
         m.sp[id] = C.SpellName(id) or true; changed = true
       end
     end
@@ -576,7 +585,7 @@ function B.ApplyRemote(sender, d)
         fk = validTime(r.fk) or nil, t = r.t, i = {}, q = {} }
       local items = 0
       for itemID, n in pairs(type(r.i) == "table" and r.i or {}) do
-        if validCount(itemID) and validCount(n) and items < B.MAX_ITEMS_PER_RECORD then
+        if validId(itemID) and validCount(n) and items < B.MAX_ITEMS_PER_RECORD then
           items = items + 1
           clean.i[itemID] = math.min(n, clean.c > 0 and clean.c or n)
           local q = type(r.q) == "table" and validCount(r.q[itemID]) or n

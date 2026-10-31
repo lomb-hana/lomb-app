@@ -102,7 +102,7 @@ local function cells(list, did, minQ)
         badge = badges[1], wanted = Loot.Wanted(e.itemID), tip = tipFor(e, did),
         onWant = function(d)
           local now, why = Loot.ToggleWant(d.item, Tab.LootNote(did))
-          if now == nil and why then ns:Print(why) end
+          if now == nil and why then ns.Print(why) end
           Tab.Refresh()
         end,
       }
